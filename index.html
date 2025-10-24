@@ -130,6 +130,14 @@
             margin-bottom: 20px;
         }
 
+        .scenarios-container.cols-1 {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        .scenarios-container.cols-1 .scenario-card:first-child {
+            grid-column: 1;
+        }
+
         .scenarios-container.cols-2 {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -162,12 +170,61 @@
             margin-bottom: 20px;
         }
 
+        .form-group.additional-factors-header {
+            margin-bottom: 8px;
+        }
+
+        .form-group.sapto-section {
+            margin-top: 10px;
+        }
+
+        .form-group.dividend-section {
+            margin-bottom: 8px;
+            margin-top: -8px;
+        }
+
+        .dividend-inputs {
+            margin-bottom: 12px;
+        }
+
+        .dividend-inputs.hidden {
+            display: none;
+        }
+
+        .form-group-inline.dividend-indented {
+            padding-left: 30px;
+        }
+
+        #totalAssessableDividend1,
+        #totalAssessableDividend2,
+        #totalAssessableDividend3,
+        #totalAssessableDividend4 {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
         .form-group-inline {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
+            padding: 6px 0;
             border-bottom: 1px solid #e2e8f0;
+        }
+
+        .form-group-inline.no-border {
+            border-bottom: none;
+            padding-bottom: 3px;
+        }
+
+        .form-group-inline.no-border + .form-group-inline {
+            padding-top: 3px;
+        }
+
+        .form-group-inline .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .form-group-inline label {
@@ -180,6 +237,12 @@
         .input-with-currency {
             position: relative;
             width: 200px;
+            max-width: 150px;
+        }
+
+        .scenarios-container.cols-3 .input-with-currency,
+        .scenarios-container.cols-4 .input-with-currency {
+            width: 150px;
         }
 
         .input-with-currency::before {
@@ -198,6 +261,7 @@
         .form-group-inline input[type="number"],
         .form-group-inline input[type="text"] {
             width: 200px;
+            max-width: 576px;
             padding: 8px 12px 8px 28px;
             border: 2px solid #e2e8f0;
             border-radius: 6px;
@@ -206,6 +270,13 @@
             font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
             font-weight: 600;
             color: #2d3748;
+        }
+
+        .scenarios-container.cols-3 .form-group-inline input[type="number"],
+        .scenarios-container.cols-3 .form-group-inline input[type="text"],
+        .scenarios-container.cols-4 .form-group-inline input[type="number"],
+        .scenarios-container.cols-4 .form-group-inline input[type="text"] {
+            width: 150px;
         }
 
         .input-with-currency input[type="number"],
@@ -372,6 +443,12 @@
             font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
         }
 
+        .result-row.refund .result-label,
+        .result-row.refund .result-value {
+            color: #38a169;
+            font-weight: 700;
+        }
+
         .result-highlight {
             background: #2d3748;
             color: white;
@@ -462,10 +539,15 @@
         }
 
         @media (max-width: 768px) {
+            .scenarios-container.cols-1,
             .scenarios-container.cols-2,
             .scenarios-container.cols-3,
             .scenarios-container.cols-4 {
                 grid-template-columns: 1fr;
+            }
+
+            .scenarios-container.cols-1 .scenario-card:first-child {
+                grid-column: 1;
             }
 
             h1 {
@@ -506,8 +588,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>🇦🇺 Australian Tax Calculator</h1>
-        <p class="subtitle">Compare Tax Across Financial Years & Scenarios</p>
+        <h1>Australian Tax Calculator</h1>
+        <p class="subtitle">Compare Tax Accross Financial Years & Scenarios</p>
 
         <div class="year-selector">
             <h3>Select Financial Year</h3>
@@ -550,7 +632,13 @@
 
     const AU = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
 
-    function formatCurrency(n) { return AU.format(Math.round(n || 0)); }
+    function formatCurrency(n) {
+        const value = Math.round(n || 0);
+        if (value < 0) {
+            return '(' + AU.format(Math.abs(value)) + ')';
+        }
+        return AU.format(value);
+    }
 
     function formatNumberInput(input) {
         // Remove non-digit characters except for cursor position tracking
@@ -652,7 +740,6 @@
     };
 
     function createScenarioHTML(num) {
-        const defaultIncomes = [80000, 100000, 120000, 150000];
         return `
             <div id="scenario${num}" class="scenario-card ${num > 1 ? 'hidden' : ''}">
                 <h2 class="scenario-header">Scenario ${num}</h2>
@@ -660,49 +747,98 @@
                 <div class="form-group-inline">
                     <label for="income${num}">Annual Income</label>
                     <div class="input-with-currency">
-                        <input type="text" id="income${num}" value="${num === 1 ? defaultIncomes[num-1].toLocaleString('en-US') : ''}" 
-                               oninput="calculateTax(${num})" onblur="formatNumberInput(this)" placeholder="0">
+                        <input type="text" id="income${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group dividend-section">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="dividend${num}" onchange="toggleDividend(${num})">
+                        <label for="dividend${num}">Dividend Income</label>
+                    </div>
+                </div>
+
+                <div id="dividendInputs${num}" class="dividend-inputs hidden">
+                    <div class="form-group-inline dividend-indented">
+                        <label for="dividendAmount${num}">Dividend</label>
+                        <div class="input-with-currency">
+                            <input type="text" id="dividendAmount${num}" value="" 
+                                   onblur="formatNumberInput(this); calculateDividend(${num})" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group-inline dividend-indented">
+                        <label for="frankingCredit${num}">Franking Credit</label>
+                        <div class="input-with-currency">
+                            <input type="text" id="frankingCredit${num}" value="" 
+                                   onblur="formatNumberInput(this); calculateDividend(${num})" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group-inline">
+                        <label for="totalAssessableDividend${num}">Total Assessable Dividend</label>
+                        <div class="input-with-currency">
+                            <input type="text" id="totalAssessableDividend${num}" value="0" 
+                                   readonly disabled>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Residency Status</label>
                     <div class="radio-group">
                         <div class="radio-option">
-                            <input type="radio" id="resident${num}" name="resident${num}" value="resident" checked 
-                                   onchange="calculateTax(${num})">
+                            <input type="radio" id="resident${num}" name="resident${num}" value="resident" checked>
                             <label for="resident${num}">Australian Resident</label>
                         </div>
                         <div class="radio-option">
-                            <input type="radio" id="nonresident${num}" name="resident${num}" value="nonresident" 
-                                   onchange="calculateTax(${num})">
+                            <input type="radio" id="nonresident${num}" name="resident${num}" value="nonresident">
                             <label for="nonresident${num}">Non-Resident</label>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group additional-factors-header">
                     <label>Additional Factors</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-option">
-                            <input type="checkbox" id="help${num}" onchange="toggleHelpDebt(${num})">
-                            <label for="help${num}">I have a HELP/HECS debt</label>
-                        </div>
+                </div>
+
+                <div class="form-group-inline no-border">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="help${num}" onchange="toggleHelpDebt(${num})">
+                        <label for="help${num}">I have a HELP/HECS debt</label>
+                    </div>
+                    <div class="input-with-currency disabled">
+                        <input type="text" id="helpDebt${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0" disabled>
+                    </div>
+                </div>
+
+                <div class="form-group-inline no-border">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="paygWithholding${num}" onchange="togglePaygWithholding(${num})">
+                        <label for="paygWithholding${num}">PAYG Withholding</label>
+                    </div>
+                    <div class="input-with-currency disabled">
+                        <input type="text" id="paygWithholdingAmount${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0" disabled>
                     </div>
                 </div>
 
                 <div class="form-group-inline">
-                    <label for="helpDebt${num}">Current HELP Debt</label>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="payg${num}" onchange="togglePayg(${num})">
+                        <label for="payg${num}">PAYG Instalments</label>
+                    </div>
                     <div class="input-with-currency disabled">
-                        <input type="text" id="helpDebt${num}" value="" 
-                               oninput="calculateTax(${num})" onblur="formatNumberInput(this)" placeholder="0" disabled>
+                        <input type="text" id="paygAmount${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0" disabled>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group sapto-section">
                     <div class="checkbox-group">
                         <div class="checkbox-option">
-                            <input type="checkbox" id="sapto${num}" onchange="calculateTax(${num})">
+                            <input type="checkbox" id="sapto${num}">
                             <label for="sapto${num}">I'm eligible for SAPTO (seniors/pensioners)</label>
                         </div>
                     </div>
@@ -740,7 +876,19 @@
                         <span class="result-value" id="sapto${num}Amount">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">Total Tax:</span>
+                        <span class="result-label">Franking Credit:</span>
+                        <span class="result-value" id="frankingCreditOffset${num}">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">PAYG Withholding Paid:</span>
+                        <span class="result-value" id="paygWithholdingPaid${num}">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">PAYG Instalments Paid:</span>
+                        <span class="result-value" id="paygPaid${num}">$0</span>
+                    </div>
+                    <div class="result-row" id="totalTaxRow${num}">
+                        <span class="result-label" id="totalTaxLabel${num}">Total Tax:</span>
                         <span class="result-value" id="totalTax${num}">$0</span>
                     </div>
                     
@@ -772,15 +920,79 @@
             debtInput.disabled = false;
             wrapper.classList.remove('disabled');
             if (!debtInput.value) {
-                debtInput.value = '30,000';
+                debtInput.value = '0';
             }
         } else {
             debtInput.disabled = true;
             wrapper.classList.add('disabled');
             debtInput.value = '';
         }
+    }
+
+    function togglePayg(num) {
+        const checkbox = document.getElementById('payg' + num);
+        const paygInput = document.getElementById('paygAmount' + num);
+        const wrapper = paygInput.parentElement;
         
-        calculateTax(num);
+        if (checkbox.checked) {
+            paygInput.disabled = false;
+            wrapper.classList.remove('disabled');
+            if (!paygInput.value) {
+                paygInput.value = '0';
+            }
+        } else {
+            paygInput.disabled = true;
+            wrapper.classList.add('disabled');
+            paygInput.value = '';
+        }
+    }
+
+    function toggleDividend(num) {
+        const checkbox = document.getElementById('dividend' + num);
+        const dividendInputs = document.getElementById('dividendInputs' + num);
+        
+        if (checkbox.checked) {
+            dividendInputs.classList.remove('hidden');
+            // Set default values
+            const dividendAmount = document.getElementById('dividendAmount' + num);
+            const frankingCredit = document.getElementById('frankingCredit' + num);
+            if (!dividendAmount.value) dividendAmount.value = '0';
+            if (!frankingCredit.value) frankingCredit.value = '0';
+            calculateDividend(num);
+        } else {
+            dividendInputs.classList.add('hidden');
+            // Clear values
+            document.getElementById('dividendAmount' + num).value = '';
+            document.getElementById('frankingCredit' + num).value = '';
+            document.getElementById('totalAssessableDividend' + num).value = '0';
+        }
+    }
+
+    function calculateDividend(num) {
+        const dividendAmount = getNumericValue(document.getElementById('dividendAmount' + num));
+        const frankingCredit = getNumericValue(document.getElementById('frankingCredit' + num));
+        const total = dividendAmount + frankingCredit;
+        
+        const totalField = document.getElementById('totalAssessableDividend' + num);
+        totalField.value = total.toLocaleString('en-US');
+    }
+
+    function togglePaygWithholding(num) {
+        const checkbox = document.getElementById('paygWithholding' + num);
+        const withholdingInput = document.getElementById('paygWithholdingAmount' + num);
+        const wrapper = withholdingInput.parentElement;
+        
+        if (checkbox.checked) {
+            withholdingInput.disabled = false;
+            wrapper.classList.remove('disabled');
+            if (!withholdingInput.value) {
+                withholdingInput.value = '0';
+            }
+        } else {
+            withholdingInput.disabled = true;
+            wrapper.classList.add('disabled');
+            withholdingInput.value = '';
+        }
     }
 
     function selectYear(year) {
@@ -791,8 +1003,6 @@
         if (document.getElementById('infoPanel').classList.contains('active')) {
             updateInfoPanel();
         }
-        
-        visibleScenarios.forEach(s => calculateTax(s));
     }
 
     function toggleScenario(num) {
@@ -808,8 +1018,6 @@
             if (num < 4) {
                 document.getElementById('toggleBtn' + (num + 1)).classList.remove('hidden');
             }
-            
-            calculateTax(num);
         } else {
             scenario.classList.add('hidden');
             visibleScenarios = visibleScenarios.filter(s => s !== num);
@@ -830,7 +1038,9 @@
         const container = document.getElementById('scenariosContainer');
         container.className = 'scenarios-container';
         
-        if (visibleScenarios.length === 2) {
+        if (visibleScenarios.length === 1) {
+            container.classList.add('cols-1');
+        } else if (visibleScenarios.length === 2) {
             container.classList.add('cols-2');
         } else if (visibleScenarios.length === 3) {
             container.classList.add('cols-3');
@@ -946,13 +1156,31 @@
 
     function computeScenario(scenario) {
         const incomeEl = document.getElementById('income' + scenario);
-        const income = getNumericValue(incomeEl);
+        const baseIncome = getNumericValue(incomeEl);
+        
+        // Get dividend income
+        const hasDividend = document.getElementById('dividend' + scenario).checked;
+        const totalAssessableDividendEl = document.getElementById('totalAssessableDividend' + scenario);
+        const totalAssessableDividend = hasDividend ? getNumericValue(totalAssessableDividendEl) : 0;
+        const frankingCreditEl = document.getElementById('frankingCredit' + scenario);
+        const frankingCredit = hasDividend ? getNumericValue(frankingCreditEl) : 0;
+        
+        // Total income includes base income + total assessable dividend
+        const income = baseIncome + totalAssessableDividend;
 
         const isResident = document.querySelector(`input[name="resident${scenario}"]:checked`).value === 'resident';
         const hasHelp = document.getElementById('help' + scenario).checked;
         const helpDebtEl = document.getElementById('helpDebt' + scenario);
         const helpDebt = hasHelp ? getNumericValue(helpDebtEl) : 0;
         const hasSapto = document.getElementById('sapto' + scenario).checked;
+        
+        const hasPaygWithholding = document.getElementById('paygWithholding' + scenario).checked;
+        const paygWithholdingEl = document.getElementById('paygWithholdingAmount' + scenario);
+        const paygWithholdingAmount = hasPaygWithholding ? getNumericValue(paygWithholdingEl) : 0;
+        
+        const hasPayg = document.getElementById('payg' + scenario).checked;
+        const paygEl = document.getElementById('paygAmount' + scenario);
+        const paygAmount = hasPayg ? getNumericValue(paygEl) : 0;
 
         const incomeTax = calculateIncomeTax(income, isResident);
         const medicareLevy = calculateMedicareLevy(income, isResident);
@@ -963,8 +1191,19 @@
         const totalOffsets = lito + sapto;
         const taxAfterOffsets = Math.max(0, incomeTax - totalOffsets);
 
-        const totalTax = taxAfterOffsets + medicareLevy + helpRepayment;
+        const totalTax = taxAfterOffsets + medicareLevy + helpRepayment - frankingCredit - paygWithholdingAmount - paygAmount;
         const netIncome = income - totalTax;
+        
+        // Update Total Tax label and styling based on whether it's negative (refund)
+        const totalTaxLabel = document.getElementById('totalTaxLabel' + scenario);
+        const totalTaxRow = document.getElementById('totalTaxRow' + scenario);
+        if (totalTax < 0) {
+            totalTaxLabel.textContent = 'Total Tax (Refund):';
+            totalTaxRow.classList.add('refund');
+        } else {
+            totalTaxLabel.textContent = 'Total Tax:';
+            totalTaxRow.classList.remove('refund');
+        }
 
         document.getElementById('baseIncome' + scenario).textContent = formatCurrency(income);
         document.getElementById('taxOnIncome' + scenario).textContent = formatCurrency(incomeTax);
@@ -972,6 +1211,9 @@
         document.getElementById('helpRepayment' + scenario).textContent = formatCurrency(helpRepayment);
         document.getElementById('sapto' + scenario + 'Amount').textContent = formatCurrency(-sapto);
         document.getElementById('lito' + scenario).textContent = formatCurrency(-lito);
+        document.getElementById('frankingCreditOffset' + scenario).textContent = formatCurrency(-frankingCredit);
+        document.getElementById('paygWithholdingPaid' + scenario).textContent = formatCurrency(-paygWithholdingAmount);
+        document.getElementById('paygPaid' + scenario).textContent = formatCurrency(-paygAmount);
         document.getElementById('totalTax' + scenario).textContent = formatCurrency(totalTax);
         document.getElementById('netAnnual' + scenario).textContent = formatCurrency(netIncome);
         document.getElementById('netMonthly' + scenario).textContent = formatCurrency(netIncome / 12);
@@ -1040,6 +1282,18 @@
         const incomeEl = document.getElementById('income' + num);
         if (incomeEl) incomeEl.value = '';
 
+        // Uncheck dividend checkbox and hide inputs
+        const dividendCheck = document.getElementById('dividend' + num);
+        if (dividendCheck) dividendCheck.checked = false;
+        const dividendInputs = document.getElementById('dividendInputs' + num);
+        if (dividendInputs) dividendInputs.classList.add('hidden');
+        const dividendAmount = document.getElementById('dividendAmount' + num);
+        if (dividendAmount) dividendAmount.value = '';
+        const frankingCreditEl = document.getElementById('frankingCredit' + num);
+        if (frankingCreditEl) frankingCreditEl.value = '';
+        const totalAssessableDividend = document.getElementById('totalAssessableDividend' + num);
+        if (totalAssessableDividend) totalAssessableDividend.value = '0';
+
         // Reset residency to resident
         const residentRadio = document.querySelector(`input[name="resident${num}"][value="resident"]`);
         if (residentRadio) residentRadio.checked = true;
@@ -1056,6 +1310,30 @@
             helpDebtEl.parentElement.classList.add('disabled');
         }
 
+        // Uncheck PAYG Withholding checkbox
+        const paygWithholdingCheck = document.getElementById('paygWithholding' + num);
+        if (paygWithholdingCheck) paygWithholdingCheck.checked = false;
+
+        // Clear PAYG Withholding amount and disable it
+        const paygWithholdingEl = document.getElementById('paygWithholdingAmount' + num);
+        if (paygWithholdingEl) {
+            paygWithholdingEl.value = '';
+            paygWithholdingEl.disabled = true;
+            paygWithholdingEl.parentElement.classList.add('disabled');
+        }
+
+        // Uncheck PAYG checkbox
+        const paygCheck = document.getElementById('payg' + num);
+        if (paygCheck) paygCheck.checked = false;
+
+        // Clear PAYG amount and disable it
+        const paygEl = document.getElementById('paygAmount' + num);
+        if (paygEl) {
+            paygEl.value = '';
+            paygEl.disabled = true;
+            paygEl.parentElement.classList.add('disabled');
+        }
+
         // Uncheck SAPTO checkbox
         const saptoCheck = document.getElementById('sapto' + num);
         if (saptoCheck) saptoCheck.checked = false;
@@ -1063,7 +1341,7 @@
         // Clear all result displays
         const resultFields = [
             'baseIncome', 'taxOnIncome', 'medicareLevy', 'helpRepayment', 
-            'lito', 'totalTax', 'netAnnual', 'netMonthly', 'netWeekly'
+            'lito', 'frankingCreditOffset', 'paygWithholdingPaid', 'paygPaid', 'totalTax', 'netAnnual', 'netMonthly', 'netWeekly'
         ];
         
         resultFields.forEach(field => {
@@ -1074,6 +1352,14 @@
         // Clear SAPTO amount (has different ID format)
         const saptoAmountEl = document.getElementById('sapto' + num + 'Amount');
         if (saptoAmountEl) saptoAmountEl.textContent = '$0';
+        
+        // Reset Total Tax label
+        const totalTaxLabel = document.getElementById('totalTaxLabel' + num);
+        if (totalTaxLabel) totalTaxLabel.textContent = 'Total Tax:';
+        
+        // Remove refund class from Total Tax row
+        const totalTaxRow = document.getElementById('totalTaxRow' + num);
+        if (totalTaxRow) totalTaxRow.classList.remove('refund');
     }
 
     window.onload = function () {
@@ -1081,7 +1367,7 @@
         for (let i = 1; i <= 4; i++) {
             container.innerHTML += createScenarioHTML(i);
         }
-        computeScenario(1);
+        updateGridLayout();
     };
 </script>
 </body>
