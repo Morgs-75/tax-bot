@@ -82,79 +82,80 @@
             border-color: #2d3748;
         }
 
-        .comparison-controls {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .clear-btn {
-            padding: 12px 24px;
-            background: #cbd5e0;
-            color: #4a5568;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-left: 10px;
-        }
-
-        .clear-btn:hover {
-            background: #a0aec0;
-        }
-
-        .clear-btn:active {
-            transform: translateY(0);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .button-group .btn,
-        .button-group .clear-btn {
-            flex: 1;
-            margin: 0;
-        }
-
         .scenarios-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            display: flex;
+            gap: 0;
             margin-bottom: 20px;
-        }
-
-        .scenarios-container.cols-1 {
-            grid-template-columns: 2fr 1fr;
-        }
-
-        .scenarios-container.cols-1 .scenario-card:first-child {
-            grid-column: 1;
-        }
-
-        .scenarios-container.cols-2 {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .scenarios-container.cols-3 {
-            grid-template-columns: repeat(3, 1fr);
-        }
-
-        .scenarios-container.cols-4 {
-            grid-template-columns: repeat(4, 1fr);
+            align-items: flex-start;
         }
 
         .scenario-card {
             background: white;
-            border-radius: 12px;
             padding: 30px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .scenario-control-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #4a5568;
+            background: white;
+            color: #4a5568;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .scenario-control-btn:hover {
+            background: #4a5568;
+            color: white;
+            border-color: #2d3748;
+        }
+
+        .scenario-control-btn.hidden {
+            display: none;
+        }
+
+        .scenario-card:first-child {
+            border-radius: 12px 0 0 12px;
+            min-width: 500px;
+        }
+
+        .scenario-card:not(:first-child) {
+            border-radius: 0;
+            width: 340px;
+            padding: 30px 15px;
+        }
+
+        .scenario-card:last-child:not(:first-child) {
+            border-radius: 0 12px 12px 0;
+        }
+
+        .scenario-card:only-child {
+            border-radius: 12px;
+        }
+
+        .scenario-card.hidden {
+            display: none;
+        }
+
+        /* CRITICAL: Fixed heights for vertical alignment */
+        .residency-section {
+            height: 53px; /* Radio buttons + margins */
+            margin-bottom: 20px;
         }
 
         .scenario-header {
@@ -164,52 +165,39 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #e2e8f0;
             font-weight: 600;
+            text-align: center;
+            height: 48px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        /* Compact scenario styling - hide labels */
+        .compact-scenario .residency-section {
+            visibility: hidden;
+            height: 53px; /* Maintain exact height */
+        }
+        
+        .compact-scenario .scenario-header {
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .form-group.additional-factors-header {
-            margin-bottom: 8px;
+        .compact-scenario .form-group label,
+        .compact-scenario .form-group-inline > label:first-child {
+            display: none !important;
         }
 
-        .form-group.sapto-section {
-            margin-top: 10px;
-        }
-
-        .form-group.dividend-section {
-            margin-bottom: 8px;
-            margin-top: -8px;
-        }
-
-        .dividend-inputs {
-            margin-bottom: 12px;
-        }
-
-        .dividend-inputs.hidden {
-            display: none;
-        }
-
-        .form-group-inline.dividend-indented {
-            padding-left: 30px;
-        }
-
-        #totalAssessableDividend1,
-        #totalAssessableDividend2,
-        #totalAssessableDividend3,
-        #totalAssessableDividend4 {
-            background: #f7fafc;
-            color: #4a5568;
-            font-weight: 600;
-        }
-
+        /* All input rows must have consistent height */
         .form-group-inline {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 6px 0;
             border-bottom: 1px solid #e2e8f0;
+            min-height: 50px;
+        }
+
+        .compact-scenario .form-group-inline {
+            justify-content: flex-end;
         }
 
         .form-group-inline.no-border {
@@ -221,28 +209,68 @@
             padding-top: 3px;
         }
 
-        .form-group-inline .checkbox-option {
+        /* Checkbox sections - fixed height */
+        .checkbox-section {
+            min-height: 40px;
+            margin-bottom: 8px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .compact-scenario .checkbox-section {
+            justify-content: flex-end;
+        }
+
+        .checkbox-option {
             display: flex;
             align-items: center;
             gap: 8px;
+            line-height: 1;
         }
 
-        .form-group-inline label {
-            color: #4a5568;
-            font-weight: 500;
-            font-size: 0.95em;
-            margin: 0;
+        .compact-scenario .checkbox-option label {
+            display: none !important;
+        }
+
+        /* Dividend inputs - maintain space even when hidden */
+        .dividend-inputs {
+            margin-bottom: 12px;
+            min-height: 0;
+            overflow: hidden;
+            transition: min-height 0.3s;
+        }
+
+        .dividend-inputs.hidden {
+            display: none;
+        }
+
+        .dividend-inputs .form-group-inline {
+            min-height: 50px;
+        }
+
+        .compact-scenario .dividend-inputs .form-group-inline {
+            justify-content: flex-end;
+        }
+
+        .compact-scenario .dividend-inputs .form-group-inline label {
+            display: none !important;
+        }
+
+        /* Additional factors header */
+        .additional-factors-header {
+            margin-bottom: 8px;
+            margin-top: 8px;
+            min-height: 35px;
+        }
+
+        .compact-scenario .additional-factors-header label {
+            display: none !important;
         }
 
         .input-with-currency {
             position: relative;
             width: 200px;
-            max-width: 150px;
-        }
-
-        .scenarios-container.cols-3 .input-with-currency,
-        .scenarios-container.cols-4 .input-with-currency {
-            width: 150px;
         }
 
         .input-with-currency::before {
@@ -261,7 +289,6 @@
         .form-group-inline input[type="number"],
         .form-group-inline input[type="text"] {
             width: 200px;
-            max-width: 576px;
             padding: 8px 12px 8px 28px;
             border: 2px solid #e2e8f0;
             border-radius: 6px;
@@ -270,13 +297,6 @@
             font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
             font-weight: 600;
             color: #2d3748;
-        }
-
-        .scenarios-container.cols-3 .form-group-inline input[type="number"],
-        .scenarios-container.cols-3 .form-group-inline input[type="text"],
-        .scenarios-container.cols-4 .form-group-inline input[type="number"],
-        .scenarios-container.cols-4 .form-group-inline input[type="text"] {
-            width: 150px;
         }
 
         .input-with-currency input[type="number"],
@@ -319,6 +339,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            line-height: 1;
         }
 
         input[type="radio"] {
@@ -326,18 +347,7 @@
             height: 18px;
             cursor: pointer;
             accent-color: #2d3748;
-        }
-
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .checkbox-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-shrink: 0;
         }
 
         input[type="checkbox"] {
@@ -345,11 +355,29 @@
             height: 18px;
             cursor: pointer;
             accent-color: #2d3748;
+            flex-shrink: 0;
+        }
+
+        .checkbox-option label,
+        .radio-option label {
+            display: inline;
+            margin-bottom: 0;
+            cursor: pointer;
+            line-height: 1.2;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            min-height: 52px;
         }
 
         .btn {
-            width: 100%;
-            padding: 14px;
+            flex: 1;
+            height: 52px;
+            padding: 0 14px;
             background: #2d3748;
             color: white;
             border: none;
@@ -358,44 +386,34 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
-            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn:hover {
             background: #1a202c;
         }
 
-        .btn-secondary {
-            background: #4a5568;
-            padding: 10px 20px;
-            width: auto;
-            font-size: 0.9em;
+        .clear-btn {
+            flex: 1;
+            height: 52px;
+            padding: 0 14px;
+            background: #cbd5e0;
+            color: #4a5568;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .btn-secondary:hover {
-            background: #2d3748;
-        }
-
-        .btn-tertiary {
-            background: #718096;
-            padding: 10px 20px;
-            width: auto;
-            font-size: 0.9em;
-        }
-
-        .btn-tertiary:hover {
-            background: #4a5568;
-        }
-
-        .btn-quaternary {
+        .clear-btn:hover {
             background: #a0aec0;
-            padding: 10px 20px;
-            width: auto;
-            font-size: 0.9em;
-        }
-
-        .btn-quaternary:hover {
-            background: #718096;
         }
 
         .btn-info {
@@ -403,6 +421,12 @@
             padding: 14px 24px;
             width: 100%;
             font-size: 1em;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
         }
 
         .btn-info:hover {
@@ -416,17 +440,14 @@
             border-radius: 8px;
         }
 
-        .results h3 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
         .result-row {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #e2e8f0;
+            line-height: 1.5;
+            min-height: 41px;
+            align-items: center;
         }
 
         .result-row:last-child {
@@ -435,12 +456,28 @@
 
         .result-label {
             color: #4a5568;
+            line-height: 1.5;
         }
 
         .result-value {
             font-weight: 600;
             color: #2d3748;
             font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            line-height: 1.5;
+            text-align: right;
+        }
+
+        .compact-scenario .result-row {
+            justify-content: flex-end;
+        }
+
+        .compact-scenario .result-label {
+            display: none !important;
+        }
+
+        .compact-scenario .result-value {
+            width: 200px;
+            text-align: right;
         }
 
         .result-row.refund .result-label,
@@ -460,11 +497,22 @@
         .result-highlight .result-label {
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.1em;
+            line-height: 1.5;
         }
 
         .result-highlight .result-value {
             color: white;
             font-size: 1.3em;
+            line-height: 1.5;
+        }
+
+        .compact-scenario .result-highlight .result-row {
+            justify-content: flex-end;
+        }
+
+        .compact-scenario .result-highlight .result-value {
+            width: 200px;
+            text-align: right;
         }
 
         .hidden {
@@ -526,61 +574,27 @@
             color: #2d3748;
         }
 
-        @media (max-width: 1400px) {
-            .scenarios-container.cols-4 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 1200px) {
-            .scenarios-container.cols-3 {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
         @media (max-width: 768px) {
-            .scenarios-container.cols-1,
-            .scenarios-container.cols-2,
-            .scenarios-container.cols-3,
-            .scenarios-container.cols-4 {
-                grid-template-columns: 1fr;
+            .scenarios-container {
+                flex-direction: column;
             }
 
-            .scenarios-container.cols-1 .scenario-card:first-child {
-                grid-column: 1;
+            .scenario-card {
+                width: 100% !important;
+                min-width: 0 !important;
+                border-radius: 12px !important;
+                margin-bottom: 20px;
             }
 
             h1 {
                 font-size: 2em;
             }
 
-            .year-buttons,
-            .comparison-controls {
+            .year-buttons {
                 flex-direction: column;
             }
 
             .year-btn {
-                width: 100%;
-            }
-
-            .btn-secondary,
-            .btn-tertiary,
-            .btn-quaternary {
-                width: 100%;
-            }
-
-            .form-group-inline {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            .input-with-currency {
-                width: 100%;
-            }
-
-            .form-group-inline input[type="number"],
-            .form-group-inline input[type="text"] {
                 width: 100%;
             }
         }
@@ -589,7 +603,7 @@
 <body>
     <div class="container">
         <h1>Australian Tax Calculator</h1>
-        <p class="subtitle">Compare Tax Accross Financial Years & Scenarios</p>
+        <p class="subtitle">Compare Tax Across Financial Years & Scenarios</p>
 
         <div class="year-selector">
             <h3>Select Financial Year</h3>
@@ -607,18 +621,6 @@
 
         <div id="infoPanel" class="info-panel">
             <div id="taxRatesInfo"></div>
-        </div>
-
-        <div class="comparison-controls">
-            <button class="btn btn-secondary" onclick="toggleScenario(2)" id="toggleBtn2">
-                <span id="toggleText2">+ Add Scenario 2</span>
-            </button>
-            <button class="btn btn-tertiary hidden" onclick="toggleScenario(3)" id="toggleBtn3">
-                <span id="toggleText3">+ Add Scenario 3</span>
-            </button>
-            <button class="btn btn-quaternary hidden" onclick="toggleScenario(4)" id="toggleBtn4">
-                <span id="toggleText4">+ Add Scenario 4</span>
-            </button>
         </div>
 
         <div id="scenariosContainer" class="scenarios-container">
@@ -641,18 +643,15 @@
     }
 
     function formatNumberInput(input) {
-        // Remove non-digit characters except for cursor position tracking
         let value = input.value.replace(/,/g, '');
         if (value === '' || isNaN(value)) {
             input.value = '';
             return;
         }
-        // Format with commas
         input.value = parseInt(value).toLocaleString('en-US');
     }
 
     function getNumericValue(input) {
-        // Get the raw numeric value without commas
         return parseFloat(input.value.replace(/,/g, '')) || 0;
     }
 
@@ -740,52 +739,27 @@
     };
 
     function createScenarioHTML(num) {
-        return `
-            <div id="scenario${num}" class="scenario-card ${num > 1 ? 'hidden' : ''}">
-                <h2 class="scenario-header">Scenario ${num}</h2>
-                
-                <div class="form-group-inline">
-                    <label for="income${num}">Annual Income</label>
-                    <div class="input-with-currency">
-                        <input type="text" id="income${num}" value="" 
-                               onblur="formatNumberInput(this)" placeholder="0">
-                    </div>
-                </div>
-
-                <div class="form-group dividend-section">
+        const compactClass = num > 1 ? ' compact-scenario' : '';
+        const dividendCheckbox = num === 1 ? `
+                <div class="checkbox-section">
                     <div class="checkbox-option">
-                        <input type="checkbox" id="dividend${num}" onchange="toggleDividend(${num})">
-                        <label for="dividend${num}">Dividend Income</label>
+                        <input type="checkbox" id="dividend1" onchange="toggleDividendAll()">
+                        <label for="dividend1">Dividend Income</label>
                     </div>
-                </div>
-
-                <div id="dividendInputs${num}" class="dividend-inputs hidden">
-                    <div class="form-group-inline dividend-indented">
-                        <label for="dividendAmount${num}">Dividend</label>
-                        <div class="input-with-currency">
-                            <input type="text" id="dividendAmount${num}" value="" 
-                                   onblur="formatNumberInput(this); calculateDividend(${num})" placeholder="0">
-                        </div>
-                    </div>
-
-                    <div class="form-group-inline dividend-indented">
-                        <label for="frankingCredit${num}">Franking Credit</label>
-                        <div class="input-with-currency">
-                            <input type="text" id="frankingCredit${num}" value="" 
-                                   onblur="formatNumberInput(this); calculateDividend(${num})" placeholder="0">
-                        </div>
-                    </div>
-
-                    <div class="form-group-inline">
-                        <label for="totalAssessableDividend${num}">Total Assessable Dividend</label>
-                        <div class="input-with-currency">
-                            <input type="text" id="totalAssessableDividend${num}" value="0" 
-                                   readonly disabled>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
+                </div>` : `<div class="checkbox-section" style="visibility: hidden; height: 40px;"></div>`;
+        
+        // Add button based on scenario number
+        let controlButton = '';
+        if (num === 1) {
+            controlButton = `<button class="scenario-control-btn" id="addScenarioBtn" onclick="addNextScenario()">+</button>`;
+        } else {
+            controlButton = `<button class="scenario-control-btn" onclick="removeScenario(${num})">−</button>`;
+        }
+        
+        return `
+            <div id="scenario${num}" class="scenario-card${compactClass} ${num > 1 ? 'hidden' : ''}">
+                ${controlButton}
+                <div class="residency-section">
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" id="resident${num}" name="resident${num}" value="resident" checked>
@@ -798,111 +772,156 @@
                     </div>
                 </div>
 
-                <div class="form-group additional-factors-header">
-                    <label>Additional Factors</label>
-                </div>
-
-                <div class="form-group-inline no-border">
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="help${num}" onchange="toggleHelpDebt(${num})">
-                        <label for="help${num}">I have a HELP/HECS debt</label>
-                    </div>
-                    <div class="input-with-currency disabled">
-                        <input type="text" id="helpDebt${num}" value="" 
-                               onblur="formatNumberInput(this)" placeholder="0" disabled>
-                    </div>
-                </div>
-
-                <div class="form-group-inline no-border">
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="paygWithholding${num}" onchange="togglePaygWithholding(${num})">
-                        <label for="paygWithholding${num}">PAYG Withholding</label>
-                    </div>
-                    <div class="input-with-currency disabled">
-                        <input type="text" id="paygWithholdingAmount${num}" value="" 
-                               onblur="formatNumberInput(this)" placeholder="0" disabled>
-                    </div>
-                </div>
-
+                <h2 class="scenario-header">Scenario ${num}</h2>
+                
                 <div class="form-group-inline">
-                    <div class="checkbox-option">
-                        <input type="checkbox" id="payg${num}" onchange="togglePayg(${num})">
-                        <label for="payg${num}">PAYG Instalments</label>
-                    </div>
-                    <div class="input-with-currency disabled">
-                        <input type="text" id="paygAmount${num}" value="" 
-                               onblur="formatNumberInput(this)" placeholder="0" disabled>
+                    <label for="income${num}">Annual Income</label>
+                    <div class="input-with-currency">
+                        <input type="text" id="income${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
                     </div>
                 </div>
 
-                <div class="form-group sapto-section">
-                    <div class="checkbox-group">
-                        <div class="checkbox-option">
-                            <input type="checkbox" id="sapto${num}">
-                            <label for="sapto${num}">I'm eligible for SAPTO (seniors/pensioners)</label>
+                ${dividendCheckbox}
+
+                <div id="dividendInputs${num}" class="dividend-inputs hidden">
+                    <div class="form-group-inline">
+                        <label for="dividendAmount${num}">Dividend Amount</label>
+                        <div class="input-with-currency">
+                            <input type="text" id="dividendAmount${num}" value="" 
+                                   oninput="calculateDividend(${num})" 
+                                   onblur="formatNumberInput(this)" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="frankingCredit${num}">Franking Credit</label>
+                        <div class="input-with-currency">
+                            <input type="text" id="frankingCredit${num}" value="" 
+                                   oninput="calculateDividend(${num})" 
+                                   onblur="formatNumberInput(this)" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="form-group-inline">
+                        <label for="totalAssessableDividend${num}">Total Assessable Dividend</label>
+                        <div class="input-with-currency">
+                            <input type="text" id="totalAssessableDividend${num}" value="0" disabled>
                         </div>
                     </div>
                 </div>
 
+                <div class="form-group-inline">
+                    <label for="deductionsAmount${num}">Deductions</label>
+                    <div class="input-with-currency">
+                        <input type="text" id="deductionsAmount${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group-inline">
+                    <label for="superannuationAmount${num}">Concessional Super Contributions</label>
+                    <div class="input-with-currency">
+                        <input type="text" id="superannuationAmount${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="additional-factors-header">
+                    <label><strong>Additional Factors</strong></label>
+                </div>
+
+                <div class="form-group-inline">
+                    <label for="helpDebt${num}">HELP/HECS Debt</label>
+                    <div class="input-with-currency">
+                        <input type="text" id="helpDebt${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group-inline no-border">
+                    <label for="paygWithholdingAmount${num}">PAYG Withholding</label>
+                    <div class="input-with-currency">
+                        <input type="text" id="paygWithholdingAmount${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group-inline">
+                    <label for="paygAmount${num}">PAYG Instalments</label>
+                    <div class="input-with-currency">
+                        <input type="text" id="paygAmount${num}" value="" 
+                               onblur="formatNumberInput(this)" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="checkbox-section">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="sapto${num}">
+                        <label for="sapto${num}">I'm eligible for SAPTO (seniors/pensioners)</label>
+                    </div>
+                </div>
+
                 <div class="button-group">
-                    <button class="btn" onclick="calculateTax(${num})">Calculate Tax</button>
-                    <button class="clear-btn" onclick="clearScenario(${num})">🗑️ Clear</button>
+                    <button class="btn" onclick="calculateTax(${num})">Calculate</button>
+                    <button class="clear-btn" onclick="clearScenario(${num})">Clear</button>
                 </div>
 
                 <div class="results">
-                    <h3>Tax Breakdown</h3>
                     <div class="result-row">
-                        <span class="result-label">Gross Income:</span>
+                        <span class="result-label" style="font-weight: bold;"><strong>TAXABLE INCOME</strong></span>
                         <span class="result-value" id="baseIncome${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">Income Tax:</span>
+                        <span class="result-label">Income Tax</span>
                         <span class="result-value" id="taxOnIncome${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">Medicare Levy:</span>
+                        <span class="result-label">Medicare Levy</span>
                         <span class="result-value" id="medicareLevy${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">HELP/HECS Repayment:</span>
+                        <span class="result-label">HELP/HECS Repayment</span>
                         <span class="result-value" id="helpRepayment${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">LITO (Low Income Offset):</span>
+                        <span class="result-label">LITO (Low Income Offset)</span>
                         <span class="result-value" id="lito${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">SAPTO Offset:</span>
+                        <span class="result-label">SAPTO Offset</span>
                         <span class="result-value" id="sapto${num}Amount">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">Franking Credit:</span>
+                        <span class="result-label" style="font-weight: bold;"><strong>TOTAL TAX PAYABLE</strong></span>
+                        <span class="result-value" id="totalTaxPayable${num}">$0</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Franking Credit</span>
                         <span class="result-value" id="frankingCreditOffset${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">PAYG Withholding Paid:</span>
+                        <span class="result-label">PAYG Withholding Paid</span>
                         <span class="result-value" id="paygWithholdingPaid${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label">PAYG Instalments Paid:</span>
+                        <span class="result-label">PAYG Instalments Paid</span>
                         <span class="result-value" id="paygPaid${num}">$0</span>
                     </div>
                     <div class="result-row" id="totalTaxRow${num}">
-                        <span class="result-label" id="totalTaxLabel${num}">Total Tax:</span>
+                        <span class="result-label" id="totalTaxLabel${num}" style="font-weight: bold;"><strong>TOTAL TAX</strong></span>
                         <span class="result-value" id="totalTax${num}">$0</span>
                     </div>
                     
                     <div class="result-highlight">
                         <div class="result-row">
-                            <span class="result-label">Net Annual Income:</span>
+                            <span class="result-label">Net Annual Income</span>
                             <span class="result-value" id="netAnnual${num}">$0</span>
                         </div>
                         <div class="result-row">
-                            <span class="result-label">Net Monthly Income:</span>
+                            <span class="result-label">Net Monthly Income</span>
                             <span class="result-value" id="netMonthly${num}">$0</span>
                         </div>
                         <div class="result-row">
-                            <span class="result-label">Net Weekly Income:</span>
+                            <span class="result-label">Net Weekly Income</span>
                             <span class="result-value" id="netWeekly${num}">$0</span>
                         </div>
                     </div>
@@ -911,60 +930,26 @@
         `;
     }
 
-    function toggleHelpDebt(num) {
-        const checkbox = document.getElementById('help' + num);
-        const debtInput = document.getElementById('helpDebt' + num);
-        const wrapper = debtInput.parentElement;
+    function toggleDividendAll() {
+        const checkbox = document.getElementById('dividend1');
         
-        if (checkbox.checked) {
-            debtInput.disabled = false;
-            wrapper.classList.remove('disabled');
-            if (!debtInput.value) {
-                debtInput.value = '0';
+        // Toggle dividend inputs for all scenarios (1-4)
+        for (let num = 1; num <= 4; num++) {
+            const dividendInputs = document.getElementById('dividendInputs' + num);
+            
+            if (checkbox.checked) {
+                dividendInputs.classList.remove('hidden');
+                const dividendAmount = document.getElementById('dividendAmount' + num);
+                const frankingCredit = document.getElementById('frankingCredit' + num);
+                if (!dividendAmount.value) dividendAmount.value = '0';
+                if (!frankingCredit.value) frankingCredit.value = '0';
+                calculateDividend(num);
+            } else {
+                dividendInputs.classList.add('hidden');
+                document.getElementById('dividendAmount' + num).value = '';
+                document.getElementById('frankingCredit' + num).value = '';
+                document.getElementById('totalAssessableDividend' + num).value = '0';
             }
-        } else {
-            debtInput.disabled = true;
-            wrapper.classList.add('disabled');
-            debtInput.value = '';
-        }
-    }
-
-    function togglePayg(num) {
-        const checkbox = document.getElementById('payg' + num);
-        const paygInput = document.getElementById('paygAmount' + num);
-        const wrapper = paygInput.parentElement;
-        
-        if (checkbox.checked) {
-            paygInput.disabled = false;
-            wrapper.classList.remove('disabled');
-            if (!paygInput.value) {
-                paygInput.value = '0';
-            }
-        } else {
-            paygInput.disabled = true;
-            wrapper.classList.add('disabled');
-            paygInput.value = '';
-        }
-    }
-
-    function toggleDividend(num) {
-        const checkbox = document.getElementById('dividend' + num);
-        const dividendInputs = document.getElementById('dividendInputs' + num);
-        
-        if (checkbox.checked) {
-            dividendInputs.classList.remove('hidden');
-            // Set default values
-            const dividendAmount = document.getElementById('dividendAmount' + num);
-            const frankingCredit = document.getElementById('frankingCredit' + num);
-            if (!dividendAmount.value) dividendAmount.value = '0';
-            if (!frankingCredit.value) frankingCredit.value = '0';
-            calculateDividend(num);
-        } else {
-            dividendInputs.classList.add('hidden');
-            // Clear values
-            document.getElementById('dividendAmount' + num).value = '';
-            document.getElementById('frankingCredit' + num).value = '';
-            document.getElementById('totalAssessableDividend' + num).value = '0';
         }
     }
 
@@ -977,75 +962,72 @@
         totalField.value = total.toLocaleString('en-US');
     }
 
-    function togglePaygWithholding(num) {
-        const checkbox = document.getElementById('paygWithholding' + num);
-        const withholdingInput = document.getElementById('paygWithholdingAmount' + num);
-        const wrapper = withholdingInput.parentElement;
-        
-        if (checkbox.checked) {
-            withholdingInput.disabled = false;
-            wrapper.classList.remove('disabled');
-            if (!withholdingInput.value) {
-                withholdingInput.value = '0';
+    function addNextScenario() {
+        // Find the first hidden scenario to add
+        for (let num = 2; num <= 4; num++) {
+            if (!visibleScenarios.includes(num)) {
+                const card = document.getElementById('scenario' + num);
+                card.classList.remove('hidden');
+                visibleScenarios.push(num);
+                visibleScenarios.sort((a, b) => a - b);
+                
+                // Hide the + button if all scenarios are visible
+                if (visibleScenarios.length === 4) {
+                    document.getElementById('addScenarioBtn').classList.add('hidden');
+                }
+                
+                return;
             }
-        } else {
-            withholdingInput.disabled = true;
-            wrapper.classList.add('disabled');
-            withholdingInput.value = '';
         }
+    }
+
+    function removeScenario(num) {
+        const card = document.getElementById('scenario' + num);
+        card.classList.add('hidden');
+        visibleScenarios = visibleScenarios.filter(s => s !== num);
+        
+        // Show the + button since we now have space for more scenarios
+        document.getElementById('addScenarioBtn').classList.remove('hidden');
     }
 
     function selectYear(year) {
         selectedYear = year;
+        
         document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('btn-' + year).classList.add('active');
         
-        if (document.getElementById('infoPanel').classList.contains('active')) {
-            updateInfoPanel();
-        }
+        visibleScenarios.forEach(s => computeScenario(s));
     }
 
     function toggleScenario(num) {
-        const scenario = document.getElementById('scenario' + num);
+        const card = document.getElementById('scenario' + num);
         const button = document.getElementById('toggleBtn' + num);
         const text = document.getElementById('toggleText' + num);
         
-        if (scenario.classList.contains('hidden')) {
-            scenario.classList.remove('hidden');
-            visibleScenarios.push(num);
-            text.textContent = '− Remove Scenario ' + num;
-            
-            if (num < 4) {
-                document.getElementById('toggleBtn' + (num + 1)).classList.remove('hidden');
-            }
-        } else {
-            scenario.classList.add('hidden');
+        if (visibleScenarios.includes(num)) {
+            card.classList.add('hidden');
             visibleScenarios = visibleScenarios.filter(s => s !== num);
             text.textContent = '+ Add Scenario ' + num;
             
-            if (num < 4) {
-                const nextScenario = document.getElementById('scenario' + (num + 1));
-                if (nextScenario.classList.contains('hidden')) {
-                    document.getElementById('toggleBtn' + (num + 1)).classList.add('hidden');
-                }
+            if (num === 2) {
+                document.getElementById('toggleBtn3').classList.add('hidden');
+                document.getElementById('toggleBtn4').classList.add('hidden');
             }
-        }
-        
-        updateGridLayout();
-    }
-
-    function updateGridLayout() {
-        const container = document.getElementById('scenariosContainer');
-        container.className = 'scenarios-container';
-        
-        if (visibleScenarios.length === 1) {
-            container.classList.add('cols-1');
-        } else if (visibleScenarios.length === 2) {
-            container.classList.add('cols-2');
-        } else if (visibleScenarios.length === 3) {
-            container.classList.add('cols-3');
-        } else if (visibleScenarios.length === 4) {
-            container.classList.add('cols-4');
+            if (num === 3) {
+                document.getElementById('toggleBtn4').classList.add('hidden');
+            }
+        } else {
+            card.classList.remove('hidden');
+            visibleScenarios.push(num);
+            visibleScenarios.sort((a, b) => a - b);
+            text.textContent = '- Remove Scenario ' + num;
+            
+            if (num === 2 && !visibleScenarios.includes(3)) {
+                document.getElementById('toggleBtn3').classList.remove('hidden');
+            }
+            if (num === 3 && !visibleScenarios.includes(4)) {
+                document.getElementById('toggleBtn4').classList.remove('hidden');
+            }
         }
     }
 
@@ -1053,16 +1035,19 @@
         const config = taxConfig[selectedYear];
         const rates = isResident ? config.rates : config.nonResRates;
         
-        income = Math.max(0, income);
+        if (income <= 0) return 0;
         
+        let tax = 0;
         for (let i = 0; i < rates.length; i++) {
             if (income <= rates[i].limit) {
-                const prevLimit = i > 0 ? rates[i-1].limit : 0;
-                return rates[i].base + (income - prevLimit) * rates[i].rate;
+                const prevLimit = i === 0 ? 0 : rates[i - 1].limit;
+                const taxableInThisBracket = income - prevLimit;
+                tax = rates[i].base + (taxableInThisBracket * rates[i].rate);
+                break;
             }
         }
         
-        return 0;
+        return Math.max(0, tax);
     }
 
     function calculateMedicareLevy(income, isResident) {
@@ -1070,64 +1055,65 @@
         
         const config = taxConfig[selectedYear];
         const threshold = config.medicareThreshold;
-        const phaseOutEnd = threshold * 1.25;
         
         if (income <= threshold) return 0;
-        if (income <= phaseOutEnd) return (income - threshold) * 0.10;
+        
+        const shadeOutEnd = threshold * 1.1;
+        if (income <= shadeOutEnd) {
+            return Math.min(income * 0.02, (income - threshold) * 0.1);
+        }
+        
         return income * 0.02;
     }
 
-    function calculateHelpRepayment(income, debtBalance) {
+    function calculateHelpRepayment(income, debt) {
+        if (debt <= 0) return 0;
+        
         const config = taxConfig[selectedYear];
         
-        if (income <= config.helpThreshold || debtBalance <= 0) return 0;
+        if (income < config.helpThreshold) return 0;
         
-        let calculatedRepayment = 0;
+        let repayment = 0;
         
         if (config.helpRates === 'marginal') {
-            if (income <= 125000) calculatedRepayment = 0.15 * (income - 67000);
-            else if (income <= 179285) calculatedRepayment = 8700 + 0.17 * (income - 125000);
-            else calculatedRepayment = income * 0.10;
+            if (income <= 125000) {
+                repayment = (income - config.helpThreshold) * 0.15;
+            } else if (income <= 179285) {
+                repayment = 8700 + (income - 125000) * 0.17;
+            } else {
+                repayment = income * 0.10;
+            }
         } else {
-            if (selectedYear === '2023') {
-                if (income <= 51550) calculatedRepayment = income * 0.01;
-                else if (income <= 57730) calculatedRepayment = income * 0.02;
-                else if (income <= 64307) calculatedRepayment = income * 0.025;
-                else if (income <= 70882) calculatedRepayment = income * 0.03;
-                else if (income <= 77494) calculatedRepayment = income * 0.035;
-                else if (income <= 84069) calculatedRepayment = income * 0.04;
-                else if (income <= 90521) calculatedRepayment = income * 0.045;
-                else if (income <= 97377) calculatedRepayment = income * 0.05;
-                else if (income <= 103765) calculatedRepayment = income * 0.055;
-                else if (income <= 110139) calculatedRepayment = income * 0.06;
-                else if (income <= 116837) calculatedRepayment = income * 0.065;
-                else if (income <= 124242) calculatedRepayment = income * 0.07;
-                else if (income <= 131989) calculatedRepayment = income * 0.075;
-                else if (income <= 151200) calculatedRepayment = income * 0.08;
-                else calculatedRepayment = income * 0.10;
-            } else if (selectedYear === '2024' || selectedYear === '2025') {
-                if (income <= 54435) calculatedRepayment = income * 0.01;
-                else if (income <= 62851) calculatedRepayment = income * 0.02;
-                else if (income <= 66621) calculatedRepayment = income * 0.025;
-                else if (income <= 70619) calculatedRepayment = income * 0.03;
-                else if (income <= 74855) calculatedRepayment = income * 0.035;
-                else if (income <= 79346) calculatedRepayment = income * 0.04;
-                else if (income <= 84107) calculatedRepayment = income * 0.045;
-                else if (income <= 89154) calculatedRepayment = income * 0.05;
-                else if (income <= 94504) calculatedRepayment = income * 0.055;
-                else if (income <= 100168) calculatedRepayment = income * 0.06;
-                else if (income <= 106163) calculatedRepayment = income * 0.065;
-                else if (income <= 112507) calculatedRepayment = income * 0.07;
-                else if (income <= 119220) calculatedRepayment = income * 0.075;
-                else if (income <= 126319) calculatedRepayment = income * 0.08;
-                else if (income <= 133808) calculatedRepayment = income * 0.085;
-                else if (income <= 141808) calculatedRepayment = income * 0.09;
-                else if (income <= 150421) calculatedRepayment = income * 0.095;
-                else calculatedRepayment = income * 0.10;
+            const rates = [
+                { threshold: 54435, rate: 0.01 },
+                { threshold: 62851, rate: 0.02 },
+                { threshold: 66621, rate: 0.025 },
+                { threshold: 70619, rate: 0.03 },
+                { threshold: 74856, rate: 0.035 },
+                { threshold: 79347, rate: 0.04 },
+                { threshold: 84108, rate: 0.045 },
+                { threshold: 89155, rate: 0.05 },
+                { threshold: 94504, rate: 0.055 },
+                { threshold: 100175, rate: 0.06 },
+                { threshold: 106186, rate: 0.065 },
+                { threshold: 112556, rate: 0.07 },
+                { threshold: 119309, rate: 0.075 },
+                { threshold: 126468, rate: 0.08 },
+                { threshold: 134062, rate: 0.085 },
+                { threshold: 142117, rate: 0.09 },
+                { threshold: 150664, rate: 0.095 },
+                { threshold: Infinity, rate: 0.10 }
+            ];
+            
+            for (let i = 0; i < rates.length; i++) {
+                if (income <= rates[i].threshold) {
+                    repayment = income * rates[i].rate;
+                    break;
+                }
             }
         }
         
-        return Math.min(calculatedRepayment, debtBalance);
+        return Math.min(repayment, debt);
     }
 
     function calculateLITO(income, isResident) {
@@ -1136,9 +1122,15 @@
         const config = taxConfig[selectedYear];
         const lito = config.lito;
         
-        if (income <= lito.threshold1) return lito.max;
-        if (income <= lito.threshold2) return lito.max - ((income - lito.threshold1) * 0.05);
-        if (income <= lito.threshold3) return 325 - ((income - lito.threshold2) * 0.015);
+        if (income <= lito.threshold1) {
+            return lito.max;
+        } else if (income <= lito.threshold2) {
+            return lito.max;
+        } else if (income <= lito.threshold3) {
+            const reduction = (income - lito.threshold2) * 0.05;
+            return Math.max(0, lito.max - reduction);
+        }
+        
         return 0;
     }
 
@@ -1147,40 +1139,48 @@
         
         const config = taxConfig[selectedYear];
         const sapto = config.sapto;
-        const phaseOutRate = 0.125;
         
-        if (income <= sapto.threshold) return sapto.max;
-        const reduction = (income - sapto.threshold) * phaseOutRate;
-        return Math.max(0, sapto.max - reduction);
+        if (income <= sapto.threshold) {
+            return sapto.max;
+        } else if (income < sapto.cutout) {
+            const reduction = (income - sapto.threshold) * 0.125;
+            return Math.max(0, sapto.max - reduction);
+        }
+        
+        return 0;
     }
 
     function computeScenario(scenario) {
         const incomeEl = document.getElementById('income' + scenario);
         const baseIncome = getNumericValue(incomeEl);
         
-        // Get dividend income
-        const hasDividend = document.getElementById('dividend' + scenario).checked;
-        const totalAssessableDividendEl = document.getElementById('totalAssessableDividend' + scenario);
-        const totalAssessableDividend = hasDividend ? getNumericValue(totalAssessableDividendEl) : 0;
+        const dividendAmountEl = document.getElementById('dividendAmount' + scenario);
         const frankingCreditEl = document.getElementById('frankingCredit' + scenario);
-        const frankingCredit = hasDividend ? getNumericValue(frankingCreditEl) : 0;
+        const totalAssessableDividendEl = document.getElementById('totalAssessableDividend' + scenario);
         
-        // Total income includes base income + total assessable dividend
-        const income = baseIncome + totalAssessableDividend;
+        const dividendAmount = getNumericValue(dividendAmountEl);
+        const frankingCredit = getNumericValue(frankingCreditEl);
+        const totalAssessableDividend = getNumericValue(totalAssessableDividendEl);
+        
+        const deductionsEl = document.getElementById('deductionsAmount' + scenario);
+        const deductions = getNumericValue(deductionsEl);
+        
+        const superannuationEl = document.getElementById('superannuationAmount' + scenario);
+        const superannuation = getNumericValue(superannuationEl);
+        
+        const income = baseIncome + totalAssessableDividend - deductions - superannuation;
 
         const isResident = document.querySelector(`input[name="resident${scenario}"]:checked`).value === 'resident';
-        const hasHelp = document.getElementById('help' + scenario).checked;
         const helpDebtEl = document.getElementById('helpDebt' + scenario);
-        const helpDebt = hasHelp ? getNumericValue(helpDebtEl) : 0;
+        const helpDebt = getNumericValue(helpDebtEl);
+        const hasHelp = helpDebt > 0;
         const hasSapto = document.getElementById('sapto' + scenario).checked;
         
-        const hasPaygWithholding = document.getElementById('paygWithholding' + scenario).checked;
         const paygWithholdingEl = document.getElementById('paygWithholdingAmount' + scenario);
-        const paygWithholdingAmount = hasPaygWithholding ? getNumericValue(paygWithholdingEl) : 0;
+        const paygWithholdingAmount = getNumericValue(paygWithholdingEl);
         
-        const hasPayg = document.getElementById('payg' + scenario).checked;
         const paygEl = document.getElementById('paygAmount' + scenario);
-        const paygAmount = hasPayg ? getNumericValue(paygEl) : 0;
+        const paygAmount = getNumericValue(paygEl);
 
         const incomeTax = calculateIncomeTax(income, isResident);
         const medicareLevy = calculateMedicareLevy(income, isResident);
@@ -1191,17 +1191,17 @@
         const totalOffsets = lito + sapto;
         const taxAfterOffsets = Math.max(0, incomeTax - totalOffsets);
 
-        const totalTax = taxAfterOffsets + medicareLevy + helpRepayment - frankingCredit - paygWithholdingAmount - paygAmount;
+        const totalTaxPayable = taxAfterOffsets + medicareLevy + helpRepayment;
+        const totalTax = totalTaxPayable - frankingCredit - paygWithholdingAmount - paygAmount;
         const netIncome = income - totalTax;
         
-        // Update Total Tax label and styling based on whether it's negative (refund)
         const totalTaxLabel = document.getElementById('totalTaxLabel' + scenario);
         const totalTaxRow = document.getElementById('totalTaxRow' + scenario);
         if (totalTax < 0) {
-            totalTaxLabel.textContent = 'Total Tax (Refund):';
+            totalTaxLabel.innerHTML = '<strong>TOTAL TAX (REFUND)</strong>';
             totalTaxRow.classList.add('refund');
         } else {
-            totalTaxLabel.textContent = 'Total Tax:';
+            totalTaxLabel.innerHTML = '<strong>TOTAL TAX</strong>';
             totalTaxRow.classList.remove('refund');
         }
 
@@ -1211,6 +1211,7 @@
         document.getElementById('helpRepayment' + scenario).textContent = formatCurrency(helpRepayment);
         document.getElementById('sapto' + scenario + 'Amount').textContent = formatCurrency(-sapto);
         document.getElementById('lito' + scenario).textContent = formatCurrency(-lito);
+        document.getElementById('totalTaxPayable' + scenario).textContent = formatCurrency(totalTaxPayable);
         document.getElementById('frankingCreditOffset' + scenario).textContent = formatCurrency(-frankingCredit);
         document.getElementById('paygWithholdingPaid' + scenario).textContent = formatCurrency(-paygWithholdingAmount);
         document.getElementById('paygPaid' + scenario).textContent = formatCurrency(-paygAmount);
@@ -1220,7 +1221,9 @@
         document.getElementById('netWeekly' + scenario).textContent = formatCurrency(netIncome / 52);
     }
 
-    function calculateTax(scenario) { computeScenario(scenario); }
+    function calculateTax(scenario) { 
+        computeScenario(scenario); 
+    }
 
     function updateInfoPanel() {
         const config = taxConfig[selectedYear];
@@ -1278,70 +1281,51 @@
     }
 
     function clearScenario(num) {
-        // Reset income input
         const incomeEl = document.getElementById('income' + num);
         if (incomeEl) incomeEl.value = '';
 
-        // Uncheck dividend checkbox and hide inputs
-        const dividendCheck = document.getElementById('dividend' + num);
-        if (dividendCheck) dividendCheck.checked = false;
-        const dividendInputs = document.getElementById('dividendInputs' + num);
-        if (dividendInputs) dividendInputs.classList.add('hidden');
-        const dividendAmount = document.getElementById('dividendAmount' + num);
-        if (dividendAmount) dividendAmount.value = '';
-        const frankingCreditEl = document.getElementById('frankingCredit' + num);
-        if (frankingCreditEl) frankingCreditEl.value = '';
-        const totalAssessableDividend = document.getElementById('totalAssessableDividend' + num);
-        if (totalAssessableDividend) totalAssessableDividend.value = '0';
+        // Only handle dividend checkbox in Scenario 1, which controls all scenarios
+        if (num === 1) {
+            const dividendCheck = document.getElementById('dividend1');
+            if (dividendCheck) {
+                dividendCheck.checked = false;
+                // This will hide dividend inputs for all scenarios
+                toggleDividendAll();
+            }
+        } else {
+            // For other scenarios, just clear the dividend values
+            const dividendAmount = document.getElementById('dividendAmount' + num);
+            if (dividendAmount) dividendAmount.value = '';
+            const frankingCreditEl = document.getElementById('frankingCredit' + num);
+            if (frankingCreditEl) frankingCreditEl.value = '';
+            const totalAssessableDividend = document.getElementById('totalAssessableDividend' + num);
+            if (totalAssessableDividend) totalAssessableDividend.value = '0';
+        }
 
-        // Reset residency to resident
+        const deductionsAmount = document.getElementById('deductionsAmount' + num);
+        if (deductionsAmount) deductionsAmount.value = '';
+
+        const superannuationAmount = document.getElementById('superannuationAmount' + num);
+        if (superannuationAmount) superannuationAmount.value = '';
+
         const residentRadio = document.querySelector(`input[name="resident${num}"][value="resident"]`);
         if (residentRadio) residentRadio.checked = true;
 
-        // Uncheck HELP checkbox
-        const helpCheck = document.getElementById('help' + num);
-        if (helpCheck) helpCheck.checked = false;
-
-        // Clear HELP debt and disable it
         const helpDebtEl = document.getElementById('helpDebt' + num);
-        if (helpDebtEl) {
-            helpDebtEl.value = '';
-            helpDebtEl.disabled = true;
-            helpDebtEl.parentElement.classList.add('disabled');
-        }
+        if (helpDebtEl) helpDebtEl.value = '';
 
-        // Uncheck PAYG Withholding checkbox
-        const paygWithholdingCheck = document.getElementById('paygWithholding' + num);
-        if (paygWithholdingCheck) paygWithholdingCheck.checked = false;
-
-        // Clear PAYG Withholding amount and disable it
         const paygWithholdingEl = document.getElementById('paygWithholdingAmount' + num);
-        if (paygWithholdingEl) {
-            paygWithholdingEl.value = '';
-            paygWithholdingEl.disabled = true;
-            paygWithholdingEl.parentElement.classList.add('disabled');
-        }
+        if (paygWithholdingEl) paygWithholdingEl.value = '';
 
-        // Uncheck PAYG checkbox
-        const paygCheck = document.getElementById('payg' + num);
-        if (paygCheck) paygCheck.checked = false;
-
-        // Clear PAYG amount and disable it
         const paygEl = document.getElementById('paygAmount' + num);
-        if (paygEl) {
-            paygEl.value = '';
-            paygEl.disabled = true;
-            paygEl.parentElement.classList.add('disabled');
-        }
+        if (paygEl) paygEl.value = '';
 
-        // Uncheck SAPTO checkbox
         const saptoCheck = document.getElementById('sapto' + num);
         if (saptoCheck) saptoCheck.checked = false;
 
-        // Clear all result displays
         const resultFields = [
             'baseIncome', 'taxOnIncome', 'medicareLevy', 'helpRepayment', 
-            'lito', 'frankingCreditOffset', 'paygWithholdingPaid', 'paygPaid', 'totalTax', 'netAnnual', 'netMonthly', 'netWeekly'
+            'lito', 'totalTaxPayable', 'frankingCreditOffset', 'paygWithholdingPaid', 'paygPaid', 'totalTax', 'netAnnual', 'netMonthly', 'netWeekly'
         ];
         
         resultFields.forEach(field => {
@@ -1349,15 +1333,12 @@
             if (el) el.textContent = '$0';
         });
 
-        // Clear SAPTO amount (has different ID format)
         const saptoAmountEl = document.getElementById('sapto' + num + 'Amount');
         if (saptoAmountEl) saptoAmountEl.textContent = '$0';
         
-        // Reset Total Tax label
         const totalTaxLabel = document.getElementById('totalTaxLabel' + num);
-        if (totalTaxLabel) totalTaxLabel.textContent = 'Total Tax:';
+        if (totalTaxLabel) totalTaxLabel.innerHTML = '<strong>TOTAL TAX</strong>';
         
-        // Remove refund class from Total Tax row
         const totalTaxRow = document.getElementById('totalTaxRow' + num);
         if (totalTaxRow) totalTaxRow.classList.remove('refund');
     }
@@ -1367,7 +1348,6 @@
         for (let i = 1; i <= 4; i++) {
             container.innerHTML += createScenarioHTML(i);
         }
-        updateGridLayout();
     };
 </script>
 </body>
