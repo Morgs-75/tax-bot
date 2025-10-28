@@ -44,6 +44,9 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
+            width: 860px;
+            max-width: 860px;
+            transition: width 0.3s ease, max-width 0.3s ease;
         }
 
         .year-selector h3 {
@@ -102,7 +105,6 @@
         .scenario-control-btn {
             position: absolute;
             top: 15px;
-            right: 15px;
             width: 28px;
             height: 28px;
             border-radius: 50%;
@@ -119,6 +121,14 @@
             z-index: 10;
         }
 
+        .scenario-control-btn.add-btn {
+            right: 15px;
+        }
+
+        .scenario-control-btn.remove-btn {
+            right: 50px;
+        }
+
         .scenario-control-btn:hover {
             background: #4a5568;
             color: white;
@@ -131,21 +141,25 @@
 
         .scenario-card:first-child {
             border-radius: 12px 0 0 12px;
-            min-width: 500px;
+            min-width: 800px;
+            width: 800px;
+            max-width: 800px;
+            transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease, border-radius 0.3s ease;
+        }
+
+        .scenario-card:first-child:only-child,
+        .scenario-card:only-child {
+            border-radius: 12px;
         }
 
         .scenario-card:not(:first-child) {
             border-radius: 0;
-            width: 340px;
+            width: 290px;
             padding: 30px 15px;
         }
 
         .scenario-card:last-child:not(:first-child) {
             border-radius: 0 12px 12px 0;
-        }
-
-        .scenario-card:only-child {
-            border-radius: 12px;
         }
 
         .scenario-card.hidden {
@@ -167,6 +181,38 @@
             font-weight: 600;
             text-align: center;
             height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scenario-name-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            font-weight: 600;
+            color: #2d3748;
+            text-align: center;
+            outline: none;
+            font-family: inherit;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .scenario-name-input:hover {
+            background: #f7fafc;
+        }
+
+        .scenario-name-input:focus {
+            background: #edf2f7;
+            border: 1px solid #cbd5e0;
+        }
+
+        .scenario-name-input::placeholder {
+            color: #2d3748;
+            opacity: 1;
         }
 
         /* Compact scenario styling - hide labels */
@@ -181,8 +227,15 @@
             margin-right: auto;
         }
 
+        .compact-scenario .scenario-name-input {
+            width: 200px;
+        }
+
         .compact-scenario .form-group label,
-        .compact-scenario .form-group-inline > label:first-child {
+        .compact-scenario .form-group-inline > label:first-child,
+        .compact-scenario .form-group-inline > label,
+        .compact-scenario .checkbox-option label,
+        .compact-scenario label {
             display: none !important;
         }
 
@@ -220,6 +273,7 @@
 
         .compact-scenario .checkbox-section {
             justify-content: flex-end;
+            min-height: 40px;
         }
 
         .checkbox-option {
@@ -229,13 +283,17 @@
             line-height: 1;
         }
 
+        .compact-scenario .checkbox-option {
+            justify-content: flex-end;
+        }
+
         .compact-scenario .checkbox-option label {
             display: none !important;
         }
 
         /* Dividend inputs - maintain space even when hidden */
         .dividend-inputs {
-            margin-bottom: 12px;
+            margin-bottom: 0px;
             min-height: 0;
             overflow: hidden;
             transition: min-height 0.3s;
@@ -254,17 +312,6 @@
         }
 
         .compact-scenario .dividend-inputs .form-group-inline label {
-            display: none !important;
-        }
-
-        /* Additional factors header */
-        .additional-factors-header {
-            margin-bottom: 8px;
-            margin-top: 8px;
-            min-height: 35px;
-        }
-
-        .compact-scenario .additional-factors-header label {
             display: none !important;
         }
 
@@ -419,14 +466,15 @@
         .btn-info {
             background: #4a5568;
             padding: 14px 24px;
-            width: 100%;
+            width: 860px;
+            max-width: 860px;
             font-size: 1em;
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, width 0.3s ease, max-width 0.3s ease;
         }
 
         .btn-info:hover {
@@ -526,6 +574,9 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: none;
+            width: 860px;
+            max-width: 860px;
+            transition: width 0.3s ease, max-width 0.3s ease;
         }
 
         .info-panel.active {
@@ -748,12 +799,15 @@
                     </div>
                 </div>` : `<div class="checkbox-section" style="visibility: hidden; height: 40px;"></div>`;
         
-        // Add button based on scenario number
+        // Add buttons based on scenario number
         let controlButton = '';
-        if (num === 1) {
-            controlButton = `<button class="scenario-control-btn" id="addScenarioBtn" onclick="addNextScenario()">+</button>`;
-        } else {
-            controlButton = `<button class="scenario-control-btn" onclick="removeScenario(${num})">−</button>`;
+        if (num < 4) {
+            // Scenarios 1, 2, 3 get a + button
+            controlButton += `<button class="scenario-control-btn add-btn" onclick="addFromScenario(${num})">+</button>`;
+        }
+        if (num > 1) {
+            // Scenarios 2, 3, 4 get a − button
+            controlButton += `<button class="scenario-control-btn remove-btn" onclick="removeScenario(${num})">−</button>`;
         }
         
         return `
@@ -772,7 +826,13 @@
                     </div>
                 </div>
 
-                <h2 class="scenario-header">Scenario ${num}</h2>
+                <h2 class="scenario-header">
+                    <input type="text" 
+                           id="scenarioName${num}" 
+                           class="scenario-name-input" 
+                           placeholder="Scenario ${num}" 
+                           maxlength="50">
+                </h2>
                 
                 <div class="form-group-inline">
                     <label for="income${num}">Annual Income</label>
@@ -823,10 +883,6 @@
                         <input type="text" id="superannuationAmount${num}" value="" 
                                onblur="formatNumberInput(this)" placeholder="0">
                     </div>
-                </div>
-
-                <div class="additional-factors-header">
-                    <label><strong>Additional Factors</strong></label>
                 </div>
 
                 <div class="form-group-inline">
@@ -962,7 +1018,116 @@
         totalField.value = total.toLocaleString('en-US');
     }
 
-    function addNextScenario() {
+    function adjustWidths() {
+        const scenario1 = document.getElementById('scenario1');
+        const yearSelector = document.querySelector('.year-selector');
+        const infoPanel = document.getElementById('infoPanel');
+        const infoButton = document.querySelector('.btn-info');
+        
+        let totalWidth;
+        
+        if (visibleScenarios.length === 1) {
+            // Only Scenario 1
+            scenario1.style.setProperty('box-sizing', 'border-box', 'important');
+            scenario1.style.setProperty('width', '860px', 'important');
+            scenario1.style.setProperty('min-width', '860px', 'important');
+            scenario1.style.setProperty('max-width', '860px', 'important');
+            scenario1.style.setProperty('padding', '30px', 'important');
+            scenario1.style.setProperty('flex-shrink', '0', 'important');
+            scenario1.style.borderRadius = '12px';
+            totalWidth = 860;
+        } else {
+            // Multiple scenarios
+            scenario1.style.setProperty('box-sizing', 'border-box', 'important');
+            scenario1.style.setProperty('width', '535px', 'important');
+            scenario1.style.setProperty('min-width', '535px', 'important');
+            scenario1.style.setProperty('max-width', '535px', 'important');
+            scenario1.style.setProperty('padding', '30px', 'important');
+            scenario1.style.setProperty('flex-shrink', '0', 'important');
+            scenario1.style.borderRadius = '12px 0 0 12px';
+            
+            // Calculate total width: 535px (Scenario 1) + 290px per additional scenario
+            totalWidth = 535 + (290 * (visibleScenarios.length - 1));
+        }
+        
+        // Apply width to year-selector
+        if (yearSelector) {
+            yearSelector.style.width = totalWidth + 'px';
+            yearSelector.style.maxWidth = totalWidth + 'px';
+        }
+        
+        // Apply width to info panel
+        if (infoPanel) {
+            infoPanel.style.width = totalWidth + 'px';
+            infoPanel.style.maxWidth = totalWidth + 'px';
+        }
+        
+        // Apply width to info button
+        if (infoButton) {
+            infoButton.style.width = totalWidth + 'px';
+            infoButton.style.maxWidth = totalWidth + 'px';
+        }
+    }
+
+    function copyScenarioValues(fromNum, toNum) {
+        // Copy income
+        const fromIncome = document.getElementById('income' + fromNum);
+        const toIncome = document.getElementById('income' + toNum);
+        if (fromIncome && toIncome) toIncome.value = fromIncome.value;
+
+        // Copy dividend inputs
+        const fromDividendAmount = document.getElementById('dividendAmount' + fromNum);
+        const toDividendAmount = document.getElementById('dividendAmount' + toNum);
+        if (fromDividendAmount && toDividendAmount) toDividendAmount.value = fromDividendAmount.value;
+
+        const fromFrankingCredit = document.getElementById('frankingCredit' + fromNum);
+        const toFrankingCredit = document.getElementById('frankingCredit' + toNum);
+        if (fromFrankingCredit && toFrankingCredit) toFrankingCredit.value = fromFrankingCredit.value;
+
+        // Recalculate dividend for the new scenario
+        if (toDividendAmount && toFrankingCredit) {
+            calculateDividend(toNum);
+        }
+
+        // Copy deductions
+        const fromDeductions = document.getElementById('deductionsAmount' + fromNum);
+        const toDeductions = document.getElementById('deductionsAmount' + toNum);
+        if (fromDeductions && toDeductions) toDeductions.value = fromDeductions.value;
+
+        // Copy superannuation
+        const fromSuper = document.getElementById('superannuationAmount' + fromNum);
+        const toSuper = document.getElementById('superannuationAmount' + toNum);
+        if (fromSuper && toSuper) toSuper.value = fromSuper.value;
+
+        // Copy HELP debt
+        const fromHelp = document.getElementById('helpDebt' + fromNum);
+        const toHelp = document.getElementById('helpDebt' + toNum);
+        if (fromHelp && toHelp) toHelp.value = fromHelp.value;
+
+        // Copy PAYG Withholding
+        const fromPaygWith = document.getElementById('paygWithholdingAmount' + fromNum);
+        const toPaygWith = document.getElementById('paygWithholdingAmount' + toNum);
+        if (fromPaygWith && toPaygWith) toPaygWith.value = fromPaygWith.value;
+
+        // Copy PAYG Instalments
+        const fromPayg = document.getElementById('paygAmount' + fromNum);
+        const toPayg = document.getElementById('paygAmount' + toNum);
+        if (fromPayg && toPayg) toPayg.value = fromPayg.value;
+
+        // Copy residency status
+        const fromResident = document.querySelector(`input[name="resident${fromNum}"]:checked`);
+        if (fromResident) {
+            const toResident = document.querySelector(`input[name="resident${toNum}"][value="${fromResident.value}"]`);
+            if (toResident) toResident.checked = true;
+        }
+
+        // Copy SAPTO checkbox
+        const fromSapto = document.getElementById('sapto' + fromNum);
+        const toSapto = document.getElementById('sapto' + toNum);
+        if (fromSapto && toSapto) toSapto.checked = fromSapto.checked;
+    }
+
+    function addFromScenario(sourceNum) {
         // Find the first hidden scenario to add
         for (let num = 2; num <= 4; num++) {
             if (!visibleScenarios.includes(num)) {
@@ -971,10 +1136,11 @@
                 visibleScenarios.push(num);
                 visibleScenarios.sort((a, b) => a - b);
                 
-                // Hide the + button if all scenarios are visible
-                if (visibleScenarios.length === 4) {
-                    document.getElementById('addScenarioBtn').classList.add('hidden');
-                }
+                // Copy values from source scenario to new scenario
+                copyScenarioValues(sourceNum, num);
+                
+                // Adjust widths
+                adjustWidths();
                 
                 return;
             }
@@ -982,12 +1148,40 @@
     }
 
     function removeScenario(num) {
-        const card = document.getElementById('scenario' + num);
-        card.classList.add('hidden');
-        visibleScenarios = visibleScenarios.filter(s => s !== num);
+        // Can't remove Scenario 1
+        if (num === 1) return;
         
-        // Show the + button since we now have space for more scenarios
-        document.getElementById('addScenarioBtn').classList.remove('hidden');
+        // Shift all scenarios after the removed one down by one position
+        for (let i = num; i < 4; i++) {
+            const nextScenario = i + 1;
+            if (visibleScenarios.includes(nextScenario)) {
+                // Copy all values from next scenario to current scenario
+                copyScenarioValues(nextScenario, i);
+                
+                // Copy scenario name
+                const fromName = document.getElementById('scenarioName' + nextScenario);
+                const toName = document.getElementById('scenarioName' + i);
+                if (fromName && toName) {
+                    toName.value = fromName.value;
+                }
+            }
+        }
+        
+        // Find the highest visible scenario and hide it
+        const highestScenario = Math.max(...visibleScenarios);
+        const card = document.getElementById('scenario' + highestScenario);
+        card.classList.add('hidden');
+        
+        // Clear the highest scenario's data and name
+        clearScenario(highestScenario);
+        const scenarioNameEl = document.getElementById('scenarioName' + highestScenario);
+        if (scenarioNameEl) scenarioNameEl.value = '';
+        
+        // Update visibleScenarios array to always be sequential
+        visibleScenarios = visibleScenarios.filter(s => s !== highestScenario);
+        
+        // Adjust widths
+        adjustWidths();
     }
 
     function selectYear(year) {
