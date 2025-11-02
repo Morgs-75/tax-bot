@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Australian Tax Calculator - Multi-Year</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5110666876136750"
+     crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -44,11 +46,16 @@
             font-size: 1.1em;
         }
 
+        .header-wrapper {
+            width: 100%;
+            margin: 0 auto;
+        }
+
         .year-selector {
             background: white;
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
             width: 860px;
@@ -95,7 +102,7 @@
         .scenarios-container {
             display: flex;
             gap: 0;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
             align-items: flex-start;
         }
 
@@ -473,15 +480,13 @@
         .btn-info {
             background: #4a5568;
             padding: 14px 24px;
-            width: 860px;
-            max-width: 860px;
             font-size: 1em;
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s, width 0.3s ease, max-width 0.3s ease;
+            transition: background 0.3s;
         }
 
         .btn-info:hover {
@@ -578,7 +583,7 @@
             background: white;
             border-radius: 12px;
             padding: 30px;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: none;
             width: 860px;
@@ -632,6 +637,33 @@
             color: #2d3748;
         }
 
+        .taxbot-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            width: 860px;
+            max-width: 860px;
+            transition: width 0.3s ease, max-width 0.3s ease;
+            min-height: 600px;
+        }
+
+        .taxbot-panel.active {
+            display: block;
+        }
+
+        .taxbot-container {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+
+        #taxbotButton:hover {
+            background: #000000 !important;
+        }
+
         @media (max-width: 768px) {
             .scenarios-container {
                 flex-direction: column;
@@ -678,12 +710,22 @@
             </div>
         </div>
 
-        <button class="btn btn-info" onclick="toggleInfo()">
-            <span id="infoToggleText">View Tax Information</span>
-        </button>
+        <div style="display: flex; gap: 10px; margin: 0 auto 20px auto;">
+            <button class="btn btn-info" onclick="toggleInfo()" style="flex: 1;">
+                <span id="infoToggleText">View Tax Information</span>
+            </button>
+            
+            <button id="taxbotButton" onclick="toggleTaxbot()" style="background: #1D1D1D; color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 0.95em; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.3s;">
+                <span id="taxbotToggleText">💬 Ask TaxBot...</span>
+            </button>
+        </div>
 
         <div id="infoPanel" class="info-panel">
             <div id="taxRatesInfo"></div>
+        </div>
+
+        <div id="taxbotPanel" class="taxbot-panel">
+            <typebot-standard id="taxbot-standard" style="width: 100%; height: 600px;"></typebot-standard>
         </div>
 
         <div id="scenariosContainer" class="scenarios-container">
@@ -978,20 +1020,9 @@
                         <span class="result-label" id="totalTaxLabel${num}" style="font-weight: bold;"><strong>TOTAL TAX</strong></span>
                         <span class="result-value" id="totalTax${num}">$0</span>
                     </div>
-                    
-                    <div class="result-highlight">
-                        <div class="result-row">
-                            <span class="result-label">Net Annual Income</span>
-                            <span class="result-value" id="netAnnual${num}">$0</span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">Net Monthly Income</span>
-                            <span class="result-value" id="netMonthly${num}">$0</span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">Net Weekly Income</span>
-                            <span class="result-value" id="netWeekly${num}">$0</span>
-                        </div>
+                    <div class="result-row">
+                        <span class="result-label" style="font-weight: bold;"><strong>NET ANNUAL INCOME</strong></span>
+                        <span class="result-value" id="netAnnual${num}">$0</span>
                     </div>
                 </div>
             </div>
@@ -1034,7 +1065,8 @@
         const scenario1 = document.getElementById('scenario1');
         const yearSelector = document.querySelector('.year-selector');
         const infoPanel = document.getElementById('infoPanel');
-        const infoButton = document.querySelector('.btn-info');
+        const buttonContainer = document.querySelector('div[style*="display: flex"]'); // The container holding both buttons
+        const taxbotPanel = document.getElementById('taxbotPanel');
         
         let totalWidth;
         
@@ -1068,16 +1100,22 @@
             yearSelector.style.maxWidth = totalWidth + 'px';
         }
         
+        // Apply width to button container
+        if (buttonContainer) {
+            buttonContainer.style.width = totalWidth + 'px';
+            buttonContainer.style.maxWidth = totalWidth + 'px';
+        }
+        
         // Apply width to info panel
         if (infoPanel) {
             infoPanel.style.width = totalWidth + 'px';
             infoPanel.style.maxWidth = totalWidth + 'px';
         }
         
-        // Apply width to info button
-        if (infoButton) {
-            infoButton.style.width = totalWidth + 'px';
-            infoButton.style.maxWidth = totalWidth + 'px';
+        // Apply width to taxbot panel
+        if (taxbotPanel) {
+            taxbotPanel.style.width = totalWidth + 'px';
+            taxbotPanel.style.maxWidth = totalWidth + 'px';
         }
     }
 
@@ -1399,7 +1437,7 @@
 
         const totalTaxPayable = taxAfterOffsets + medicareLevy + helpRepayment;
         const totalTax = totalTaxPayable - frankingCredit - paygWithholdingAmount - paygAmount;
-        const netIncome = income - totalTax;
+        const netIncome = income - totalTaxPayable - frankingCredit;
         
         const totalTaxLabel = document.getElementById('totalTaxLabel' + scenario);
         const totalTaxRow = document.getElementById('totalTaxRow' + scenario);
@@ -1423,8 +1461,6 @@
         document.getElementById('paygPaid' + scenario).textContent = formatCurrency(-paygAmount);
         document.getElementById('totalTax' + scenario).textContent = formatCurrency(totalTax);
         document.getElementById('netAnnual' + scenario).textContent = formatCurrency(netIncome);
-        document.getElementById('netMonthly' + scenario).textContent = formatCurrency(netIncome / 12);
-        document.getElementById('netWeekly' + scenario).textContent = formatCurrency(netIncome / 52);
     }
 
     function calculateTax(scenario) { 
@@ -1486,6 +1522,21 @@
         }
     }
 
+    function toggleTaxbot() {
+        const panel = document.getElementById('taxbotPanel');
+        const text = document.getElementById('taxbotToggleText');
+        const button = document.getElementById('taxbotButton');
+        if (panel.classList.contains('active')) {
+            panel.classList.remove('active');
+            text.textContent = '💬 Ask TaxBot...';
+            button.style.background = '#1D1D1D';
+        } else {
+            panel.classList.add('active');
+            text.textContent = '✕ Close';
+            button.style.background = '#000000';
+        }
+    }
+
     function clearScenario(num) {
         const incomeEl = document.getElementById('income' + num);
         if (incomeEl) incomeEl.value = '';
@@ -1531,7 +1582,7 @@
 
         const resultFields = [
             'baseIncome', 'taxOnIncome', 'medicareLevy', 'helpRepayment', 
-            'lito', 'totalTaxPayable', 'frankingCreditOffset', 'paygWithholdingPaid', 'paygPaid', 'totalTax', 'netAnnual', 'netMonthly', 'netWeekly'
+            'lito', 'totalTaxPayable', 'frankingCreditOffset', 'paygWithholdingPaid', 'paygPaid', 'totalTax', 'netAnnual'
         ];
         
         resultFields.forEach(field => {
@@ -1561,13 +1612,20 @@
 
 <script type="module">
   import Typebot from 'https://cdn.jsdelivr.net/npm/@typebot.io/js@0/dist/web.js'
-  Typebot.initBubble({
+  
+  Typebot.initStandard({
     typebot: "open-ai-assistant-chat-jw5q04i",
-    theme: {
-      button: { backgroundColor: "#1D1D1D" },
-      chatWindow: { backgroundColor: "#F8F8F8" },
-    },
+    onClose: () => {
+      // Clear session storage to force new OpenAI thread
+      sessionStorage.removeItem('typebot-open-ai-assistant-chat-jw5q04i');
+      localStorage.removeItem('typebot-open-ai-assistant-chat-jw5q04i');
+      setTimeout(() => {
+        Typebot.reset();
+      }, 100);
+    }
   });
+  
+  console.log('TaxBot standard embed initialized');
 </script>
 </body>
 </html>
