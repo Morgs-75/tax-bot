@@ -99,11 +99,20 @@
             border-color: #2d3748;
         }
 
+        #buttonContainer {
+            width: 860px;
+            max-width: 860px;
+            transition: width 0.3s ease, max-width 0.3s ease;
+        }
+
         .scenarios-container {
             display: flex;
             gap: 0;
             margin: 0 auto 20px auto;
             align-items: flex-start;
+            width: 860px;
+            max-width: 860px;
+            transition: width 0.3s ease, max-width 0.3s ease;
         }
 
         .scenario-card {
@@ -155,9 +164,9 @@
 
         .scenario-card:first-child {
             border-radius: 12px 0 0 12px;
-            min-width: 800px;
-            width: 800px;
-            max-width: 800px;
+            min-width: 860px;
+            width: 860px;
+            max-width: 860px;
             transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease, border-radius 0.3s ease;
         }
 
@@ -710,7 +719,7 @@
             </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin: 0 auto 20px auto;">
+        <div id="buttonContainer" style="display: flex; gap: 10px; margin: 0 auto 20px auto;">
             <button class="btn btn-info" onclick="toggleInfo()" style="flex: 1;">
                 <span id="infoToggleText">View Tax Information</span>
             </button>
@@ -1065,8 +1074,9 @@
         const scenario1 = document.getElementById('scenario1');
         const yearSelector = document.querySelector('.year-selector');
         const infoPanel = document.getElementById('infoPanel');
-        const buttonContainer = document.querySelector('div[style*="display: flex"]'); // The container holding both buttons
+        const buttonContainer = document.getElementById('buttonContainer');
         const taxbotPanel = document.getElementById('taxbotPanel');
+        const scenariosContainer = document.getElementById('scenariosContainer');
         
         let totalWidth;
         
@@ -1094,25 +1104,27 @@
             totalWidth = 535 + (290 * (visibleScenarios.length - 1));
         }
         
-        // Apply width to year-selector
+        // Apply width to all containers
         if (yearSelector) {
             yearSelector.style.width = totalWidth + 'px';
             yearSelector.style.maxWidth = totalWidth + 'px';
         }
         
-        // Apply width to button container
         if (buttonContainer) {
             buttonContainer.style.width = totalWidth + 'px';
             buttonContainer.style.maxWidth = totalWidth + 'px';
         }
         
-        // Apply width to info panel
+        if (scenariosContainer) {
+            scenariosContainer.style.width = totalWidth + 'px';
+            scenariosContainer.style.maxWidth = totalWidth + 'px';
+        }
+        
         if (infoPanel) {
             infoPanel.style.width = totalWidth + 'px';
             infoPanel.style.maxWidth = totalWidth + 'px';
         }
         
-        // Apply width to taxbot panel
         if (taxbotPanel) {
             taxbotPanel.style.width = totalWidth + 'px';
             taxbotPanel.style.maxWidth = totalWidth + 'px';
