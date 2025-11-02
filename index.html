@@ -584,6 +584,69 @@
             text-align: right;
         }
 
+        .info-tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 6px;
+            cursor: help;
+        }
+
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4a5568;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            font-style: normal;
+            line-height: 1;
+        }
+
+        .info-tooltip:hover .info-icon {
+            background: #2d3748;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            width: 280px;
+            background-color: #2d3748;
+            color: white;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+
+        .info-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
         .hidden {
             display: none;
         }
@@ -858,7 +921,13 @@
                 <div class="checkbox-section">
                     <div class="checkbox-option">
                         <input type="checkbox" id="dividend1" onchange="toggleDividendAll()">
-                        <label for="dividend1">Dividend Income</label>
+                        <label for="dividend1">
+                            Dividend Income
+                            <span class="info-tooltip">
+                                <i class="info-icon">i</i>
+                                <span class="tooltip-text">Include your dividend income by checking the box. Ensure that you include the correct franking credit.</span>
+                            </span>
+                        </label>
                     </div>
                 </div>` : `<div class="checkbox-section" style="visibility: hidden; height: 40px;"></div>`;
         
@@ -898,7 +967,13 @@
                 </h2>
                 
                 <div class="form-group-inline">
-                    <label for="income${num}">Annual Income</label>
+                    <label for="income${num}">
+                        Annual Income
+                        <span class="info-tooltip">
+                            <i class="info-icon">i</i>
+                            <span class="tooltip-text">Include all income such as your salary, interest, and rent. Do not include dividend income at this label.</span>
+                        </span>
+                    </label>
                     <div class="input-with-currency">
                         <input type="text" id="income${num}" value="" 
                                onblur="formatNumberInput(this)" placeholder="0">
@@ -1030,7 +1105,13 @@
                         <span class="result-value" id="totalTax${num}">$0</span>
                     </div>
                     <div class="result-row">
-                        <span class="result-label" style="font-weight: bold;"><strong>NET ANNUAL INCOME</strong></span>
+                        <span class="result-label" style="font-weight: bold;">
+                            <strong>NET ANNUAL INCOME</strong>
+                            <span class="info-tooltip">
+                                <i class="info-icon">i</i>
+                                <span class="tooltip-text">Net Annual Income excludes franking credits as these are not cash received but a credit towards your income tax liability</span>
+                            </span>
+                        </span>
                         <span class="result-value" id="netAnnual${num}">$0</span>
                     </div>
                 </div>
@@ -1449,7 +1530,7 @@
 
         const totalTaxPayable = taxAfterOffsets + medicareLevy + helpRepayment;
         const totalTax = totalTaxPayable - frankingCredit - paygWithholdingAmount - paygAmount;
-        const netIncome = income - totalTaxPayable - frankingCredit;
+        const netIncome = income - totalTaxPayable;
         
         const totalTaxLabel = document.getElementById('totalTaxLabel' + scenario);
         const totalTaxRow = document.getElementById('totalTaxRow' + scenario);
