@@ -171,6 +171,44 @@
             display: none;
         }
 
+        .control-btn-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: 220px;
+            background-color: #2d3748;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s, visibility 0.3s;
+            white-space: nowrap;
+        }
+
+        .control-btn-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+
+        .scenario-control-btn:hover .control-btn-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
         .scenario-card:first-child {
             border-radius: 12px 0 0 12px;
             min-width: 860px;
@@ -656,6 +694,50 @@
             opacity: 1;
         }
 
+        .scenario-name-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .scenario-name-wrapper .scenario-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: 240px;
+            background-color: #2d3748;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -120px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .scenario-name-wrapper .scenario-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+
+        .scenario-name-wrapper:hover .scenario-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
         .hidden {
             display: none;
         }
@@ -745,6 +827,37 @@
             background: #000000 !important;
         }
 
+        .disclaimer-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin: 0 auto 30px auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            width: 860px;
+            max-width: 860px;
+            transition: width 0.3s ease, max-width 0.3s ease;
+            border-left: 4px solid #4a5568;
+        }
+
+        .disclaimer-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .disclaimer-section p {
+            color: #4a5568;
+            line-height: 1.7;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+            text-align: justify;
+        }
+
+        .disclaimer-section p:last-child {
+            margin-bottom: 0;
+        }
+
         @media (max-width: 768px) {
             .scenarios-container {
                 flex-direction: column;
@@ -811,6 +924,12 @@
 
         <div id="scenariosContainer" class="scenarios-container">
             <!-- Scenarios will be dynamically generated -->
+        </div>
+
+        <div class="disclaimer-section">
+            <h3>Disclaimer</h3>
+            <p>The information and calculations provided by this tool are general in nature and do not take into account your specific circumstances. You should seek advice from a qualified professional before acting on any information contained herein.</p>
+            <p>This tool is not intended to provide financial, taxation, or legal advice and should not be relied upon as such. While every effort has been made to ensure accuracy, no warranty is given as to the reliability or completeness of the information provided.</p>
         </div>
     </div>
 
@@ -944,11 +1063,11 @@
         let controlButton = '';
         if (num < 4) {
             // Scenarios 1, 2, 3 get a + button
-            controlButton += `<button class="scenario-control-btn add-btn" onclick="addFromScenario(${num})">+</button>`;
+            controlButton += `<button class="scenario-control-btn add-btn" onclick="addFromScenario(${num})">+<span class="control-btn-tooltip">Click + to create new scenario (max 4)</span></button>`;
         }
         if (num > 1) {
             // Scenarios 2, 3, 4 get a − button
-            controlButton += `<button class="scenario-control-btn remove-btn" onclick="removeScenario(${num})">−</button>`;
+            controlButton += `<button class="scenario-control-btn remove-btn" onclick="removeScenario(${num})">−<span class="control-btn-tooltip">Click − to delete this scenario</span></button>`;
         }
         
         return `
@@ -968,11 +1087,14 @@
                 </div>
 
                 <h2 class="scenario-header">
-                    <input type="text" 
-                           id="scenarioName${num}" 
-                           class="scenario-name-input" 
-                           placeholder="Scenario ${num}" 
-                           maxlength="50">
+                    <div class="scenario-name-wrapper">
+                        <span class="scenario-tooltip">Insert the name of the taxpayer</span>
+                        <input type="text" 
+                               id="scenarioName${num}" 
+                               class="scenario-name-input" 
+                               placeholder="Scenario ${num}" 
+                               maxlength="50">
+                    </div>
                 </h2>
                 
                 <div class="form-group-inline">
@@ -1218,6 +1340,12 @@
         if (taxbotPanel) {
             taxbotPanel.style.width = totalWidth + 'px';
             taxbotPanel.style.maxWidth = totalWidth + 'px';
+        }
+        
+        const disclaimerSection = document.querySelector('.disclaimer-section');
+        if (disclaimerSection) {
+            disclaimerSection.style.width = totalWidth + 'px';
+            disclaimerSection.style.maxWidth = totalWidth + 'px';
         }
     }
 
