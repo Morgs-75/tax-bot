@@ -1225,10 +1225,7 @@
                                    onblur="formatNumberInput(this)" placeholder="0">
                         </div>
                     </div>
-                    <div id="frankingWarning${num}" class="franking-warning">
-                        Franking credit exceeds the maximum amount for fully franked dividends (30% company tax rate). Please check.
-                        <button class="warning-close" onclick="dismissFrankingWarning(${num})" aria-label="Close warning">×</button>
-                    </div>
+                    <div id="frankingWarning${num}" class="franking-warning"></div>
                     <div class="form-group-inline">
                         <label for="totalAssessableDividend${num}">Total Assessable Dividend</label>
                         <div class="input-with-currency">
@@ -1383,15 +1380,28 @@
         const totalField = document.getElementById('totalAssessableDividend' + num);
         totalField.value = total.toLocaleString('en-US');
         
-        // Check if franking credit exceeds maximum allowable (30/70 of dividend amount)
-        const maxFrankingCredit = dividendAmount * (30 / 70);
         const warningElement = document.getElementById('frankingWarning' + num);
         
         if (warningElement) {
-            if (frankingCredit > maxFrankingCredit && dividendAmount > 0) {
+            // Priority 1: Check if dividend is 0 but franking credit exists
+            if (dividendAmount === 0 && frankingCredit > 0) {
+                warningElement.innerHTML = 'You have not entered any dividend income<button class="warning-close" onclick="dismissFrankingWarning(' + num + ')" aria-label="Close warning">×</button>';
                 warningElement.classList.add('show');
             }
-            // Note: Warning stays visible until manually dismissed
+            // Priority 2: Check if franking credit exceeds maximum (only when dividend > 0)
+            else if (dividendAmount > 0) {
+                const maxFrankingCredit = dividendAmount * (30 / 70);
+                if (frankingCredit > maxFrankingCredit) {
+                    warningElement.innerHTML = 'Franking credit exceeds the maximum amount for fully franked dividends (30% company tax rate). Please check.<button class="warning-close" onclick="dismissFrankingWarning(' + num + ')" aria-label="Close warning">×</button>';
+                    warningElement.classList.add('show');
+                } else {
+                    // Valid case - hide warning if it was showing
+                    warningElement.classList.remove('show');
+                }
+            } else {
+                // Both are 0 or franking credit is 0 - hide warning
+                warningElement.classList.remove('show');
+            }
         }
     }
 
