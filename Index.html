@@ -438,6 +438,46 @@
             color: #a0aec0;
         }
 
+        .franking-warning {
+            display: none;
+            background: #FEF2F2;
+            border: 1px solid #FCA5A5;
+            color: #991B1B;
+            padding: 8px 32px 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .franking-warning.show {
+            display: block;
+        }
+
+        .warning-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 18px;
+            height: 18px;
+            background: transparent;
+            border: none;
+            color: #991B1B;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .warning-close:hover {
+            color: #7F1D1D;
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -486,8 +526,8 @@
         .button-group {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 10px;
+            margin-bottom: 10px;
             min-height: 52px;
         }
 
@@ -550,8 +590,8 @@
         }
 
         .results {
-            margin-top: 30px;
-            padding: 20px;
+            margin-top: 0px;
+            padding: 0px 20px 0px 20px;
             background: #f7fafc;
             border-radius: 8px;
         }
@@ -570,6 +610,12 @@
             border-bottom: none;
         }
 
+        /* Bold styling for specific rows */
+        .bold-row .result-label,
+        .bold-row .result-value {
+            font-weight: 700 !important;
+        }
+
         .result-label {
             color: #4a5568;
             line-height: 1.5;
@@ -581,6 +627,24 @@
             font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
             line-height: 1.5;
             text-align: right;
+        }
+
+        /* Bold styling for last two rows - TOTAL TAX and NET ANNUAL INCOME */
+        .results .bold-row .result-label,
+        .results .bold-row .result-value,
+        .results .bold-row .result-label strong,
+        .results .bold-row .result-value,
+        div.bold-row span.result-value,
+        div.bold-row span.result-label,
+        #totalTaxRow1 .result-value,
+        #totalTaxRow2 .result-value,
+        #totalTaxRow3 .result-value,
+        #totalTaxRow4 .result-value,
+        #netAnnual1,
+        #netAnnual2,
+        #netAnnual3,
+        #netAnnual4 {
+            font-weight: 700 !important;
         }
 
         .compact-scenario .result-row {
@@ -600,6 +664,20 @@
         .result-row.refund .result-value {
             color: #38a169;
             font-weight: 700;
+        }
+
+        /* Make last two rows bold (TOTAL TAX and NET ANNUAL INCOME) */
+        .result-row:nth-last-child(1) .result-label,
+        .result-row:nth-last-child(1) .result-value,
+        .result-row:nth-last-child(2) .result-label,
+        .result-row:nth-last-child(2) .result-value {
+            font-weight: 700 !important;
+        }
+
+        /* Ensure TOTAL TAX and NET ANNUAL INCOME values are always bold */
+        #totalTax1, #totalTax2, #totalTax3, #totalTax4,
+        #netAnnual1, #netAnnual2, #netAnnual3, #netAnnual4 {
+            font-weight: 700 !important;
         }
 
         .result-highlight {
@@ -1141,6 +1219,10 @@
                                    onblur="formatNumberInput(this)" placeholder="0">
                         </div>
                     </div>
+                    <div id="frankingWarning${num}" class="franking-warning">
+                        Franking credit exceeds the maximum amount for fully franked dividends (30% company tax rate). Please check.
+                        <button class="warning-close" onclick="dismissFrankingWarning(${num})" aria-label="Close warning">×</button>
+                    </div>
                     <div class="form-group-inline">
                         <label for="totalAssessableDividend${num}">Total Assessable Dividend</label>
                         <div class="input-with-currency">
@@ -1242,12 +1324,12 @@
                         <span class="result-label">PAYG Instalments Paid</span>
                         <span class="result-value" id="paygPaid${num}">$0</span>
                     </div>
-                    <div class="result-row" id="totalTaxRow${num}">
-                        <span class="result-label" id="totalTaxLabel${num}" style="font-weight: bold;"><strong>TOTAL TAX</strong></span>
+                    <div class="result-row bold-row" id="totalTaxRow${num}">
+                        <span class="result-label" id="totalTaxLabel${num}"><strong>TOTAL TAX</strong></span>
                         <span class="result-value" id="totalTax${num}">$0</span>
                     </div>
-                    <div class="result-row">
-                        <span class="result-label" style="font-weight: bold;">
+                    <div class="result-row bold-row">
+                        <span class="result-label">
                             <strong>NET ANNUAL INCOME</strong>
                             <span class="info-tooltip">
                                 <i class="info-icon">i</i>
@@ -1280,6 +1362,9 @@
                 document.getElementById('dividendAmount' + num).value = '';
                 document.getElementById('frankingCredit' + num).value = '';
                 document.getElementById('totalAssessableDividend' + num).value = '0';
+                // Hide franking warning
+                const warningElement = document.getElementById('frankingWarning' + num);
+                if (warningElement) warningElement.classList.remove('show');
             }
         }
     }
@@ -1291,6 +1376,24 @@
         
         const totalField = document.getElementById('totalAssessableDividend' + num);
         totalField.value = total.toLocaleString('en-US');
+        
+        // Check if franking credit exceeds maximum allowable (30/70 of dividend amount)
+        const maxFrankingCredit = dividendAmount * (30 / 70);
+        const warningElement = document.getElementById('frankingWarning' + num);
+        
+        if (warningElement) {
+            if (frankingCredit > maxFrankingCredit && dividendAmount > 0) {
+                warningElement.classList.add('show');
+            }
+            // Note: Warning stays visible until manually dismissed
+        }
+    }
+
+    function dismissFrankingWarning(num) {
+        const warningElement = document.getElementById('frankingWarning' + num);
+        if (warningElement) {
+            warningElement.classList.remove('show');
+        }
     }
 
     function adjustWidths() {
@@ -1798,6 +1901,9 @@
             if (frankingCreditEl) frankingCreditEl.value = '';
             const totalAssessableDividend = document.getElementById('totalAssessableDividend' + num);
             if (totalAssessableDividend) totalAssessableDividend.value = '0';
+            // Hide franking warning
+            const warningElement = document.getElementById('frankingWarning' + num);
+            if (warningElement) warningElement.classList.remove('show');
         }
 
         const deductionsAmount = document.getElementById('deductionsAmount' + num);
@@ -1849,6 +1955,17 @@
         // Set initial widths to match Scenario 1
         adjustWidths();
     };
+
+    // Handle click outside warning to dismiss it
+    document.addEventListener('click', function(event) {
+        // Check if click is outside any warning box
+        const warnings = document.querySelectorAll('.franking-warning.show');
+        warnings.forEach(warning => {
+            if (!warning.contains(event.target)) {
+                warning.classList.remove('show');
+            }
+        });
+    });
 </script>
 
 <script type="module">
