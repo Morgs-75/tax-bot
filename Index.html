@@ -666,6 +666,12 @@
             font-weight: 700;
         }
 
+        /* Green color for both label and values when ALL scenarios are refunds */
+        .result-row.all-refund .result-label,
+        .result-row.all-refund .result-value {
+            color: #38a169;
+        }
+
         /* Make last two rows bold (TOTAL TAX and NET ANNUAL INCOME) */
         .result-row:nth-last-child(1) .result-label,
         .result-row:nth-last-child(1) .result-value,
@@ -1536,6 +1542,9 @@
                 // Adjust widths
                 adjustWidths();
                 
+                // Update TOTAL TAX labels
+                updateAllTotalTaxLabels();
+                
                 return;
             }
         }
@@ -1783,16 +1792,6 @@
         const totalTax = totalTaxPayable - frankingCredit - paygWithholdingAmount - paygAmount;
         const netIncome = income - totalTaxPayable;
         
-        const totalTaxLabel = document.getElementById('totalTaxLabel' + scenario);
-        const totalTaxRow = document.getElementById('totalTaxRow' + scenario);
-        if (totalTax < 0) {
-            totalTaxLabel.innerHTML = '<strong>TOTAL TAX (REFUND)</strong>';
-            totalTaxRow.classList.add('refund');
-        } else {
-            totalTaxLabel.innerHTML = '<strong>TOTAL TAX</strong>';
-            totalTaxRow.classList.remove('refund');
-        }
-
         document.getElementById('baseIncome' + scenario).textContent = formatCurrency(income);
         document.getElementById('taxOnIncome' + scenario).textContent = formatCurrency(incomeTax);
         document.getElementById('medicareLevy' + scenario).textContent = formatCurrency(medicareLevy);
@@ -1805,6 +1804,79 @@
         document.getElementById('paygPaid' + scenario).textContent = formatCurrency(-paygAmount);
         document.getElementById('totalTax' + scenario).textContent = formatCurrency(totalTax);
         document.getElementById('netAnnual' + scenario).textContent = formatCurrency(netIncome);
+        
+        // Update all TOTAL TAX labels based on all visible scenarios
+        updateAllTotalTaxLabels();
+    }
+
+    function updateAllTotalTaxLabels() {
+        let hasPositive = false;
+        let hasNegative = false;
+        
+        // Check all visible scenarios
+        visibleScenarios.forEach(num => {
+            const totalTaxElement = document.getElementById('totalTax' + num);
+            if (totalTaxElement) {
+                const text = totalTaxElement.textContent;
+                // Parse the value - remove $ and commas, check for parentheses (negative)
+                const isNegative = text.includes('(');
+                
+                if (isNegative) {
+                    hasNegative = true;
+                } else {
+                    // Check if it's not just $0
+                    const value = parseFloat(text.replace(/[$,()]/g, ''));
+                    if (value > 0) {
+                        hasPositive = true;
+                    }
+                }
+            }
+        });
+        
+        // Determine label text and styling
+        let labelText;
+        let applyGreenToLabel = false;
+        
+        if (hasPositive && hasNegative) {
+            // Mixed: default color
+            labelText = '<strong>TOTAL TAX / (REFUND)</strong>';
+            applyGreenToLabel = false;
+        } else if (hasNegative && !hasPositive) {
+            // All refunds: green color
+            labelText = '<strong>TOTAL TAX REFUND</strong>';
+            applyGreenToLabel = true;
+        } else {
+            // All positive or all zero: default color
+            labelText = '<strong>TOTAL TAX</strong>';
+            applyGreenToLabel = false;
+        }
+        
+        // Update all labels
+        visibleScenarios.forEach(num => {
+            const totalTaxLabel = document.getElementById('totalTaxLabel' + num);
+            const totalTaxRow = document.getElementById('totalTaxRow' + num);
+            const totalTaxElement = document.getElementById('totalTax' + num);
+            
+            if (totalTaxLabel && totalTaxRow && totalTaxElement) {
+                totalTaxLabel.innerHTML = labelText;
+                
+                // Apply or remove all-refund class for green label
+                if (applyGreenToLabel) {
+                    totalTaxRow.classList.add('all-refund');
+                } else {
+                    totalTaxRow.classList.remove('all-refund');
+                }
+                
+                // Add refund class if this specific scenario is negative (for value color)
+                const text = totalTaxElement.textContent;
+                const isNegative = text.includes('(');
+                if (isNegative) {
+                    totalTaxRow.classList.add('refund');
+                } else {
+                    totalTaxRow.classList.remove('refund');
+                }
+            }
+        });
     }
 
     function calculateTax(scenario) { 
@@ -1945,6 +2017,9 @@
         
         const totalTaxRow = document.getElementById('totalTaxRow' + num);
         if (totalTaxRow) totalTaxRow.classList.remove('refund');
+        
+        // Update all TOTAL TAX labels based on remaining scenarios
+        updateAllTotalTaxLabels();
     }
 
     window.onload = function () {
