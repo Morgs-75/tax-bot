@@ -993,6 +993,199 @@
             .year-btn {
                 width: 100%;
             }
+
+            .message-copy-container {
+                width: 100%;
+                max-width: 600px;
+            }
+        }
+
+        /* Message Copy Button Styles */
+        .message-copy-container {
+            width: 860px;
+            max-width: 860px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .message-copy-btn {
+            padding: 15px 40px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message-copy-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        }
+
+        .message-copy-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #4a5568;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .modal-close:hover {
+            color: #2d3748;
+        }
+
+        .modal-content h2 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .modal-content p {
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .phone-input-group {
+            margin-bottom: 20px;
+        }
+
+        .phone-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .phone-input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .phone-input-group input:focus {
+            outline: none;
+            border-color: #48bb78;
+        }
+
+        .phone-input-group .input-hint {
+            font-size: 0.85em;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: #38a169;
+        }
+
+        .modal-btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .modal-btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #c6f6d5;
+            color: #2f855a;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #fed7d7;
+            color: #c53030;
+            display: block;
+        }
+
+        .status-message.sending {
+            background: #bee3f8;
+            color: #2c5282;
+            display: block;
         }
     </style>
 </head>
@@ -1058,6 +1251,14 @@
 
         <div id="scenariosContainer" class="scenarios-container">
             <!-- Scenarios will be dynamically generated -->
+        </div>
+
+        <!-- Message a Copy Button -->
+        <div class="message-copy-container">
+            <button class="message-copy-btn" onclick="openPhoneModal()">
+                <span>📱</span>
+                <span>Message a Copy</span>
+            </button>
         </div>
 
         <div class="disclaimer-section">
@@ -2101,6 +2302,141 @@
             }
         });
     });
+
+    // === MESSAGE A COPY FUNCTIONALITY ===
+    
+    function openPhoneModal() {
+        const modal = document.getElementById('phoneModal');
+        modal.classList.add('active');
+        document.getElementById('phoneNumber').focus();
+    }
+
+    function closePhoneModal() {
+        const modal = document.getElementById('phoneModal');
+        modal.classList.remove('active');
+        document.getElementById('phoneNumber').value = '';
+        document.getElementById('statusMessage').className = 'status-message';
+        document.getElementById('statusMessage').textContent = '';
+    }
+
+    function getCalculationData() {
+        const data = {
+            taxYear: selectedYear,
+            scenarios: []
+        };
+
+        visibleScenarios.forEach(num => {
+            const scenarioData = {
+                scenarioNumber: num,
+                income: parseFloat(document.getElementById('income' + num).value) || 0,
+                dividendAmount: parseFloat(document.getElementById('dividendAmount' + num).value) || 0,
+                frankingCredit: parseFloat(document.getElementById('frankingCredit' + num).value) || 0,
+                deductions: parseFloat(document.getElementById('deductionsAmount' + num).value) || 0,
+                superContributions: parseFloat(document.getElementById('superannuationAmount' + num).value) || 0,
+                helpDebt: parseFloat(document.getElementById('helpDebt' + num).value) || 0,
+                paygWithholding: parseFloat(document.getElementById('paygWithholdingAmount' + num).value) || 0,
+                payg: parseFloat(document.getElementById('paygAmount' + num).value) || 0,
+                isResident: document.querySelector(`input[name="resident${num}"]:checked`).value === 'resident',
+                isSAPTO: document.getElementById('sapto' + num).checked,
+                results: {
+                    baseIncome: document.getElementById('baseIncome' + num).textContent,
+                    taxOnIncome: document.getElementById('taxOnIncome' + num).textContent,
+                    medicareLevy: document.getElementById('medicareLevy' + num).textContent,
+                    helpRepayment: document.getElementById('helpRepayment' + num).textContent,
+                    lito: document.getElementById('lito' + num).textContent,
+                    saptoAmount: document.getElementById('sapto' + num + 'Amount').textContent,
+                    totalTaxPayable: document.getElementById('totalTaxPayable' + num).textContent,
+                    frankingCreditOffset: document.getElementById('frankingCreditOffset' + num).textContent,
+                    paygWithholdingPaid: document.getElementById('paygWithholdingPaid' + num).textContent,
+                    paygPaid: document.getElementById('paygPaid' + num).textContent,
+                    totalTax: document.getElementById('totalTax' + num).textContent,
+                    netAnnual: document.getElementById('netAnnual' + num).textContent
+                }
+            };
+            data.scenarios.push(scenarioData);
+        });
+
+        return data;
+    }
+
+    async function sendCalculation() {
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const statusMessage = document.getElementById('statusMessage');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Validate phone number
+        if (!phoneNumber) {
+            statusMessage.className = 'status-message error';
+            statusMessage.textContent = 'Please enter a phone number';
+            return;
+        }
+
+        // Basic Australian phone validation
+        const cleanPhone = phoneNumber.replace(/\s/g, '');
+        if (!/^04\d{8}$/.test(cleanPhone) && !/^\+614\d{8}$/.test(cleanPhone)) {
+            statusMessage.className = 'status-message error';
+            statusMessage.textContent = 'Please enter a valid Australian mobile number';
+            return;
+        }
+
+        // Disable button and show sending status
+        sendBtn.disabled = true;
+        statusMessage.className = 'status-message sending';
+        statusMessage.textContent = 'Sending your calculation...';
+
+        try {
+            const calculationData = getCalculationData();
+            
+            // Format phone for international format
+            const formattedPhone = cleanPhone.startsWith('+61') ? cleanPhone : '+61' + cleanPhone.substring(1);
+
+            const payload = {
+                phone: formattedPhone,
+                calculation: calculationData,
+                timestamp: new Date().toISOString()
+            };
+
+            // Replace this URL with your Make.com webhook URL
+            const webhookUrl = 'YOUR_MAKE_COM_WEBHOOK_URL_HERE';
+            
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                statusMessage.className = 'status-message success';
+                statusMessage.textContent = '✓ SMS sent successfully! Check your phone.';
+                
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    closePhoneModal();
+                }, 2000);
+            } else {
+                throw new Error('Failed to send SMS');
+            }
+        } catch (error) {
+            console.error('Error sending calculation:', error);
+            statusMessage.className = 'status-message error';
+            statusMessage.textContent = 'Failed to send SMS. Please try again.';
+            sendBtn.disabled = false;
+        }
+    }
+
+    // Allow Enter key to submit phone modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('phoneNumber');
+        if (phoneInput) {
+            phoneInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendCalculation();
+                }
+            });
+        }
+    });
 </script>
 
 <script type="module">
@@ -2120,5 +2456,33 @@
   
   console.log('TaxBot standard embed initialized');
 </script>
+
+<!-- Phone Number Modal -->
+<div id="phoneModal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closePhoneModal()">×</button>
+        <h2>Get Your Tax Calculation</h2>
+        <p>Enter your mobile number to receive a PDF copy of your calculation via SMS.</p>
+        
+        <div class="phone-input-group">
+            <label for="phoneNumber">Mobile Number</label>
+            <input 
+                type="tel" 
+                id="phoneNumber" 
+                placeholder="0412 345 678" 
+                maxlength="12"
+            />
+            <div class="input-hint">Australian mobile number (e.g., 0412345678)</div>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-secondary" onclick="closePhoneModal()">Cancel</button>
+            <button class="modal-btn modal-btn-primary" id="sendBtn" onclick="sendCalculation()">Send SMS</button>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+</div>
+
 </body>
 </html>
