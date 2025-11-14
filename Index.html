@@ -161,24 +161,209 @@
         }
 
         @media print {
-            .no-print, .side-banner, .year-selector, button, .modal-overlay,
-            .scenario-control-btn, #buttonContainer {
+            @page {
+                size: A4 portrait;
+                margin: 6mm 5mm;
+            }
+
+            /* Hide all unnecessary elements */
+            .no-print, 
+            .side-banner, 
+            .year-selector, 
+            button, 
+            .modal-overlay,
+            .scenario-control-btn, 
+            #buttonContainer, 
+            .logo, 
+            .info-panel, 
+            .taxbot-panel,
+            .residency-section,
+            .form-group-inline,
+            .checkbox-section,
+            .button-group,
+            .dividend-inputs,
+            .scenario-name-wrapper input,
+            .info-tooltip,
+            input {
                 display: none !important;
             }
             
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
+                font-size: 6pt;
+                line-height: 1.1;
             }
 
             .container {
                 max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 12pt;
+                margin: 0 0 1.5mm 0;
+                text-align: center;
+                line-height: 1;
+                padding: 0;
+            }
+
+            .subtitle {
+                font-size: 7pt;
+                margin: 0 0 3mm 0;
+                text-align: center;
+                padding: 0;
+            }
+
+            .scenarios-container {
+                width: 100%;
+                max-width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 2.5mm;
+                align-items: start;
+            }
+
+            /* Single scenario takes full width */
+            .scenarios-container:has(.scenario-card:only-child) {
+                grid-template-columns: 1fr;
             }
 
             .scenario-card {
                 page-break-inside: avoid;
-                box-shadow: none;
-                border: 1px solid #e2e8f0;
+                box-shadow: none !important;
+                border: 0.5pt solid #cbd5e0 !important;
+                padding: 2mm !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                background: white !important;
+            }
+
+            .scenario-card h2,
+            .scenario-header {
+                font-size: 8pt;
+                margin: 0 0 1mm 0 !important;
+                padding: 1.5mm !important;
+                background: #2d3748 !important;
+                color: white !important;
+                text-align: center;
+                font-weight: 600;
+                border-radius: 1mm;
+            }
+
+            /* Show only the results section */
+            .results {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+            }
+
+            .result-row {
+                font-size: 6pt !important;
+                padding: 0.5mm 0 !important;
+                margin: 0 !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                border-bottom: 0.25pt solid #e2e8f0 !important;
+                line-height: 1.2 !important;
+                min-height: auto !important;
+            }
+
+            .result-row:last-child {
+                border-bottom: none !important;
+            }
+
+            .result-label {
+                font-size: 6pt !important;
+                color: #4a5568 !important;
+                font-weight: 500 !important;
+                flex: 1 !important;
+            }
+
+            .result-value {
+                font-size: 6pt !important;
+                font-weight: 600 !important;
+                color: #2d3748 !important;
+                text-align: right !important;
+            }
+
+            /* Make key rows bold and highlighted */
+            .result-row:first-child .result-label,
+            .result-row:first-child .result-value {
+                font-weight: 700 !important;
+                font-size: 6.5pt !important;
+            }
+
+            /* Last two rows: TOTAL TAX and NET ANNUAL INCOME */
+            .result-row:nth-last-child(1),
+            .result-row:nth-last-child(2) {
+                background: #f7fafc !important;
+                padding: 1mm !important;
+                margin-top: 0.5mm !important;
+            }
+
+            .result-row:nth-last-child(1) .result-label,
+            .result-row:nth-last-child(1) .result-value,
+            .result-row:nth-last-child(2) .result-label,
+            .result-row:nth-last-child(2) .result-value {
+                font-weight: 700 !important;
+                font-size: 6.5pt !important;
+            }
+
+            /* Very last row - NET ANNUAL INCOME - extra emphasis */
+            .result-row:nth-last-child(1) {
+                background: #2d3748 !important;
+            }
+
+            .result-row:nth-last-child(1) .result-label,
+            .result-row:nth-last-child(1) .result-value {
+                color: white !important;
+            }
+
+            .result-highlight {
+                background: #2d3748 !important;
+                color: white !important;
+                margin: 0 !important;
+                padding: 1mm !important;
+                border-radius: 0 !important;
+            }
+
+            .result-highlight .result-label {
+                color: white !important;
+                font-size: 6.5pt !important;
+            }
+
+            .result-highlight .result-value {
+                color: white !important;
+                font-size: 6.5pt !important;
+                font-weight: 700 !important;
+            }
+
+            /* Disclaimer at bottom */
+            .disclaimer {
+                margin-top: 3mm !important;
+                padding: 2mm !important;
+                font-size: 5.5pt !important;
+                border: 0.5pt solid #e2e8f0 !important;
+                background: #f9fafb !important;
+                page-break-inside: avoid;
+            }
+
+            .disclaimer h3 {
+                font-size: 6.5pt !important;
+                margin: 0 0 1mm 0 !important;
+                font-weight: 600 !important;
+            }
+
+            .disclaimer p {
+                margin: 0.5mm 0 !important;
+                line-height: 1.3 !important;
             }
         }
 
@@ -2508,7 +2693,7 @@
             const htmlContent = docClone.outerHTML;
 
             // DocRaptor API configuration
-            const DOCRAPTOR_API_KEY = '5tzK3sOs1yVURw9IU8y0'; // Replace with your actual API key
+            const DOCRAPTOR_API_KEY = 'YOUR_DOCRAPTOR_API_KEY_HERE'; // Replace with your actual API key
             
             const payload = {
                 user_credentials: DOCRAPTOR_API_KEY,
@@ -2516,7 +2701,11 @@
                     document_content: htmlContent,
                     name: `Tax_Calculation_${new Date().toISOString().split('T')[0]}.pdf`,
                     document_type: 'pdf',
-                    test: false // Set to true for testing (free), false for production
+                    test: false, // Set to true for testing (free), false for production
+                    prince_options: {
+                        page_size: 'A4',
+                        page_margin: '6mm 5mm'
+                    }
                 }
             };
 
