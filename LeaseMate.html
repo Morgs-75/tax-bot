@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AASB 16 Lease Calculator – Remeasurements</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; padding: 24px; background: #1a1a2e; display: flex; justify-content: center; color: #e0e0e0; }
+    .container { max-width: 1500px; width: 100%; display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: flex-start; }
+    .card { background: #252538; padding: 20px 18px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+    h1 { margin-top: 0; font-size: 20px; color: #ffffff; }
+    h2 { margin: 0 0 10px 0; font-size: 16px; color: #ffffff; }
+    h3 { color: #ffffff; }
+    .field { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; margin-bottom: 3px; font-weight: 600; color: #b0b0b0; }
+    input[type="number"], input[type="date"], input[type="text"], select {
+      width: 100%; padding: 7px 9px; border-radius: 6px; border: 1px solid #404055; font-size: 13px;
+      height: 36px; box-sizing: border-box;
+      background: #1e1e30; color: #e0e0e0;
+    }
+    input:focus, select:focus { outline: none; border-color: #F527e4; box-shadow: 0 0 0 1px rgba(245,39,228,0.25); }
+    input::placeholder { color: #666; }
+    select option { background: #1e1e30; color: #e0e0e0; }
+    .inline { display: flex; gap: 8px; align-items: stretch; }
+    .inline .field { flex: 1; margin-bottom: 0; display: flex; flex-direction: column; justify-content: flex-start; }
+    .inline .field label { min-height: 16px; }
+    .button-row { margin-top: 10px; text-align: right; display: flex; justify-content: flex-end; gap: 8px; }
+    button { padding: 8px 14px; border-radius: 6px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; background: #F527e4; color: #ffffff; }
+    button:hover { background: #f85deb; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .remove-btn { 
+      width: 36px; height: 36px; min-width: 36px; padding: 0; 
+      background: #2a2a40; color: #888; border: 1px solid #404055; 
+      border-radius: 6px; font-size: 16px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .remove-btn:hover { background: #3a2020; color: #ff6666; border-color: #ff6666; }
+    .error { margin-top: 8px; font-size: 12px; color: #ff6b6b; }
+    .summary-row { display: flex; flex-wrap: nowrap; gap: 12px; margin-top: 6px; align-items: stretch; width: 100%; }
+    .summary-box { 
+      flex: 1 1 0; 
+      min-width: 160px; 
+      padding: 10px 9px; 
+      border-radius: 8px; 
+      background: #1e1e30; 
+      font-size: 12px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      border: 1px solid #404055;
+    }
+    .summary-label { text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; color: #e0e0e0; }
+    .summary-value { margin-top: 2px; font-size: 16px; font-weight: 700; color: #65F527; }
+    .muted { font-size: 11px; color: #888; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+    th, td { padding: 4px 5px; border-bottom: 1px solid #353548; text-align: right; white-space: nowrap; }
+    th { background: #1e1e30; font-weight: 600; color: #b0b0b0; }
+    th:first-child, td:first-child { text-align: left; }
+    tbody tr:nth-child(even) { background: #2a2a3d; }
+    tbody tr:nth-child(odd) { background: #252538; }
+    tbody tr:hover { background: #303045; }
+    .scroll { max-height: 460px; overflow: auto; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 999px; font-size: 10px; background: #1a3d1e; color: #65F527; margin-left: 4px; }
+    .adj-row, .fixed-row, .manual-row, .option-row, .adj-option-row { 
+      border-left: 3px solid #65F527; 
+      padding-left: 8px; 
+      margin-bottom: 6px; 
+    }
+    #leaseFilterOptions { background: #252538; border-color: #404055; }
+    #leaseFilterOptions label:hover { background: #303045; }
+    #leaseFilterOptions input[type="checkbox"] { cursor: pointer; }
+    #leaseFilterBtn { background: #1e1e30; color: #e0e0e0; }
+    #leaseFilterBtn:hover { background: #2a2a40; }
+    /* Scrollbar styling for dark mode */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #1e1e30; }
+    ::-webkit-scrollbar-thumb { background: #404055; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #505065; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- INPUT PANEL -->
+    <div class="card">
+      <h1>AASB 16 Lease Calculator</h1>
+      <form id="lease-form">
+        <h2>Lease terms</h2>
+        <div class="field">
+          <label for="leaseName">Lease name / ID (optional)</label>
+          <input id="leaseName" type="text" placeholder="e.g. Shop 1 – Retail" />
+        </div>
+        <div class="field">
+          <label for="payment">Fixed lease payment per period (excl GST)</label>
+          <input id="payment" type="number" min="0" step="0.01" placeholder="e.g. 5,000" required />
+        </div>
+        <div class="inline">
+          <div class="field">
+            <label for="months">Lease term (months)</label>
+            <input id="months" type="number" min="1" step="1" placeholder="e.g. 60" required />
+          </div>
+          <div class="field">
+            <label for="periodsPerYear">Payments per year</label>
+            <select id="periodsPerYear">
+              <option value="12">12 (monthly)</option>
+              <option value="4">4 (quarterly)</option>
+              <option value="2">2 (half-yearly)</option>
+              <option value="1">1 (annually)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- OPTION PERIODS AT COMMENCEMENT -->
+        <div style="margin-top:8px; margin-bottom:8px;">
+          <label style="font-size:12px; font-weight:600;">Option periods (reasonably certain at commencement)</label>
+          <p class="muted" style="margin-top:2px; margin-bottom:6px;">Extends the lease at the last payment rate.</p>
+          <div id="optionPeriods"></div>
+          <button type="button" id="addOption" class="secondary" style="width:100%;">+ Add option period</button>
+        </div>
+
+        <div class="inline" style="margin-top:8px;">
+          <div class="field">
+            <label for="rate">Incremental Borrowing Rate (%)</label>
+            <input id="rate" type="number" min="0" step="0.01" placeholder="e.g. 6.00" required />
+          </div>
+        </div>
+        <div class="inline" style="margin-top:8px;">
+          <div class="field">
+            <label for="commencementDate">Commencement date</label>
+            <input id="commencementDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="firstPaymentDate">First payment date</label>
+            <input id="firstPaymentDate" type="date" required />
+          </div>
+        </div>
+
+        <!-- FIXED INCREASES KNOWN AT COMMENCEMENT -->
+        <h2 style="margin-top:16px;">Fixed increases (known at commencement)</h2>
+        <div id="fixedIncreases"></div>
+        <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
+          <button type="button" id="addFixedInc" class="secondary" style="flex:1;">Add fixed increase</button>
+        </div>
+
+        <!-- MANUAL PAYMENTS -->
+        <h2 style="margin-top:16px;">Manual payments (optional overrides)</h2>
+        <div id="manualPayments"></div>
+        <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
+          <button type="button" id="addManualPay" class="secondary" style="flex:1;">Add manual payment</button>
+        </div>
+
+        <h2 style="margin-top:16px;">Adjustments at commencement</h2>
+        <div class="field">
+          <label for="idc">Initial direct costs</label>
+          <input id="idc" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="inline" style="align-items:flex-start; margin-bottom:12px;">
+          <div class="field">
+            <label for="incentives">Lease incentives received</label>
+            <input id="incentives" type="number" min="0" step="0.01" value="0" />
+          </div>
+          <div class="field">
+            <label for="incentiveDate">Incentive date</label>
+            <input id="incentiveDate" type="date" />
+          </div>
+        </div>
+        <div class="inline">
+          <div class="field">
+            <label for="restoration">Make good estimate</label>
+            <input id="restoration" type="number" min="0" step="0.01" value="0" />
+          </div>
+          <div class="field">
+            <label for="restorationDate">Make good date</label>
+            <input id="restorationDate" type="date" />
+          </div>
+        </div>
+
+        <input type="hidden" id="currentLeaseId" />
+
+        <h2 style="margin-top:16px;">Existing leases</h2>
+        <div class="inline" style="margin-bottom:8px; align-items:flex-end;">
+          <div class="field" style="flex:1;">
+            <label for="leaseSelect">Edit existing lease</label>
+            <select id="leaseSelect">
+              <option value="">-- select lease --</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;">
+            <label>&nbsp;</label>
+            <button type="button" id="loadLease" class="secondary" style="height:36px; width:100%;">Load lease</button>
+          </div>
+        </div>
+
+        <h2 style="margin-top:16px;">Remeasurements (options exercised later / step changes)</h2>
+        <p class="muted" style="margin-top:0; margin-bottom:8px;">For options NOT expected at commencement but exercised later. Treated as remeasurements.</p>
+        
+        <!-- Option periods as remeasurements -->
+        <div id="adjOptionPeriods"></div>
+        <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">
+          <button type="button" id="addAdjOption" class="secondary" style="flex:1;">Add option period (remeasurement)</button>
+        </div>
+        
+        <!-- Other adjustments -->
+        <p class="muted" style="margin-top:8px; margin-bottom:4px;">Other adjustments (rent increases, modifications):</p>
+        <div id="adjustments"></div>
+        <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
+          <button type="button" id="addAdj" style="flex:1;">Add adjustment</button>
+          <button type="submit" id="calcInside" style="flex:1;">Generate Schedule</button>
+        </div>
+        
+        <h2 style="margin-top:16px;">Save Portfolio</h2>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <button type="button" id="savePortfolio" style="flex:1;">Save</button>
+          <button type="button" id="saveAsPortfolio" style="flex:1;">Save As</button>
+          <button type="button" id="openPortfolio" style="flex:1;">Open</button>
+          <button type="button" id="homeButton" style="flex:1; background: rgba(30, 30, 48, 0.85); border: 1px solid #404055;">Home</button>
+        </div>
+        <p id="saveStatus" class="muted" style="margin-top:4px;"></p>
+      </form>
+
+      <p class="muted">
+        Multi-lease AASB 16 model. Fixed payments only, single discount rate. Fixed increases known at commencement
+        are included in the opening ROU and lease liability. Remeasurements are modelled as step changes in future
+        fixed payments (percentage increase from a base payment). Dates drive display of payment timing; discounting
+        is on a date-basis using the annual discount rate.
+      </p>
+    </div>
+
+    <!-- OUTPUT PANEL -->
+    <div class="card">
+      <h2>Lease Schedule &amp; Export</h2>
+      <div class="inline" style="margin-bottom:12px; align-items:flex-end;">
+        <div class="field" style="position:relative;">
+          <label style="font-size:12px; font-weight:600;">Filter by lease</label>
+          <div id="leaseFilterDropdown" style="position:relative;">
+            <button type="button" id="leaseFilterBtn" style="width:100%; height:36px; text-align:left; padding:7px 30px 7px 9px; background:#1e1e30; border:1px solid #404055; border-radius:6px; font-size:13px; cursor:pointer; position:relative; color:#e0e0e0;">
+              All leases
+              <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%);">▼</span>
+            </button>
+            <div id="leaseFilterOptions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#252538; border:1px solid #404055; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.4); z-index:100; max-height:250px; overflow-y:auto; margin-top:2px;">
+              <label style="display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; border-bottom:1px solid #404055; font-weight:600; font-size:12px; color:#e0e0e0;">
+                <input type="checkbox" id="filterAll" checked />
+                <span>All leases</span>
+              </label>
+              <div id="leaseFilterList"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="filterDateFrom" style="font-size:12px; font-weight:600;">From date</label>
+          <input type="date" id="filterDateFrom" />
+        </div>
+        <div class="field">
+          <label for="filterDateTo" style="font-size:12px; font-weight:600;">To date</label>
+          <input type="date" id="filterDateTo" />
+        </div>
+        <button type="button" id="clearFilters" style="height:36px;">Clear filters</button>
+      </div>
+      <div id="summary" style="display:none;">
+        <div class="summary-row">
+          <div class="summary-box">
+            <div class="summary-label">Lease liability at commencement</div>
+            <div class="summary-value" id="liability0">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Right-of-use asset at commencement</div>
+            <div class="summary-value" id="rou0">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Lease incentive</div>
+            <div class="summary-value" id="incentiveSummary">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Make good estimate</div>
+            <div class="summary-value" id="restorationSummary">0.00</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Depreciation per period <span class="tag">Straight-line</span></div>
+            <div class="summary-value" id="depPerPeriod">0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-row" style="margin-top:4px; justify-content:flex-start;">
+        <button type="button" id="downloadCsv" disabled>Download Excel</button>
+      </div>
+
+      <div id="table-wrapper" class="scroll" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Lease</th>
+              <th>Period</th>
+              <th>Payment date</th>
+              <th>Opening liability</th>
+              <th>Interest</th>
+              <th>Payment</th>
+              <th>Manual override</th>
+              <th>Incentive</th>
+              <th>Restoration</th>
+              <th>Net cash flow</th>
+              <th>Closing liability</th>
+              <th>ROU gross</th>
+              <th>Depreciation</th>
+              <th>Accum. depn</th>
+              <th>ROU carrying amt</th>
+              <th>Liab adj</th>
+              <th>ROU adj</th>
+              <th>Remeasure?</th>
+            </tr>
+          </thead>
+          <tbody id="schedule-body"></tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:14px; font-size:13px;">Monthly totals (selected leases)</h3>
+      <div id="monthly-wrapper" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Opening liability</th>
+              <th>Interest</th>
+              <th>Payment</th>
+              <th>Manual override</th>
+              <th>Incentive</th>
+              <th>Restoration</th>
+              <th>Net cash flow</th>
+              <th>Closing liability</th>
+              <th>ROU gross</th>
+              <th>Depreciation</th>
+              <th>Accum. depn</th>
+              <th>ROU carrying amt</th>
+              <th>Liab adj</th>
+              <th>ROU adj</th>
+            </tr>
+          </thead>
+          <tbody id="monthly-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // --- State ---
+  let portfolioRows = [];
+  let leaseCounter = 0;
+  let leaseConfigs = [];
+
+  // --- Helpers ---
+  
+  // Format year-month "2026-01" to "Jan-26"
+  function formatYearMonth(ym) {
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const parts = ym.split("-");
+    const year = parts[0].slice(-2);
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    return monthNames[monthIndex] + "-" + year;
+  }
+
+  // Format number as #,###.00;(#,###.00)
+  function formatCurrency(amount) {
+    if (!isFinite(amount)) return "0.00";
+    const absAmount = Math.abs(amount);
+    const formatted = absAmount.toLocaleString("en-AU", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    if (amount < 0) {
+      return "(" + formatted + ")";
+    }
+    return formatted;
+  }
+
+  function addMonths(date, months) {
+    const d = new Date(date.getTime());
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + months);
+    if (d.getDate() < day) {
+      d.setDate(0);
+    }
+    return d;
+  }
+
+  // ISO date for sorting/grouping
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
+
+  // Display date dd-mmm-yy
+  function formatDateDisplay(date) {
+    const d = String(date.getDate()).padStart(2, "0");
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const m = monthNames[date.getMonth()];
+    const y = String(date.getFullYear()).slice(-2);
+    return d + "-" + m + "-" + y;
+  }
+
+  function refreshLeaseSelect() {
+    const select = document.getElementById("leaseSelect");
+    if (!select) return;
+    select.innerHTML = '<option value="">-- select lease --</option>';
+    leaseConfigs.forEach(function (cfg) {
+      const opt = document.createElement("option");
+      opt.value = String(cfg.leaseId);
+      opt.textContent = cfg.leaseName || ("Lease " + cfg.leaseId);
+      select.appendChild(opt);
+    });
+  }
+
+  function refreshFilterSelect() {
+    const listContainer = document.getElementById("leaseFilterList");
+    if (!listContainer) return;
+    
+    // Clear and rebuild options
+    listContainer.innerHTML = '';
+    
+    // Sort leases alphabetically by name
+    const sortedLeases = leaseConfigs.slice().sort(function(a, b) {
+      const nameA = (a.leaseName || ('Lease ' + a.leaseId)).toLowerCase();
+      const nameB = (b.leaseName || ('Lease ' + b.leaseId)).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    
+    // Add checkbox for each lease
+    sortedLeases.forEach(function (cfg) {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; font-size:12px; color:#e0e0e0;';
+      label.innerHTML = '<input type="checkbox" class="filter-lease-cb" data-lease-id="' + cfg.leaseId + '" checked /><span>' + (cfg.leaseName || ('Lease ' + cfg.leaseId)) + '</span>';
+      label.addEventListener('mouseenter', function() { this.style.background = '#303045'; });
+      label.addEventListener('mouseleave', function() { this.style.background = ''; });
+      listContainer.appendChild(label);
+    });
+    
+    // Re-attach checkbox event listeners
+    attachFilterCheckboxListeners();
+    updateFilterButtonText();
+  }
+  
+  function attachFilterCheckboxListeners() {
+    const allCheckbox = document.getElementById("filterAll");
+    const leaseCheckboxes = document.querySelectorAll(".filter-lease-cb");
+    
+    if (allCheckbox) {
+      allCheckbox.addEventListener("change", function () {
+        leaseCheckboxes.forEach(function (cb) { cb.checked = allCheckbox.checked; });
+        updateFilterButtonText();
+        renderSchedule();
+      });
+    }
+    
+    leaseCheckboxes.forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        const allChecked = Array.from(leaseCheckboxes).every(function (c) { return c.checked; });
+        const noneChecked = Array.from(leaseCheckboxes).every(function (c) { return !c.checked; });
+        
+        if (allCheckbox) {
+          allCheckbox.checked = allChecked;
+          allCheckbox.indeterminate = !allChecked && !noneChecked;
+        }
+        updateFilterButtonText();
+        renderSchedule();
+      });
+    });
+  }
+  
+  function updateFilterButtonText() {
+    const btn = document.getElementById("leaseFilterBtn");
+    const allCheckbox = document.getElementById("filterAll");
+    const leaseCheckboxes = document.querySelectorAll(".filter-lease-cb");
+    const checkedBoxes = document.querySelectorAll(".filter-lease-cb:checked");
+    
+    let text = "All leases";
+    if (allCheckbox && allCheckbox.checked && !allCheckbox.indeterminate) {
+      text = "All leases";
+    } else if (checkedBoxes.length === 0) {
+      text = "No leases selected";
+    } else if (checkedBoxes.length === 1) {
+      const leaseId = checkedBoxes[0].dataset.leaseId;
+      const cfg = leaseConfigs.find(function(c) { return String(c.leaseId) === leaseId; });
+      text = cfg ? (cfg.leaseName || ('Lease ' + cfg.leaseId)) : "1 lease";
+    } else {
+      text = checkedBoxes.length + " leases selected";
+    }
+    
+    btn.innerHTML = text + '<span style="position:absolute; right:10px; top:50%; transform:translateY(-50%);">▼</span>';
+  }
+  
+  // Toggle dropdown visibility
+  document.getElementById("leaseFilterBtn").addEventListener("click", function(e) {
+    e.stopPropagation();
+    const options = document.getElementById("leaseFilterOptions");
+    options.style.display = options.style.display === "none" ? "block" : "none";
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener("click", function(e) {
+    const dropdown = document.getElementById("leaseFilterDropdown");
+    const options = document.getElementById("leaseFilterOptions");
+    if (dropdown && !dropdown.contains(e.target)) {
+      options.style.display = "none";
+    }
+  });
+  
+  document.getElementById("filterDateFrom").addEventListener("change", function() {
+    renderSchedule();
+  });
+  
+  document.getElementById("filterDateTo").addEventListener("change", function() {
+    renderSchedule();
+  });
+  
+  document.getElementById("clearFilters").addEventListener("click", function() {
+    document.getElementById("filterAll").checked = true;
+    document.getElementById("filterAll").indeterminate = false;
+    document.querySelectorAll(".filter-lease-cb").forEach(function(cb) { cb.checked = true; });
+    document.getElementById("filterDateFrom").value = "";
+    document.getElementById("filterDateTo").value = "";
+    updateFilterButtonText();
+    renderSchedule();
+  });
+
+  // Existing helper kept for tests
+  function buildPayments(basePayment, basePeriods, adjustments) {
+    const totalExtra = adjustments.reduce(function (s, a) { return s + (a.extraPeriods || 0); }, 0);
+    const totalPeriods = basePeriods + totalExtra;
+    const payments = new Array(totalPeriods);
+    for (let p = 1; p <= totalPeriods; p++) {
+      let factor = 1;
+      adjustments.forEach(function (a) {
+        if (p >= a.per) {
+          factor *= 1 + (a.pct || 0) / 100;
+        }
+      });
+      payments[p - 1] = basePayment * factor;
+    }
+    return payments;
+  }
+
+  // Base payments with fixed increases over the original term and option periods
+  function buildBasePaymentsWithFixed(basePayment, basePeriods, fixedIncreases, optionPeriods) {
+    const optPeriods = optionPeriods || [];
+    const totalOptionPeriods = optPeriods.reduce(function (sum, opt) { return sum + (opt.periods || 0); }, 0);
+    const totalPeriods = basePeriods + totalOptionPeriods;
+    
+    const payments = new Array(totalPeriods);
+    const fixedSorted = (fixedIncreases || []).slice().sort(function (a, b) { return a.per - b.per; });
+    let fiIdx = 0;
+    let current = basePayment;
+    
+    // Track fixed increase schedule for option periods
+    const fixedIncreaseSchedule = []; // Array of {period, pct, amount} for recurring increases
+    
+    // Build base term payments with fixed increases
+    for (let p = 1; p <= basePeriods; p++) {
+      while (fiIdx < fixedSorted.length && fixedSorted[fiIdx].per === p) {
+        const f = fixedSorted[fiIdx];
+        if (f.amount && f.amount > 0) {
+          current = f.amount;
+        } else if (f.pct) {
+          current = current * (1 + f.pct / 100);
+        }
+        // Track the increase for potential application in option periods
+        fixedIncreaseSchedule.push({ per: p, pct: f.pct || 0, amount: f.amount || 0 });
+        fiIdx++;
+      }
+      payments[p - 1] = current;
+    }
+    
+    // Build option period payments
+    let optionStartPeriod = basePeriods + 1;
+    for (let optIdx = 0; optIdx < optPeriods.length; optIdx++) {
+      const opt = optPeriods[optIdx];
+      const optLength = opt.periods || 0;
+      
+      if (opt.applyFixedIncreases && fixedIncreaseSchedule.length > 0) {
+        // Find the interval between fixed increases to continue the pattern
+        // Assume fixed increases occur at regular intervals (e.g., every 12 periods for annual)
+        let interval = 0;
+        if (fixedIncreaseSchedule.length >= 2) {
+          interval = fixedIncreaseSchedule[1].per - fixedIncreaseSchedule[0].per;
+        } else if (fixedIncreaseSchedule.length === 1) {
+          // Single increase - assume it repeats at the same interval from start
+          interval = fixedIncreaseSchedule[0].per - 1;
+          if (interval <= 0) interval = 12; // Default to annual if first period
+        }
+        
+        // Get the last increase info
+        const lastIncrease = fixedIncreaseSchedule[fixedIncreaseSchedule.length - 1];
+        const lastIncreasePeriod = lastIncrease.per;
+        const increasePct = lastIncrease.pct;
+        
+        for (let i = 0; i < optLength; i++) {
+          const currentPeriod = optionStartPeriod + i;
+          
+          // Check if we should apply an increase at this period
+          if (interval > 0) {
+            const periodsSinceLastIncrease = currentPeriod - lastIncreasePeriod;
+            if (periodsSinceLastIncrease > 0 && periodsSinceLastIncrease % interval === 0) {
+              current = current * (1 + increasePct / 100);
+            }
+          }
+          
+          payments[currentPeriod - 1] = current;
+        }
+      } else {
+        // Flat rate - continue at last payment amount
+        for (let i = 0; i < optLength; i++) {
+          payments[optionStartPeriod + i - 1] = current;
+        }
+      }
+      
+      optionStartPeriod += optLength;
+    }
+    
+    return payments;
+  }
+
+  // Full schedule payments (fixed increases during initial term + option periods + remeasurement adjustments)
+  function buildSchedulePayments(basePayment, basePeriods, fixedIncreases, adjustments, optionPeriods) {
+    const optPeriods = optionPeriods || [];
+    const totalOptionPeriods = optPeriods.reduce(function (sum, opt) { return sum + (opt.periods || 0); }, 0);
+    const totalExtra = (adjustments || []).reduce(function (s, a) { return s + (a.extraPeriods || 0); }, 0);
+    const totalPeriods = basePeriods + totalOptionPeriods + totalExtra;
+    
+    const fixedSorted = (fixedIncreases || []).slice().sort(function (a, b) { return a.per - b.per; });
+    const adjSorted = (adjustments || []).slice().sort(function (a, b) { return a.per - b.per; });
+
+    let fiIdx = 0;
+    let adjIdx = 0;
+    let current = basePayment;
+    const payments = new Array(totalPeriods);
+    
+    // Track fixed increase schedule for option periods
+    const fixedIncreaseSchedule = [];
+
+    // Build base term payments
+    for (let p = 1; p <= basePeriods; p++) {
+      // Apply fixed increases during base term
+      while (fiIdx < fixedSorted.length && fixedSorted[fiIdx].per === p) {
+        const f = fixedSorted[fiIdx];
+        if (f.amount && f.amount > 0) {
+          current = f.amount;
+        } else if (f.pct) {
+          current = current * (1 + f.pct / 100);
+        }
+        fixedIncreaseSchedule.push({ per: p, pct: f.pct || 0, amount: f.amount || 0 });
+        fiIdx++;
+      }
+
+      // Apply remeasurement adjustments
+      while (adjIdx < adjSorted.length && adjSorted[adjIdx].per === p) {
+        const a = adjSorted[adjIdx];
+        if (a.pct) {
+          current = current * (1 + a.pct / 100);
+        }
+        adjIdx++;
+      }
+
+      payments[p - 1] = current;
+    }
+    
+    // Build option period payments
+    let optionStartPeriod = basePeriods + 1;
+    for (let optIdx = 0; optIdx < optPeriods.length; optIdx++) {
+      const opt = optPeriods[optIdx];
+      const optLength = opt.periods || 0;
+      
+      // Determine interval for fixed increases
+      let interval = 0;
+      let increasePct = 0;
+      if (opt.applyFixedIncreases && fixedIncreaseSchedule.length > 0) {
+        if (fixedIncreaseSchedule.length >= 2) {
+          interval = fixedIncreaseSchedule[1].per - fixedIncreaseSchedule[0].per;
+        } else if (fixedIncreaseSchedule.length === 1) {
+          interval = fixedIncreaseSchedule[0].per - 1;
+          if (interval <= 0) interval = 12;
+        }
+        increasePct = fixedIncreaseSchedule[fixedIncreaseSchedule.length - 1].pct;
+      }
+      
+      const lastIncreasePeriod = fixedIncreaseSchedule.length > 0 ? 
+        fixedIncreaseSchedule[fixedIncreaseSchedule.length - 1].per : 0;
+      
+      for (let i = 0; i < optLength; i++) {
+        const currentPeriod = optionStartPeriod + i;
+        
+        // Apply fixed increases if enabled for this option
+        if (opt.applyFixedIncreases && interval > 0) {
+          const periodsSinceLastIncrease = currentPeriod - lastIncreasePeriod;
+          if (periodsSinceLastIncrease > 0 && periodsSinceLastIncrease % interval === 0) {
+            current = current * (1 + increasePct / 100);
+          }
+        }
+        
+        // Apply remeasurement adjustments
+        while (adjIdx < adjSorted.length && adjSorted[adjIdx].per === currentPeriod) {
+          const a = adjSorted[adjIdx];
+          if (a.pct) {
+            current = current * (1 + a.pct / 100);
+          }
+          adjIdx++;
+        }
+        
+        payments[currentPeriod - 1] = current;
+      }
+      
+      optionStartPeriod += optLength;
+    }
+    
+    // Build remeasurement extra periods (options exercised later)
+    const adjExtraStart = basePeriods + totalOptionPeriods + 1;
+    for (let p = adjExtraStart; p <= totalPeriods; p++) {
+      // Apply any remaining adjustments
+      while (adjIdx < adjSorted.length && adjSorted[adjIdx].per <= p) {
+        const a = adjSorted[adjIdx];
+        if (a.pct) {
+          current = current * (1 + a.pct / 100);
+        }
+        adjIdx++;
+      }
+      payments[p - 1] = current;
+    }
+
+    return payments;
+  }
+
+  // Present value of net cash flows over a range (period-based, kept for tests)
+  function presentValueOfNetCashFlowsRange(payments, incentivesPerPeriod, periodicRate, timing, startIndex) {
+    let pv = 0;
+    for (let i = startIndex; i < payments.length; i++) {
+      const netCF = payments[i] - (incentivesPerPeriod[i] || 0);
+      let t;
+      if (timing === "advance") {
+        t = (i === startIndex) ? 0 : (i - startIndex);
+      } else {
+        t = (i - startIndex) + 1;
+      }
+      pv += netCF / Math.pow(1 + periodicRate, t);
+    }
+    return pv;
+  }
+
+  // Present value using actual payment dates and annual rate
+  function presentValueFromDates(payments, incentivesPerPeriod, paymentDates, annualRatePct, startIndex, anchorDate) {
+    let pv = 0;
+    const r = annualRatePct / 100;
+    const anchor = anchorDate.getTime();
+    const yearMs = 365.25 * 24 * 60 * 60 * 1000;
+
+    for (let i = startIndex; i < payments.length; i++) {
+      const netCF = payments[i] - (incentivesPerPeriod[i] || 0);
+      const payTime = paymentDates[i].getTime();
+      const years = Math.max((payTime - anchor) / yearMs, 0);
+      pv += netCF / Math.pow(1 + r, years);
+    }
+    return pv;
+  }
+
+  // Compute base rent for a given fixed increase row (used for syncing % and amount)
+  function computeBaseRentForFixedRow(rowElem) {
+    const basePayment = parseFloat(document.getElementById("payment").value || "0");
+    if (!basePayment || !isFinite(basePayment)) return 0;
+
+    const allRows = Array.from(document.querySelectorAll("#fixedIncreases .fixed-row"));
+    const rowsData = allRows.map(function (r) {
+      const per = parseInt(r.querySelector(".fixed-per").value || "0", 10);
+      const pct = parseFloat(r.querySelector(".fixed-pct").value || "0");
+      const amt = parseFloat((r.querySelector(".fixed-amt") && r.querySelector(".fixed-amt").value) || "0");
+      return { el: r, per: per, pct: pct, amt: amt };
+    }).filter(function (d) { return d.per >= 1; });
+
+    rowsData.sort(function (a, b) { return a.per - b.per; });
+
+    let current = basePayment;
+    for (let i = 0; i < rowsData.length; i++) {
+      const d = rowsData[i];
+      if (d.el === rowElem) break;
+      if (d.amt && d.amt > 0) {
+        current = d.amt;
+      } else if (d.pct) {
+        current = current * (1 + d.pct / 100);
+      }
+    }
+    return current;
+  }
+
+  // --- Simple internal tests ---
+  (function runInternalTests() {
+    const base = 100;
+    const basePeriods = 24;
+    const fixed = [{ pct: 4, per: 13, amount: 0 }];
+    const payments = buildBasePaymentsWithFixed(base, basePeriods, fixed, []);
+    if (!(payments[0] === 100 && Math.abs(payments[12] - 104) < 1e-6)) {
+      console.warn("buildBasePaymentsWithFixed test failed");
+    }
+
+    const sched = buildSchedulePayments(base, basePeriods, fixed, [], [], []);
+    if (!(sched[0] === 100 && Math.abs(sched[12] - 104) < 1e-6 && Math.abs(sched[23] - 104) < 1e-6)) {
+      console.warn("buildSchedulePayments test failed");
+    }
+  })();
+
+  // --- Option period rows (at commencement) ---
+  document.getElementById("addOption").addEventListener("click", function () {
+    const wrap = document.getElementById("optionPeriods");
+    const div = document.createElement("div");
+    div.className = "option-row";
+    div.innerHTML = '' +
+      '<div class="inline" style="margin-bottom:6px; align-items:flex-end;">' +
+        '<div class="field">' +
+          '<label>Additional term (months)</label>' +
+          '<input type="number" class="option-months" min="1" step="1" placeholder="e.g. 24" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Apply fixed increases?</label>' +
+          '<select class="option-apply-fixed">' +
+            '<option value="no">No - flat rate</option>' +
+            '<option value="yes">Yes - continue increases</option>' +
+          '</select>' +
+        '</div>' +
+        '<button type="button" class="remove-btn remove-option">✕</button>' +
+      '</div>';
+    wrap.appendChild(div);
+    
+    // Add remove handler
+    div.querySelector(".remove-option").addEventListener("click", function() {
+      div.remove();
+    });
+  });
+
+  // --- Fixed increase rows ---
+  document.getElementById("addFixedInc").addEventListener("click", function () {
+    const wrap = document.getElementById("fixedIncreases");
+    const div = document.createElement("div");
+    div.className = "fixed-row";
+    div.innerHTML = '' +
+      '<div class="inline" style="margin-bottom: 12px;">' +
+        '<div class="field">' +
+          '<label>Increase %</label>' +
+          '<input type="number" class="fixed-pct" step="0.01" placeholder="e.g. 4" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>From period</label>' +
+          '<input type="number" class="fixed-per" min="1" step="1" placeholder="e.g. 13" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>New payment</label>' +
+          '<input type="number" class="fixed-amt" min="0" step="0.01" placeholder="override" />' +
+        '</div>' +
+      '</div>';
+    wrap.appendChild(div);
+  });
+
+  // Sync % and amount when user edits fixed increases
+  document.getElementById("fixedIncreases").addEventListener("input", function (e) {
+    const target = e.target;
+    const row = target.closest(".fixed-row");
+    if (!row) return;
+    const pctInput = row.querySelector(".fixed-pct");
+    const amtInput = row.querySelector(".fixed-amt");
+
+    const baseRent = computeBaseRentForFixedRow(row);
+    if (!baseRent) return;
+
+    if (target === pctInput) {
+      const pct = parseFloat(pctInput.value || "0");
+      if (isFinite(pct)) {
+        const amt = baseRent * (1 + pct / 100);
+        amtInput.value = amt.toFixed(2);
+      }
+    } else if (target === amtInput) {
+      const amt = parseFloat(amtInput.value || "0");
+      if (isFinite(amt) && baseRent > 0) {
+        const pct = (amt / baseRent - 1) * 100;
+        pctInput.value = pct.toFixed(4);
+      }
+    }
+  });
+
+  // --- Manual payment rows ---
+  document.getElementById("addManualPay").addEventListener("click", function () {
+    const wrap = document.getElementById("manualPayments");
+    const div = document.createElement("div");
+    div.className = "manual-row";
+    div.innerHTML = '' +
+      '<div class="inline" style="margin-bottom:6px;">' +
+        '<div class="field">' +
+          '<label>Payment date</label>' +
+          '<input type="date" class="manual-date" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Payment amount</label>' +
+          '<input type="number" class="manual-amt" min="0" step="0.01" placeholder="e.g. 5,500" />' +
+        '</div>' +
+      '</div>';
+    wrap.appendChild(div);
+  });
+
+  // --- Adjustment rows (remeasurements) ---
+  document.getElementById("addAdjOption").addEventListener("click", function () {
+    const wrap = document.getElementById("adjOptionPeriods");
+    const div = document.createElement("div");
+    div.className = "adj-option-row";
+    div.innerHTML = '' +
+      '<div class="inline" style="margin-bottom:6px; align-items:flex-end;">' +
+        '<div class="field">' +
+          '<label>From period</label>' +
+          '<input type="number" class="adj-opt-per" min="1" step="1" placeholder="e.g. 25" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Additional term (months)</label>' +
+          '<input type="number" class="adj-opt-months" min="1" step="1" placeholder="e.g. 24" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Apply fixed increases?</label>' +
+          '<select class="adj-opt-apply-fixed">' +
+            '<option value="no">No - flat rate</option>' +
+            '<option value="yes">Yes - continue increases</option>' +
+          '</select>' +
+        '</div>' +
+        '<button type="button" class="remove-btn remove-adj-option">✕</button>' +
+      '</div>';
+    wrap.appendChild(div);
+    
+    // Add remove handler
+    div.querySelector(".remove-adj-option").addEventListener("click", function() {
+      div.remove();
+    });
+  });
+
+  document.getElementById("addAdj").addEventListener("click", function () {
+    const wrap = document.getElementById("adjustments");
+    const div = document.createElement("div");
+    div.className = "adj-row";
+    div.innerHTML = '' +
+      '<div class="inline" style="margin-bottom:6px;">' +
+        '<div class="field">' +
+          '<label>Increase %</label>' +
+          '<input type="number" class="adj-pct" step="0.01" placeholder="e.g. 4" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>From period</label>' +
+          '<input type="number" class="adj-per" min="1" step="1" placeholder="e.g. 13" />' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Extra periods</label>' +
+          '<input type="number" class="adj-extra" min="0" step="1" placeholder="e.g. 12" />' +
+        '</div>' +
+      '</div>';
+    wrap.appendChild(div);
+  });
+
+  // --- Load lease handler ---
+  document.getElementById("loadLease").addEventListener("click", function () {
+    const select = document.getElementById("leaseSelect");
+    const leaseId = parseInt(select.value || "0", 10);
+    if (!leaseId) return;
+
+    const cfg = leaseConfigs.find(function (c) { return c.leaseId === leaseId; });
+    if (!cfg) return;
+
+    document.getElementById("leaseName").value = cfg.leaseName || "";
+    document.getElementById("payment").value = cfg.payment || "";
+    document.getElementById("months").value = cfg.months || "";
+    document.getElementById("periodsPerYear").value = cfg.periodsPerYear || "12";
+    document.getElementById("rate").value = cfg.rate || "";
+    document.getElementById("commencementDate").value = cfg.commencementDateStr || "";
+    document.getElementById("firstPaymentDate").value = cfg.firstPaymentDateStr || "";
+    document.getElementById("idc").value = cfg.idc || 0;
+    document.getElementById("incentives").value = cfg.incentives || 0;
+    document.getElementById("incentiveDate").value = cfg.incentiveDateStr || "";
+    document.getElementById("restoration").value = cfg.restoration || 0;
+    document.getElementById("restorationDate").value = cfg.restorationDateStr || "";
+    document.getElementById("currentLeaseId").value = leaseId;
+
+    // Clear and repopulate fixed increases
+    const fixedWrap = document.getElementById("fixedIncreases");
+    fixedWrap.innerHTML = "";
+    (cfg.fixedIncreases || []).forEach(function (fi) {
+      const div = document.createElement("div");
+      div.className = "fixed-row";
+      div.innerHTML = '' +
+        '<div class="inline" style="margin-bottom: 12px;">' +
+          '<div class="field">' +
+            '<label>Increase %</label>' +
+            '<input type="number" class="fixed-pct" step="0.01" value="' + (fi.pct || 0) + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>From period</label>' +
+            '<input type="number" class="fixed-per" min="1" step="1" value="' + (fi.per || "") + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>New payment</label>' +
+            '<input type="number" class="fixed-amt" min="0" step="0.01" value="' + (fi.amount || "") + '" />' +
+          '</div>' +
+        '</div>';
+      fixedWrap.appendChild(div);
+    });
+
+    // Clear and repopulate manual payments
+    const manualWrap = document.getElementById("manualPayments");
+    manualWrap.innerHTML = "";
+    (cfg.manualPayments || []).forEach(function (mp) {
+      const div = document.createElement("div");
+      div.className = "manual-row";
+      div.innerHTML = '' +
+        '<div class="inline" style="margin-bottom:6px;">' +
+          '<div class="field">' +
+            '<label>Payment date</label>' +
+            '<input type="date" class="manual-date" value="' + (mp.dateStr || "") + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Payment amount</label>' +
+            '<input type="number" class="manual-amt" min="0" step="0.01" value="' + (mp.amount || "") + '" />' +
+          '</div>' +
+        '</div>';
+      manualWrap.appendChild(div);
+    });
+
+    // Clear and repopulate adjustments
+    const adjWrap = document.getElementById("adjustments");
+    adjWrap.innerHTML = "";
+    (cfg.adjustments || []).forEach(function (adj) {
+      const div = document.createElement("div");
+      div.className = "adj-row";
+      div.innerHTML = '' +
+        '<div class="inline" style="margin-bottom:6px;">' +
+          '<div class="field">' +
+            '<label>Increase %</label>' +
+            '<input type="number" class="adj-pct" step="0.01" value="' + (adj.pct || 0) + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>From period</label>' +
+            '<input type="number" class="adj-per" min="1" step="1" value="' + (adj.per || "") + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Extra periods</label>' +
+            '<input type="number" class="adj-extra" min="0" step="1" value="' + (adj.extraPeriods || 0) + '" />' +
+          '</div>' +
+        '</div>';
+      adjWrap.appendChild(div);
+    });
+
+    // Clear and repopulate option periods
+    const optionWrap = document.getElementById("optionPeriods");
+    optionWrap.innerHTML = "";
+    (cfg.optionPeriods || []).forEach(function (opt) {
+      const div = document.createElement("div");
+      div.className = "option-row";
+      div.innerHTML = '' +
+        '<div class="inline" style="margin-bottom:6px; align-items:flex-end;">' +
+          '<div class="field">' +
+            '<label>Additional term (months)</label>' +
+            '<input type="number" class="option-months" min="1" step="1" value="' + (opt.months || "") + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Apply fixed increases?</label>' +
+            '<select class="option-apply-fixed">' +
+              '<option value="no"' + (opt.applyFixedIncreases ? '' : ' selected') + '>No - flat rate</option>' +
+              '<option value="yes"' + (opt.applyFixedIncreases ? ' selected' : '') + '>Yes - continue increases</option>' +
+            '</select>' +
+          '</div>' +
+          '<button type="button" class="remove-btn remove-option">✕</button>' +
+        '</div>';
+      optionWrap.appendChild(div);
+      
+      // Add remove handler
+      div.querySelector(".remove-option").addEventListener("click", function() {
+        div.remove();
+      });
+    });
+
+    // Clear and repopulate adjustment option periods
+    const adjOptWrap = document.getElementById("adjOptionPeriods");
+    adjOptWrap.innerHTML = "";
+    (cfg.adjOptionPeriods || []).forEach(function (adjOpt) {
+      const div = document.createElement("div");
+      div.className = "adj-option-row";
+      div.innerHTML = '' +
+        '<div class="inline" style="margin-bottom:6px; align-items:flex-end;">' +
+          '<div class="field">' +
+            '<label>From period</label>' +
+            '<input type="number" class="adj-opt-per" min="1" step="1" value="' + (adjOpt.per || "") + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Additional term (months)</label>' +
+            '<input type="number" class="adj-opt-months" min="1" step="1" value="' + (adjOpt.months || "") + '" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Apply fixed increases?</label>' +
+            '<select class="adj-opt-apply-fixed">' +
+              '<option value="no"' + (adjOpt.applyFixedIncreases ? '' : ' selected') + '>No - flat rate</option>' +
+              '<option value="yes"' + (adjOpt.applyFixedIncreases ? ' selected' : '') + '>Yes - continue increases</option>' +
+            '</select>' +
+          '</div>' +
+          '<button type="button" class="remove-btn remove-adj-option">✕</button>' +
+        '</div>';
+      adjOptWrap.appendChild(div);
+      
+      // Add remove handler
+      div.querySelector(".remove-adj-option").addEventListener("click", function() {
+        div.remove();
+      });
+    });
+  });
+
+  // --- Render schedule function ---
+  function renderSchedule() {
+    const scheduleBody = document.getElementById("schedule-body");
+    scheduleBody.innerHTML = "";
+    
+    const rowsSorted = portfolioRows.slice().sort(function (a, b) {
+      if (a.leaseId !== b.leaseId) return a.leaseId - b.leaseId;
+      if (a.period !== b.period) return a.period - b.period;
+      if (a.paymentDateIso < b.paymentDateIso) return -1;
+      if (a.paymentDateIso > b.paymentDateIso) return 1;
+      return 0;
+    });
+
+    // Get filter values
+    const filterDateFrom = document.getElementById("filterDateFrom").value;
+    const filterDateTo = document.getElementById("filterDateTo").value;
+    
+    // Get selected lease IDs from checkboxes
+    const selectedLeaseIds = [];
+    const leaseCheckboxes = document.querySelectorAll(".filter-lease-cb");
+    leaseCheckboxes.forEach(function (cb) {
+      if (cb.checked) {
+        selectedLeaseIds.push(parseInt(cb.dataset.leaseId, 10));
+      }
+    });
+    
+    const allCheckbox = document.getElementById("filterAll");
+    const showAllLeases = (leaseCheckboxes.length === 0) || (allCheckbox && allCheckbox.checked && !allCheckbox.indeterminate);
+    
+    // Apply filters
+    const filteredRows = rowsSorted.filter(function (r) {
+      // Lease filter
+      if (!showAllLeases && !selectedLeaseIds.includes(r.leaseId)) {
+        return false;
+      }
+      // Date range filter
+      if (filterDateFrom && r.paymentDateIso < filterDateFrom) {
+        return false;
+      }
+      if (filterDateTo && r.paymentDateIso > filterDateTo) {
+        return false;
+      }
+      return true;
+    });
+
+    filteredRows.forEach(function (r) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + r.lease + "</td>" +
+        "<td>" + r.period + "</td>" +
+        "<td>" + r.paymentDateDisp + "</td>" +
+        "<td>" + formatCurrency(r.openingLiability) + "</td>" +
+        "<td>" + formatCurrency(r.interest) + "</td>" +
+        "<td>" + formatCurrency(r.payment) + "</td>" +
+        "<td>" + formatCurrency(r.manual || 0) + "</td>" +
+        "<td>" + formatCurrency(r.incentive || 0) + "</td>" +
+        "<td>" + formatCurrency(r.restoration || 0) + "</td>" +
+        "<td>" + formatCurrency(r.netCash) + "</td>" +
+        "<td>" + formatCurrency(r.closingLiability) + "</td>" +
+        "<td>" + formatCurrency(r.rouGross) + "</td>" +
+        "<td>" + formatCurrency(r.depn || 0) + "</td>" +
+        "<td>" + formatCurrency(r.accumulatedDep) + "</td>" +
+        "<td>" + formatCurrency(r.rouCarrying) + "</td>" +
+        "<td>" + (r.liabAdj != null ? formatCurrency(r.liabAdj) : "") + "</td>" +
+        "<td>" + (r.rouAdj != null ? formatCurrency(r.rouAdj) : "") + "</td>" +
+        "<td>" + (r.flag || "") + "</td>";
+      scheduleBody.appendChild(tr);
+    });
+
+    document.getElementById("table-wrapper").style.display = rowsSorted.length ? "block" : "none";
+
+    // Monthly totals
+    const monthlyMap = new Map();
+    filteredRows.forEach(function (r) {
+      const ym = r.paymentDateIso.slice(0, 7);
+      if (!monthlyMap.has(ym)) {
+        monthlyMap.set(ym, { 
+          opening: 0, 
+          interest: 0, 
+          payment: 0,
+          manual: 0,
+          incentive: 0,
+          restoration: 0,
+          netCash: 0,
+          closing: 0,
+          rouGross: 0,
+          depn: 0, 
+          accumDepn: 0,
+          rouCarrying: 0,
+          liabAdj: 0,
+          rouAdj: 0
+        });
+      }
+      const m = monthlyMap.get(ym);
+      m.opening += r.openingLiability;
+      m.interest += r.interest;
+      m.payment += r.payment;
+      m.manual += r.manual || 0;
+      m.incentive += r.incentive || 0;
+      m.restoration += r.restoration || 0;
+      m.netCash += r.netCash;
+      m.closing += r.closingLiability;
+      m.rouGross += r.rouGross;
+      m.depn += r.depn || 0;
+      m.accumDepn += r.accumulatedDep;
+      m.rouCarrying += r.rouCarrying;
+      m.liabAdj += r.liabAdj || 0;
+      m.rouAdj += r.rouAdj || 0;
+    });
+
+    const monthlyBody = document.getElementById("monthly-body");
+    monthlyBody.innerHTML = "";
+    const months = Array.from(monthlyMap.keys()).sort();
+    months.forEach(function (ym) {
+      const m = monthlyMap.get(ym);
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + formatYearMonth(ym) + "</td>" +
+        "<td>" + formatCurrency(m.opening) + "</td>" +
+        "<td>" + formatCurrency(m.interest) + "</td>" +
+        "<td>" + formatCurrency(m.payment) + "</td>" +
+        "<td>" + formatCurrency(m.manual) + "</td>" +
+        "<td>" + formatCurrency(m.incentive) + "</td>" +
+        "<td>" + formatCurrency(m.restoration) + "</td>" +
+        "<td>" + formatCurrency(m.netCash) + "</td>" +
+        "<td>" + formatCurrency(m.closing) + "</td>" +
+        "<td>" + formatCurrency(m.rouGross) + "</td>" +
+        "<td>" + formatCurrency(m.depn) + "</td>" +
+        "<td>" + formatCurrency(m.accumDepn) + "</td>" +
+        "<td>" + formatCurrency(m.rouCarrying) + "</td>" +
+        "<td>" + formatCurrency(m.liabAdj) + "</td>" +
+        "<td>" + formatCurrency(m.rouAdj) + "</td>";
+      monthlyBody.appendChild(tr);
+    });
+    document.getElementById("monthly-wrapper").style.display = months.length ? "block" : "none";
+
+    // Update summary boxes based on selected leases
+    updateSummaryForSelectedLeases(selectedLeaseIds, showAllLeases);
+  }
+
+  // --- Update summary boxes for selected leases ---
+  function updateSummaryForSelectedLeases(selectedLeaseIds, showAll) {
+    const selectedConfigs = showAll 
+      ? leaseConfigs 
+      : leaseConfigs.filter(function (cfg) { return selectedLeaseIds.includes(cfg.leaseId); });
+
+    let totalLiability = 0;
+    let totalRou = 0;
+    let totalIncentives = 0;
+    let totalRestoration = 0;
+    let totalDepPerPeriod = 0;
+
+    selectedConfigs.forEach(function (cfg) {
+      totalLiability += cfg.liability0 || 0;
+      totalRou += cfg.rou0 || 0;
+      totalIncentives += cfg.incentives || 0;
+      totalRestoration += cfg.restoration || 0;
+      totalDepPerPeriod += cfg.depPerPeriod || 0;
+    });
+
+    document.getElementById("liability0").textContent = formatCurrency(totalLiability);
+    document.getElementById("rou0").textContent = formatCurrency(totalRou);
+    document.getElementById("incentiveSummary").textContent = formatCurrency(totalIncentives);
+    document.getElementById("restorationSummary").textContent = formatCurrency(totalRestoration);
+    document.getElementById("depPerPeriod").textContent = formatCurrency(totalDepPerPeriod);
+
+    // Show summary if there are any leases
+    document.getElementById("summary").style.display = selectedConfigs.length ? "block" : "none";
+  }
+
+  // --- Main submit / add lease ---
+  document.getElementById("lease-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const leaseNameRaw = document.getElementById("leaseName").value.trim();
+    const payment = parseFloat(document.getElementById("payment").value || "0");
+    const months = parseFloat(document.getElementById("months").value || "0");
+    const periodsPerYear = parseInt(document.getElementById("periodsPerYear").value || "12", 10);
+    const rate = parseFloat(document.getElementById("rate").value || "0");
+    const commencementDateStr = document.getElementById("commencementDate").value;
+    const firstPaymentDateStr = document.getElementById("firstPaymentDate").value;
+    const incentiveDateStr = document.getElementById("incentiveDate").value;
+    const restorationDateStr = document.getElementById("restorationDate").value;
+
+    const idc = parseFloat(document.getElementById("idc").value || "0");
+    const incentives = parseFloat(document.getElementById("incentives").value || "0");
+    const restoration = parseFloat(document.getElementById("restoration").value || "0");
+
+    if (!payment || payment <= 0 || !months || months <= 0 || rate < 0) {
+      alert("Please enter valid values for lease payment, term and discount rate.");
+      return;
+    }
+    if (!firstPaymentDateStr) {
+      alert("Please enter the first payment date.");
+      return;
+    }
+
+    const baseTotalPeriods = Math.round(months * periodsPerYear / 12);
+    if (baseTotalPeriods <= 0) {
+      alert("Lease term and payment frequency result in zero periods.");
+      return;
+    }
+
+    const firstPaymentDate = new Date(firstPaymentDateStr);
+    if (isNaN(firstPaymentDate.getTime())) {
+      alert("First payment date is invalid.");
+      return;
+    }
+
+    const commDate = commencementDateStr ? new Date(commencementDateStr) : null;
+
+    const periodicRate = Math.pow(1 + rate / 100, 1 / periodsPerYear) - 1;
+    const monthsStep = 12 / periodsPerYear;
+
+    // Collect option periods (at commencement)
+    const optionPeriods = [];
+    document.querySelectorAll(".option-row").forEach(function (r) {
+      const optionMonths = parseFloat(r.querySelector(".option-months").value || "0");
+      const applyFixed = r.querySelector(".option-apply-fixed").value === "yes";
+      if (optionMonths > 0) {
+        optionPeriods.push({
+          months: optionMonths,
+          periods: Math.round(optionMonths * periodsPerYear / 12),
+          applyFixedIncreases: applyFixed
+        });
+      }
+    });
+
+    // Calculate total option periods at commencement
+    const totalOptionPeriods = optionPeriods.reduce(function (sum, opt) { return sum + opt.periods; }, 0);
+    const totalBaseWithOptions = baseTotalPeriods + totalOptionPeriods;
+
+    // Collect fixed increases (known at commencement)
+    const fixedIncreases = [];
+    document.querySelectorAll(".fixed-row").forEach(function (r) {
+      const pct = parseFloat(r.querySelector(".fixed-pct").value || "0");
+      const per = parseInt(r.querySelector(".fixed-per").value || "0", 10);
+      const amt = parseFloat((r.querySelector(".fixed-amt") && r.querySelector(".fixed-amt").value) || "0");
+      if ((pct || amt) && per && per >= 1 && per <= baseTotalPeriods) {
+        fixedIncreases.push({
+          pct: pct || 0,
+          per: per,
+          amount: isNaN(amt) ? 0 : amt
+        });
+      }
+    });
+    fixedIncreases.sort(function (a, b) { return a.per - b.per; });
+
+    // Collect manual payments (overrides by date)
+    const manualPayments = [];
+    document.querySelectorAll(".manual-row").forEach(function (r) {
+      const dateStr = r.querySelector(".manual-date").value;
+      const amt = parseFloat(r.querySelector(".manual-amt").value || "0");
+      if (dateStr && amt && amt > 0) {
+        manualPayments.push({ dateStr: dateStr, amount: amt });
+      }
+    });
+
+    // Collect remeasurement adjustments
+    const adjustments = [];
+    document.querySelectorAll(".adj-row").forEach(function (r) {
+      const pct = parseFloat(r.querySelector(".adj-pct").value || "0");
+      const per = parseInt(r.querySelector(".adj-per").value || "0", 10);
+      const extra = parseInt((r.querySelector(".adj-extra") && r.querySelector(".adj-extra").value) || "0", 10);
+      if ((pct || extra) && per && per >= 1) {
+        adjustments.push({ pct: pct, per: per, extraPeriods: isNaN(extra) ? 0 : extra });
+      }
+    });
+    adjustments.sort(function (a, b) { return a.per - b.per; });
+
+    // Collect adjustment option periods (options exercised after commencement)
+    const adjOptionPeriods = [];
+    document.querySelectorAll(".adj-option-row").forEach(function (r) {
+      const per = parseInt(r.querySelector(".adj-opt-per").value || "0", 10);
+      const optionMonths = parseFloat(r.querySelector(".adj-opt-months").value || "0");
+      const applyFixed = r.querySelector(".adj-opt-apply-fixed").value === "yes";
+      if (optionMonths > 0 && per >= 1) {
+        adjOptionPeriods.push({
+          per: per,
+          months: optionMonths,
+          periods: Math.round(optionMonths * periodsPerYear / 12),
+          applyFixedIncreases: applyFixed
+        });
+      }
+    });
+    adjOptionPeriods.sort(function (a, b) { return a.per - b.per; });
+
+    // Determine raw incentive period index based on date (before capping to horizons)
+    let incPeriodRaw = 1;
+    if (incentives > 0) {
+      if (incentiveDateStr) {
+        const incentiveDate = new Date(incentiveDateStr);
+        if (!isNaN(incentiveDate.getTime())) {
+          const monthsDiff = (incentiveDate.getFullYear() - firstPaymentDate.getFullYear()) * 12 +
+                             (incentiveDate.getMonth() - firstPaymentDate.getMonth());
+          const approxPer = Math.round(monthsDiff / monthsStep) + 1;
+          if (approxPer >= 1) {
+            incPeriodRaw = approxPer;
+          }
+        }
+      } else if (commDate && !isNaN(commDate.getTime())) {
+        incPeriodRaw = 1;
+      } else {
+        incPeriodRaw = 1;
+      }
+    }
+
+    // Build full payment schedule including fixed increases, option periods, and remeasurement step changes
+    const payments = buildSchedulePayments(payment, baseTotalPeriods, fixedIncreases, adjustments, optionPeriods, adjOptionPeriods);
+    const totalPeriods = payments.length;
+
+    // Payment dates: same day-of-month as first payment
+    const paymentDates = new Array(totalPeriods);
+    for (let i = 0; i < totalPeriods; i++) {
+      paymentDates[i] = addMonths(firstPaymentDate, Math.round(i * monthsStep));
+    }
+
+    // Apply manual payment overrides to full schedule
+    if (manualPayments.length) {
+      const manualMap = new Map();
+      manualPayments.forEach(function (mp) { manualMap.set(mp.dateStr, mp.amount); });
+      for (let i = 0; i < totalPeriods; i++) {
+        const iso = formatDate(paymentDates[i]);
+        if (manualMap.has(iso)) {
+          payments[i] = manualMap.get(iso);
+        }
+      }
+    }
+
+    // Incentives per period (full horizon)
+    const incentivePerPeriod = new Array(totalPeriods).fill(0);
+    if (incentives > 0) {
+      const incPeriodFull = Math.min(Math.max(incPeriodRaw, 1), totalPeriods);
+      incentivePerPeriod[incPeriodFull - 1] = incentives;
+    }
+
+    // Restoration shown in schedule only (separate provision, not included in lease PV)
+    const restorationPerPeriod = new Array(totalPeriods).fill(0);
+    if (restoration > 0) {
+      let restPeriod = totalPeriods;
+      if (restorationDateStr) {
+        const restDate = new Date(restorationDateStr);
+        if (!isNaN(restDate.getTime())) {
+          const monthsDiffR = (restDate.getFullYear() - firstPaymentDate.getFullYear()) * 12 +
+                              (restDate.getMonth() - firstPaymentDate.getMonth());
+          const approxPerR = Math.round(monthsDiffR / monthsStep) + 1;
+          if (approxPerR >= 1 && approxPerR <= totalPeriods) {
+            restPeriod = approxPerR;
+          }
+        }
+      }
+      restorationPerPeriod[restPeriod - 1] = restoration;
+    }
+
+    // Initial measurement: PV of payments including fixed increases and option periods at commencement
+    const basePayments = buildBasePaymentsWithFixed(payment, baseTotalPeriods, fixedIncreases, optionPeriods);
+    const baseIncentivesPerPeriod = new Array(totalBaseWithOptions).fill(0);
+    if (incentives > 0) {
+      const incPeriodBase = Math.min(Math.max(incPeriodRaw, 1), totalBaseWithOptions);
+      baseIncentivesPerPeriod[incPeriodBase - 1] = incentives;
+    }
+
+    const basePaymentDates = new Array(totalBaseWithOptions);
+    for (let i = 0; i < totalBaseWithOptions; i++) {
+      basePaymentDates[i] = addMonths(firstPaymentDate, Math.round(i * monthsStep));
+    }
+
+    // Apply manual overrides to basePayments (for dates within the base term and options)
+    if (manualPayments.length) {
+      const manualMapBase = new Map();
+      manualPayments.forEach(function (mp) { manualMapBase.set(mp.dateStr, mp.amount); });
+      for (let i = 0; i < totalBaseWithOptions; i++) {
+        const iso = formatDate(basePaymentDates[i]);
+        if (manualMapBase.has(iso)) {
+          basePayments[i] = manualMapBase.get(iso);
+        }
+      }
+    }
+
+    const anchor0 = (commDate && !isNaN(commDate.getTime())) ? commDate : firstPaymentDate;
+    let liability0 = presentValueFromDates(
+      basePayments,
+      baseIncentivesPerPeriod,
+      basePaymentDates,
+      rate,
+      0,
+      anchor0
+    );
+
+    const rou0 = liability0;
+    const depPerPeriod = rou0 / totalPeriods;
+
+    // Lease ID / config
+    const currentLeaseIdInput = document.getElementById("currentLeaseId");
+    let leaseId = parseInt((currentLeaseIdInput.value || ""), 10);
+    if (!leaseId || isNaN(leaseId)) {
+      leaseCounter += 1;
+      leaseId = leaseCounter;
+    } else {
+      portfolioRows = portfolioRows.filter(function (r) { return r.leaseId !== leaseId; });
+    }
+
+    const leaseConfig = {
+      leaseId: leaseId,
+      leaseName: leaseNameRaw,
+      payment: payment,
+      months: months,
+      periodsPerYear: periodsPerYear,
+      rate: rate,
+      commencementDateStr: commencementDateStr,
+      firstPaymentDateStr: firstPaymentDateStr,
+      idc: idc,
+      incentives: incentives,
+      incentiveDateStr: incentiveDateStr,
+      restoration: restoration,
+      restorationDateStr: restorationDateStr,
+      adjustments: adjustments,
+      fixedIncreases: fixedIncreases,
+      manualPayments: manualPayments,
+      optionPeriods: optionPeriods,
+      adjOptionPeriods: adjOptionPeriods,
+      // Calculated values for summary
+      liability0: liability0,
+      rou0: rou0,
+      depPerPeriod: depPerPeriod
+    };
+    const existingIndex = leaseConfigs.findIndex(function (l) { return l.leaseId === leaseId; });
+    if (existingIndex >= 0) {
+      leaseConfigs[existingIndex] = leaseConfig;
+    } else {
+      leaseConfigs.push(leaseConfig);
+    }
+    refreshLeaseSelect();
+    refreshFilterSelect();
+
+    // Build schedule rows for this lease with remeasurements at adjustment periods
+    let openingLiability = liability0;
+    let accumulatedDep = 0;
+
+    for (let period = 1; period <= totalPeriods; period++) {
+      const idx = period - 1;
+      const paymentAmount = payments[idx];
+      const incentiveThisPeriod = incentivePerPeriod[idx] || 0;
+      const restorationThisPeriod = restorationPerPeriod[idx] || 0;
+      const netCash = paymentAmount - incentiveThisPeriod;
+      const paymentDate = paymentDates[idx];
+      const paymentDateIso = formatDate(paymentDate);
+      const paymentDateDisp = formatDateDisplay(paymentDate);
+
+      let liabAdj = null;
+      let rouAdj = null;
+      let flag = "";
+      const hasAdjThisPeriod = adjustments.some(function (a) { return a.per === period; });
+      const hasAdjOptThisPeriod = adjOptionPeriods.some(function (a) { return a.per === period; });
+      
+      if (hasAdjThisPeriod || hasAdjOptThisPeriod) {
+        const anchorRm = paymentDates[idx];
+        const pvRemaining = presentValueFromDates(
+          payments,
+          incentivePerPeriod,
+          paymentDates,
+          rate,
+          idx,
+          anchorRm
+        );
+        const diff = pvRemaining - openingLiability;
+        if (Math.abs(diff) > 0.01) {
+          openingLiability += diff;
+          liabAdj = diff;
+          rouAdj = diff;
+          flag = hasAdjOptThisPeriod ? "Option exercised" : "Remeasure";
+        }
+      }
+
+      const interest = openingLiability * periodicRate;
+      let closingLiability = openingLiability + interest - netCash;
+
+      accumulatedDep += depPerPeriod;
+      let rouCarrying = rou0 - accumulatedDep;
+      if (period === totalPeriods && Math.abs(closingLiability) < 0.01) {
+        closingLiability = 0;
+      }
+      if (period === totalPeriods && Math.abs(rouCarrying) < 0.01) {
+        rouCarrying = 0;
+      }
+
+      // Check if this period has a manual override
+      const manualOverride = manualPayments.find(function (mp) { return mp.dateStr === paymentDateIso; });
+
+      portfolioRows.push({
+        manual: manualOverride ? manualOverride.amount : 0,
+        leaseId: leaseId,
+        lease: leaseNameRaw || ("Lease " + leaseId),
+        period: period,
+        paymentDateIso: paymentDateIso,
+        paymentDateDisp: paymentDateDisp,
+        openingLiability: openingLiability,
+        interest: interest,
+        payment: paymentAmount,
+        incentive: incentiveThisPeriod,
+        restoration: restorationThisPeriod,
+        netCash: netCash,
+        closingLiability: closingLiability,
+        rouGross: rou0,
+        accumulatedDep: accumulatedDep,
+        rouCarrying: rouCarrying,
+        liabAdj: liabAdj,
+        rouAdj: rouAdj,
+        depn: depPerPeriod,
+        flag: flag
+      });
+
+      openingLiability = closingLiability;
+    }
+
+    // Render schedule (this also updates summary boxes)
+    renderSchedule();
+
+    // Enable CSV download
+    document.getElementById("downloadCsv").disabled = false;
+
+    // Clear the form for next lease entry
+    clearFormForNextLease();
+
+    // Mark as having unsaved changes
+    hasUnsavedChanges = true;
+  });
+
+  // --- Clear form for next lease entry ---
+  function clearFormForNextLease() {
+    // Clear main form fields
+    document.getElementById("leaseName").value = "";
+    document.getElementById("payment").value = "";
+    document.getElementById("months").value = "";
+    document.getElementById("periodsPerYear").value = "12";
+    document.getElementById("rate").value = "";
+    document.getElementById("commencementDate").value = "";
+    document.getElementById("firstPaymentDate").value = "";
+    document.getElementById("idc").value = "0";
+    document.getElementById("incentives").value = "0";
+    document.getElementById("incentiveDate").value = "";
+    document.getElementById("restoration").value = "0";
+    document.getElementById("restorationDate").value = "";
+    document.getElementById("currentLeaseId").value = "";
+
+    // Clear option periods
+    document.getElementById("optionPeriods").innerHTML = "";
+
+    // Clear fixed increases
+    document.getElementById("fixedIncreases").innerHTML = "";
+
+    // Clear manual payments
+    document.getElementById("manualPayments").innerHTML = "";
+
+    // Clear adjustments/remeasurements
+    document.getElementById("adjustments").innerHTML = "";
+
+    // Clear adjustment option periods
+    document.getElementById("adjOptionPeriods").innerHTML = "";
+
+    // Reset lease select dropdown to default
+    document.getElementById("leaseSelect").value = "";
+  }
+
+  // --- Excel Download with formatting ---
+  document.getElementById("downloadCsv").addEventListener("click", function () {
+    if (!portfolioRows.length) return;
+
+    // Load ExcelJS library for full styling support
+    if (typeof ExcelJS === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+      script.onload = function() { generateExcel(); };
+      document.head.appendChild(script);
+    } else {
+      generateExcel();
+    }
+  });
+
+  async function generateExcel() {
+    const headers = [
+      "Lease", "Period", "Payment Date", "Opening Liability", "Interest", "Payment",
+      "Manual Override", "Incentive", "Restoration", "Net Cash Flow", "Closing Liability",
+      "ROU Gross", "Depreciation", "Accum Depn", "ROU Carrying Amt", "Liab Adj", "ROU Adj", "Remeasure"
+    ];
+
+    const rowsSorted = portfolioRows.slice().sort(function (a, b) {
+      if (a.leaseId !== b.leaseId) return a.leaseId - b.leaseId;
+      if (a.period !== b.period) return a.period - b.period;
+      return 0;
+    });
+
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Lease Schedule');
+
+    // Set column widths to 10
+    worksheet.columns = headers.map(function(h) { 
+      return { header: h, width: 10 }; 
+    });
+
+    // Style header row - Aptos Narrow, size 10, bold
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell(function(cell) {
+      cell.font = { name: 'Aptos Narrow', size: 10, bold: true };
+    });
+
+    // Define number format
+    const numberFormat = '#,##0.00;(#,##0.00);" - "';
+    const dateFormat = 'DD-MMM-YY';
+
+    // Add data rows
+    rowsSorted.forEach(function (r) {
+      // Parse date for Excel
+      const dateParts = r.paymentDateIso.split('-');
+      const dateValue = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+      
+      const row = worksheet.addRow([
+        r.lease || "",
+        r.period,
+        dateValue,
+        r.openingLiability,
+        r.interest,
+        r.payment,
+        r.manual || 0,
+        r.incentive || 0,
+        r.restoration || 0,
+        r.netCash,
+        r.closingLiability,
+        r.rouGross,
+        r.depn || 0,
+        r.accumulatedDep,
+        r.rouCarrying,
+        r.liabAdj != null ? r.liabAdj : "",
+        r.rouAdj != null ? r.rouAdj : "",
+        r.flag || ""
+      ]);
+
+      // Apply font to all cells in row
+      row.eachCell(function(cell, colNumber) {
+        cell.font = { name: 'Aptos Narrow', size: 10 };
+        
+        // Date column (column 3)
+        if (colNumber === 3) {
+          cell.numFmt = dateFormat;
+        }
+        // Number columns (4-17)
+        else if (colNumber >= 4 && colNumber <= 17 && typeof cell.value === 'number') {
+          cell.numFmt = numberFormat;
+        }
+      });
+    });
+
+    // Generate and download file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'aasb16_lease_schedule.xlsx';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // --- Save & Load Portfolio Functions ---
+  const PORTFOLIO_STORAGE_KEY = 'leasemate_saved_portfolios';
+  let currentPortfolioName = null;
+  let hasUnsavedChanges = false;
+
+  function getSavedPortfolios() {
+    const stored = localStorage.getItem(PORTFOLIO_STORAGE_KEY);
+    if (!stored) return {};
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function setSavedPortfolios(portfolios) {
+    localStorage.setItem(PORTFOLIO_STORAGE_KEY, JSON.stringify(portfolios));
+  }
+
+  function collectPortfolioData() {
+    return {
+      version: "1.0",
+      savedAt: new Date().toISOString(),
+      leaseCounter: leaseCounter,
+      leaseConfigs: leaseConfigs,
+      portfolioRows: portfolioRows
+    };
+  }
+
+  function applyPortfolioData(data) {
+    if (data.leaseConfigs && data.leaseConfigs.length > 0) {
+      leaseCounter = data.leaseCounter || 0;
+      leaseConfigs = data.leaseConfigs;
+      portfolioRows = data.portfolioRows || [];
+
+      refreshLeaseSelect();
+      refreshFilterSelect();
+      renderSchedule();
+
+      document.getElementById("downloadCsv").disabled = portfolioRows.length === 0;
+      hasUnsavedChanges = false;
+      return true;
+    }
+    return false;
+  }
+
+  function savePortfolio() {
+    if (!currentPortfolioName) {
+      saveAsPortfolio();
+      return;
+    }
+    const portfolios = getSavedPortfolios();
+    portfolios[currentPortfolioName] = collectPortfolioData();
+    setSavedPortfolios(portfolios);
+    hasUnsavedChanges = false;
+    showSaveStatus('Portfolio "' + currentPortfolioName + '" saved.');
+  }
+
+  function saveAsPortfolio() {
+    const name = prompt('Enter a name for this portfolio:', currentPortfolioName || '');
+    if (!name || !name.trim()) return;
+
+    const portfolios = getSavedPortfolios();
+    portfolios[name.trim()] = collectPortfolioData();
+    setSavedPortfolios(portfolios);
+    currentPortfolioName = name.trim();
+    hasUnsavedChanges = false;
+    showSaveStatus('Portfolio "' + currentPortfolioName + '" saved.');
+  }
+
+  function openPortfolio() {
+    const portfolios = getSavedPortfolios();
+    const names = Object.keys(portfolios);
+
+    if (names.length === 0) {
+      alert('No saved portfolios found.');
+      return;
+    }
+
+    let message = 'Select a portfolio to open:\n\n';
+    names.forEach(function(name, index) {
+      message += (index + 1) + '. ' + name + '\n';
+    });
+    message += '\nEnter the number:';
+
+    const choice = prompt(message);
+    if (!choice) return;
+
+    const index = parseInt(choice, 10) - 1;
+    if (isNaN(index) || index < 0 || index >= names.length) {
+      alert('Invalid selection.');
+      return;
+    }
+
+    const selectedName = names[index];
+    const data = portfolios[selectedName];
+
+    if (applyPortfolioData(data)) {
+      currentPortfolioName = selectedName;
+      showSaveStatus('Loaded portfolio "' + selectedName + '" with ' + leaseConfigs.length + ' lease(s).');
+    } else {
+      alert('Failed to load portfolio.');
+    }
+  }
+
+  function goHome() {
+    if (hasUnsavedChanges) {
+      const choice = confirm('You have unsaved changes. Would you like to save before leaving?\n\nClick OK to save, or Cancel to leave without saving.');
+      if (choice) {
+        savePortfolio();
+      }
+    }
+    window.location.href = 'index.html';
+  }
+
+  // Save button
+  document.getElementById("savePortfolio").addEventListener("click", function() {
+    savePortfolio();
+  });
+
+  // Save As button
+  document.getElementById("saveAsPortfolio").addEventListener("click", function() {
+    saveAsPortfolio();
+  });
+
+  // Open button
+  document.getElementById("openPortfolio").addEventListener("click", function() {
+    openPortfolio();
+  });
+
+  // Home button
+  document.getElementById("homeButton").addEventListener("click", function() {
+    goHome();
+  });
+
+  function showSaveStatus(message) {
+    const status = document.getElementById("saveStatus");
+    status.textContent = message;
+    status.style.color = "#65F527";
+    setTimeout(function() {
+      status.textContent = "";
+    }, 5000);
+  }
+
+  // Mark as having unsaved changes when form inputs change
+  document.getElementById("lease-form").addEventListener("input", function() {
+    hasUnsavedChanges = true;
+  });
+
+  // Also mark unsaved when a lease is generated
+  const originalSubmitHandler = document.getElementById("lease-form").onsubmit;
+  document.getElementById("lease-form").addEventListener("submit", function() {
+    hasUnsavedChanges = true;
+  });
+
+  // Auto-load from localStorage on page load (migrate old format if exists)
+  document.addEventListener("DOMContentLoaded", function() {
+    // Try to load from old single-portfolio format first for migration
+    const oldStored = localStorage.getItem("aasb16_portfolio");
+    if (oldStored) {
+      try {
+        const data = JSON.parse(oldStored);
+        if (data.leaseConfigs && data.leaseConfigs.length > 0) {
+          applyPortfolioData(data);
+          showSaveStatus("Loaded " + leaseConfigs.length + " lease(s) from previous session.");
+          // Clear old format after successful migration
+          localStorage.removeItem("aasb16_portfolio");
+        }
+      } catch (e) {
+        console.error("Error loading from old localStorage format:", e);
+      }
+    }
+  });
+  </script>
+</body>
+</html>

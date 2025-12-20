@@ -1,1036 +1,184 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NZ1KRJM866"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-NZ1KRJM866');
-    </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tax-Bot — Smart calculators for tax & accounting</title>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Australian Tax Calculator - Compare 4 Scenarios</title>
-    <meta name="description" content="Compare tax across four scenarios with our Australian Tax Calculator. Calculate income tax, Medicare levy, HECS, franking credits, SAPTO and more for residents and non-residents.">
-    <meta name="keywords" content="Australian tax calculator, tax calculator, income tax, Medicare levy, HECS, franking credits, SAPTO, resident, non-resident, tax scenarios, compare tax">
-    <meta name="author" content="TAXBOT">
-    <meta property="og:title" content="Australian Tax Calculator - Compare 4 Scenarios">
-    <meta property="og:description" content="Quickly compare tax outcomes across four scenarios including income, dividends, HECS, SAPTO, franking credits and more.">
-    <meta property="og:type" content="website">
+  <meta name="description" content="Smart calculators for Individual Tax, AASB 16 Leases, and Loans. Built for speed, clarity, and execution." />
 
-    <!-- Favicon and Icons -->
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAjVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9RG3rWAAAAK3RSTlMAAQIDBAYICQoLDA8QERQXGBkeHyAhIyUnKSorLS8wMjU3ODs+QEZHVFq5cSTXAAAAWUlEQVQY02NgQANGLAJiZmBgYGBgSGBgYGB4BMZGFiYWRgYODg5OLm4eXh4+Pi5uHl4ePi4+Pl4+Hh5uHh5ePk5eDk5+Hk4+Lj5uHj5eHg5OHg4+Hg4+Hh4eHh4eEfFwkAAN+EDk0sJtIkAAAAAElFTkSuQmCC">
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: #f7fafc;
-            color: #1a202c;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1140px;
-            margin: 30px auto 40px auto;
-            padding: 20px 20px 30px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12);
-        }
-
-        .header-wrapper {
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .logo {
-            display: block;
-            margin: 0 auto 10px auto;
-            width: 80px;
-            height: auto;
-        }
-
-        .title {
-            font-size: 1.8em;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 6px;
-        }
-
-        .subtitle {
-            font-size: 0.95em;
-            color: #4a5568;
-            margin-bottom: 16px;
-        }
-
-        .year-selector {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 0 auto 20px auto;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .year-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #2d3748;
-        }
-
-        .year-buttons {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .year-btn {
-            padding: 8px 14px;
-            border-radius: 999px;
-            border: 1px solid #cbd5e0;
-            background: #edf2f7;
-            color: #2d3748;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .year-btn:hover {
-            background: #e2e8f0;
-        }
-
-        .year-btn.active {
-            background: #2d3748;
-            color: #fff;
-            border-color: #2d3748;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 18px;
-        }
-
-        .info-tabs {
-            display: flex;
-            gap: 8px;
-        }
-
-        .info-tab {
-            padding: 8px 16px;
-            border-radius: 999px;
-            border: 1px solid #cbd5e0;
-            background: #edf2f7;
-            color: #2d3748;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .info-tab.active {
-            background: #2d3748;
-            color: white;
-            border-color: #2d3748;
-        }
-
-        .ask-taxbot-btn {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #2b6cb0, #2c5282);
-            border-radius: 999px;
-            color: white;
-            border: none;
-            font-weight: 600;
-            font-size: 0.9em;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 3px 10px rgba(43, 108, 176, 0.3);
-            transition: all 0.2s;
-        }
-
-        .ask-taxbot-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 14px rgba(43, 108, 176, 0.4);
-        }
-
-        .ask-taxbot-btn span.icon {
-            font-size: 1.1em;
-        }
-
-        .panels-row {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            margin-bottom: 18px;
-        }
-
-        .info-panel, .taxbot-panel {
-            flex: 1 1 0;
-            background: #f7fafc;
-            border-radius: 12px;
-            padding: 12px 14px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .info-panel h3, .taxbot-panel h3 {
-            font-size: 0.95em;
-            margin-bottom: 6px;
-            color: #2d3748;
-        }
-
-        .info-panel p, .taxbot-panel p {
-            font-size: 0.85em;
-            color: #4a5568;
-        }
-
-        .info-panel ul {
-            font-size: 0.85em;
-            margin-left: 18px;
-            color: #4a5568;
-        }
-
-        .info-panel li + li {
-            margin-top: 3px;
-        }
-
-        .scenarios-container {
-            display: flex;
-            gap: 12px;
-            margin: 0 auto 20px auto;
-            align-items: flex-start;
-            width: 860px;
-            max-width: 860px;
-            transition: width 0.3s ease, max-width 0.3s ease;
-        }
-
-        .scenario-card {
-            background: #f7fafc;
-            border-radius: 12px;
-            padding: 20px 18px;
-            border: 1px solid #e2e8f0;
-            flex: 1;
-            min-width: 0;
-            position: relative;
-        }
-
-        .scenario-card.compact-scenario {
-            padding: 18px 14px;
-        }
-
-        .scenario-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 8px;
-        }
-
-        .scenario-header h2 {
-            font-size: 1.1em;
-            color: #2d3748;
-        }
-
-        .scenario-name-wrapper {
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .scenario-name-label {
-            font-size: 0.75em;
-            color: #718096;
-        }
-
-        .scenario-name-input {
-            font-size: 0.78em;
-            padding: 4px 6px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-            width: 120px;
-        }
-
-        .scenario-control-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: #e2e8f0;
-            font-weight: 700;
-            color: #2d3748;
-            cursor: pointer;
-            font-size: 1em;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-            position: relative;
-        }
-
-        .scenario-control-btn:hover {
-            background: #cbd5e0;
-        }
-
-        .control-btn-tooltip {
-            position: absolute;
-            top: 32px;
-            right: 0;
-            transform: translateX(50%);
-            background: #2d3748;
-            color: white;
-            font-size: 0.7em;
-            padding: 4px 7px;
-            border-radius: 6px;
-            white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s;
-        }
-
-        .scenario-control-btn:hover .control-btn-tooltip {
-            opacity: 1;
-        }
-
-        .residency-section {
-            margin-bottom: 10px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            background: #edf2f7;
-            border: 1px solid #e2e8f0;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 10px;
-            font-size: 0.85em;
-        }
-
-        .radio-option input {
-            margin-right: 4px;
-        }
-
-        .form-group-inline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 8px;
-        }
-
-        .form-group-inline label {
-            font-size: 0.85em;
-            color: #2d3748;
-        }
-
-        .form-group-inline input[type="number"],
-        .form-group-inline input[type="text"] {
-            width: 130px;
-            padding: 6px 8px;
-            font-size: 0.9em;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-            text-align: right;
-        }
-
-        .compact-scenario .form-group-inline input[type="number"],
-        .compact-scenario .form-group-inline input[type="text"] {
-            width: 110px;
-        }
-
-        .checkbox-section {
-            margin: 10px 0;
-            padding: 8px 10px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border: 1px dashed #cbd5e0;
-        }
-
-        .checkbox-option {
-            display: flex;
-            align-items: center;
-            font-size: 0.85em;
-            gap: 6px;
-        }
-
-        .checkbox-option input {
-            margin-right: 4px;
-        }
-
-        .dividend-inputs {
-            margin-top: 8px;
-            padding: 8px 10px;
-            background: #edf2f7;
-            border-radius: 8px;
-            border: 1px solid #cbd5e0;
-        }
-
-        .dividend-input-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .dividend-input-row label {
-            font-size: 0.8em;
-        }
-
-        .dividend-input-row input[type="number"] {
-            width: 120px;
-            padding: 5px 8px;
-            font-size: 0.85em;
-            border-radius: 6px;
-            border: 1px solid #cbd5e0;
-            text-align: right;
-        }
-
-        .info-tooltip {
-            position: relative;
-            display: inline-block;
-            margin-left: 5px;
-        }
-
-        .info-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 1px solid #a0aec0;
-            font-size: 10px;
-            font-weight: 700;
-            color: #4a5568;
-            cursor: pointer;
-        }
-
-        .tooltip-text {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute;
-            z-index: 999;
-            width: 220px;
-            background: #2d3748;
-            color: white;
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 0.75em;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            transition: opacity 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        }
-
-        .info-tooltip:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .input-hint {
-            font-size: 0.75em;
-            color: #718096;
-            margin-top: 2px;
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            margin: 10px 0;
-        }
-
-        .btn, .clear-btn {
-            flex: 1;
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #2b6cb0, #2c5282);
-            color: white;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 10px rgba(43, 108, 176, 0.35);
-        }
-
-        .clear-btn {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-
-        .clear-btn:hover {
-            background: #cbd5e0;
-        }
-
-        .results {
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid #e2e8f0;
-            background: #f9fafb;
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.85em;
-        }
-
-        .result-row strong {
-            font-weight: 700;
-        }
-
-        .result-label {
-            color: #4a5568;
-        }
-
-        .result-value {
-            font-weight: 600;
-        }
-
-        .result-row:first-child {
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-        }
-
-        .result-row:last-child {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 8px;
-            margin-top: 8px;
-        }
-
-        .disclaimer {
-            margin-top: 25px;
-            font-size: 0.8em;
-            color: #4a5568;
-            background: #edf2f7;
-            border-radius: 12px;
-            padding: 12px 14px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .disclaimer h3 {
-            font-size: 0.95em;
-            margin-bottom: 6px;
-            color: #2d3748;
-        }
-
-        .copy-btn-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .copy-btn {
-            padding: 10px 18px;
-            border-radius: 999px;
-            border: none;
-            background: #38a169;
-            color: white;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 3px 10px rgba(56, 161, 105, 0.3);
-            transition: all 0.2s;
-        }
-
-        .copy-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 14px rgba(56, 161, 105, 0.4);
-        }
-
-        .copy-btn span.icon {
-            font-size: 1.2em;
-        }
-
-        .notification {
-            margin-top: 8px;
-            font-size: 0.8em;
-            color: #2f855a;
-            text-align: center;
-        }
-
-        .side-banner {
-            position: fixed;
-            top: 80px;
-            width: 160px;
-            height: 600px;
-            display: none;
-            z-index: 10;
-        }
-
-        .left-banner {
-            left: 10px;
-        }
-
-        .right-banner {
-            right: 10px;
-        }
-
-        @media (min-width: 1350px) {
-            .side-banner {
-                display: block;
-            }
-        }
-
-        #buttonContainer {
-            width: 860px;
-            max-width: 860px;
-            transition: width 0.3s ease, max-width 0.3s ease;
-        }
-
-        .download-pdf-btn {
-            padding: 12px 24px;
-            background: #2d3748;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .download-pdf-btn:hover {
-            background: #1a202c;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-        }
-
-        .download-pdf-btn span.icon {
-            font-size: 1.2em;
-        }
-
-        /* NEW PRINT STYLES FOR DOCRAPTOR A4 OUTPUT */
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 10mm;
-            }
-
-            html, body {
-                width: 210mm;
-                height: 297mm;
-                margin: 0;
-                padding: 0;
-                background: #ffffff !important;
-            }
-
-            /* Hide interactive / non-essential elements in the PDF */
-            .no-print,
-            .side-banner,
-            .modal-overlay,
-            .back-to-top,
-            .download-pdf-btn,
-            .year-selector,
-            .typebot-container,
-            .adsbygoogle,
-            .ask-taxbot-btn {
-                display: none !important;
-            }
-
-            /* Force all scenarios to be visible in the PDF */
-            #scenario1,
-            #scenario2,
-            #scenario3,
-            #scenario4,
-            .scenario-card,
-            .scenario-card.hidden {
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-
-            body .container {
-                box-shadow: none !important;
-                width: 100% !important;
-                max-width: 190mm !important;
-                margin: 0 auto !important;
-                padding: 0 !important;
-            }
-
-            .header-wrapper {
-                margin-top: 0 !important;
-            }
-
-            .scenarios-container {
-                display: flex !important;
-                flex-wrap: nowrap !important;
-                gap: 6mm !important;
-                width: 100% !important;
-                margin: 0 auto !important;
-            }
-
-            .scenario-card {
-                flex: 1 1 0 !important;
-                max-width: none !important;
-            }
-
-            .disclaimer {
-                margin-top: 10mm !important;
-                page-break-inside: avoid !important;
-            }
-        }
-
-        .back-to-top {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: #2d3748;
-            color: white;
-            border: none;
-            font-size: 0.9em;
-            display: none;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            z-index: 50;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .back-to-top.visible {
-            display: inline-flex;
-        }
-
-        .back-to-top span.icon {
-            font-size: 1.1em;
-        }
-
-        .typebot-container {
-            margin-top: 18px;
-        }
-
-        .typebot-title {
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: 0.95em;
-        }
-
-        .typebot-frame {
-            width: 100%;
-            height: 480px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-        }
-
-        @media (max-width: 1100px) {
-            .scenarios-container {
-                flex-direction: column;
-                width: 100%;
-                max-width: 100%;
-            }
-
-            #buttonContainer {
-                width: 100%;
-                max-width: 100%;
-            }
-
-            .scenario-card {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                padding: 14px;
-            }
-
-            .side-banner {
-                display: none !important;
-            }
-
-            .year-selector {
-                padding: 14px;
-            }
-
-            .year-buttons {
-                flex-direction: column;
-            }
-
-            .top-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .panels-row {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .scenario-card {
-                padding: 14px;
-            }
-
-            .form-group-inline {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .form-group-inline input[type="number"],
-            .form-group-inline input[type="text"] {
-                width: 100%;
-            }
-
-            .dividend-input-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .dividend-input-row input[type="number"] {
-                width: 100%;
-            }
-        }
-    </style>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
+
 <body>
-    <!-- Left Side Banner -->
-    <div class="side-banner left-banner">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-5110666876136750"
-             data-ad-slot="5311701304"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
+
+  <!-- =========================
+       Top Navigation
+       ========================= -->
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="/">Tax-Bot</a>
+
+      <nav class="links">
+        <a href="#calculators">Calculators</a>
+        <a href="#">Blog</a>
+      </nav>
+
+      <div class="actions">
+        <a class="btn btn-ghost" href="#">Resources</a>
+        <a class="btn" href="#calculators">Get access</a>
+      </div>
     </div>
+  </header>
 
-    <!-- Right Side Banner -->
-    <div class="side-banner right-banner">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-5110666876136750"
-             data-ad-slot="5311701304"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </div>
+  <!-- =========================
+       Hero
+       ========================= -->
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
 
-    <div class="container">
-        <img src="data:image/png;base64,UklGRtpMAABXRUJQVlA4WAoAAAAQAAAAEAEAAgEBAAQUAAcQWEdBTkZJRwAEBQAAADwAAAAAAAAAAAAAAP/bAEMAFhYWFhYWFhYWFxYWFRcYGRgYGBcgHB0dHiMuJyMjIyMuMzQ0NDQ0Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O//bAEMBGBkYGiAcIB0gHCQbIxo0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NP/AABEIAGQAZAMBIgACEQEDEQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAAAwQCBQYBB//EADUQAAEDAQcEAwYFBAMAAAAAAAABAgMEBREhMQYSMgcTQVFhInGBkbEjUnLR8BQjU3LC0v/EABkBAAMBAQEAAAAAAAAAAAAAAAABAgMEBf/EACMRAAICAgEEAgMAAAAAAAAAAAABAhEDIRIxBEFRYXGBocH/2gAMAwEAAhEDEQA/ANxERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQf/Z"
-             alt="TaxBot Logo" class="logo">
+        <!-- Left: Message -->
+        <div>
+          <h1>Smart calculators for tax and accounting.</h1>
 
-        <div class="header-wrapper">
-            <div class="header">
-                <h1 class="title">Australian Tax Calculator</h1>
-                <p class="subtitle">Compare tax across 4 financial years & scenarios</p>
+          <p class="lead">
+            Individual tax, AASB 16 lease maths, and loan schedules — fast,
+            clean, and built for execution.
+          </p>
+
+          <div class="cta">
+            <a class="btn" href="#calculators">Get access</a>
+            <a class="btn btn-ghost" href="#calculators">View calculators</a>
+          </div>
+
+          <div class="trust">
+            <span class="trust-dot"></span>
+            <span>Built for practitioners</span>
+            <span class="trust-sep">•</span>
+            <span class="trust-strong">3</span>
+            <span>calculators live</span>
+          </div>
+        </div>
+
+        <!-- Right: Selector Panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Start here</div>
+            <div class="panel-sub">Pick a calculator. Open instantly.</div>
+          </div>
+
+          <label class="lbl" for="tool">Calculator</label>
+          <select id="tool" class="field">
+            <option value="TaxCalculator.html">Individual Tax</option>
+            <option value="LeaseMate.html">AASB 16 Lease</option>
+            <option value="LoanManager.html">Loan Calculator</option>
+          </select>
+
+          <button class="btn btn-wide" id="go">Open</button>
+
+          <div class="panel-note">No logins. No noise.</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================
+         Calculators
+         ========================= -->
+    <section id="calculators" class="section">
+      <div class="wrap">
+
+        <div class="section-head">
+          <h2>Calculators</h2>
+          <p>Focused tools. Minimal noise.</p>
+        </div>
+
+        <div class="grid3">
+
+          <!-- Individual Tax -->
+          <a class="card" href="TaxCalculator.html">
+            <div class="card-title">Individual Tax</div>
+            <div class="card-sub">
+              Scenario comparisons with clean, decision-ready outputs.
             </div>
+            <div class="pill">Launch</div>
+          </a>
 
-            <div class="year-selector">
-                <span class="year-label">Select Financial Year</span>
-                <div class="year-buttons">
-                    <button class="year-btn active" data-year="2025-26">2025-26</button>
-                    <button class="year-btn" data-year="2024-25">2024-25</button>
-                    <button class="year-btn" data-year="2023-24">2023-24</button>
-                    <button class="year-btn" data-year="2022-23">2022-23</button>
-                </div>
+          <!-- AASB 16 -->
+          <a class="card" href="LeaseMate.html">
+            <div class="card-title">AASB 16 LeaseMate</div>
+            <div class="card-sub">
+              Present value logic, remeasurements, and clear assumptions.
             </div>
+            <div class="pill">Launch</div>
+          </a>
 
-            <div class="top-bar">
-                <div class="info-tabs">
-                    <button class="info-tab active" data-target="infoPanel">View Tax Information</button>
-                    <button class="info-tab" data-target="taxbotPanel">Ask TaxBot</button>
-                </div>
-
-                <div id="buttonContainer">
-                    <button class="download-pdf-btn" id="downloadPdfBtn">
-                        <span class="icon">⬇</span>
-                        Download PDF
-                    </button>
-                </div>
+          <!-- Loan -->
+          <a class="card" href="LoanManager.html">
+            <div class="card-title">Loan Manager</div>
+            <div class="card-sub">
+              Schedules, interest holidays, capitalisation, and clarity.
             </div>
+            <div class="pill">Launch</div>
+          </a>
 
-            <div class="panels-row">
-                <div class="info-panel" id="infoPanel">
-                    <h3>How to use this calculator</h3>
-                    <p>Use this calculator to compare the tax impact of different scenarios. You can:</p>
-                    <ul>
-                        <li>Compare up to four scenarios side by side</li>
-                        <li>Toggle between resident and non-resident tax rules</li>
-                        <li>Include dividends, franking credits and SAPTO</li>
-                        <li>Estimate HECS/HELP repayments and Medicare levy</li>
-                    </ul>
-                </div>
+        </div>
+      </div>
+    </section>
 
-                <div class="taxbot-panel" id="taxbotPanel" style="display:none;">
-                    <h3>Ask TaxBot</h3>
-                    <p>Use the chat below to ask questions or clarify your scenario. TaxBot is a smart assistant that helps interpret your results and provide general information.</p>
-                </div>
-            </div>
+    <!-- =========================
+         Blog Section
+         ========================= -->
+    <section class="section">
+      <div class="wrap split">
+
+        <div>
+          <h2>Blog</h2>
+          <p>
+            Short, technical notes designed to be reposted to LinkedIn.
+            Problem → principle → action.
+          </p>
+
+          <a class="btn" href="#">Open blog</a>
         </div>
 
-        <div id="scenariosContainer" class="scenarios-container">
-            <!-- Scenarios inserted here -->
+        <div class="mini">
+          <div class="mini-row">
+            <span class="dot"></span>
+            <span>LinkedIn-ready structure</span>
+          </div>
+          <div class="mini-row">
+            <span class="dot"></span>
+            <span>Evergreen SEO value</span>
+          </div>
+          <div class="mini-row">
+            <span class="dot"></span>
+            <span>Clear, technical, concise</span>
+          </div>
         </div>
 
-        <div class="copy-btn-container">
-            <button class="copy-btn" id="copySummaryBtn">
-                <span class="icon">📋</span>
-                Message a Copy
-            </button>
-            <div id="copyNotification" class="notification"></div>
+      </div>
+    </section>
+
+    <!-- =========================
+         Footer
+         ========================= -->
+    <footer class="foot">
+      <div class="wrap foot-inner">
+        <div class="muted">
+          © <span id="y"></span> Tax-Bot
         </div>
 
-        <div class="typebot-container">
-            <div class="typebot-title">Ask TaxBot a Question</div>
-            <div id="typebot" class="typebot-frame"></div>
+        <div class="foot-links">
+          <a href="#">Blog</a>
+          <a href="#calculators">Calculators</a>
         </div>
+      </div>
+    </footer>
 
-        <div class="disclaimer">
-            <h3>Disclaimer</h3>
-            <p>The information and calculations produced by this tool are general in nature and do not take into account your specific circumstances. You should seek advice from a qualified professional before acting on any results generated by this calculator.</p>
-            <p>This calculator does not provide financial, taxation, or legal advice and should not be relied upon as such. While every effort has been made to ensure accuracy, no warranty is given as to the reliability or completeness of the information provided.</p>
-        </div>
-    </div>
+  </main>
 
-    <button id="backToTopBtn" class="back-to-top">
-        <span class="icon">▲</span>
-        Back to top
-    </button>
-
-    <script>
-        // Tax thresholds and constants
-        const TAX_CONFIG = {
-            '2025-26': {
-                resident: [
-                    { threshold: 0, rate: 0, base: 0 },
-                    { threshold: 18201, rate: 0.19, base: 0 },
-                    { threshold: 45001, rate: 0.325, base: 5092 },
-                    { threshold: 135001, rate: 0.37, base: 42707 },
-                    { threshold: 190001, rate: 0.45, base: 67807 }
-                ],
-                nonresident: [
-                    { threshold: 0, rate: 0.325, base: 0 },
-                    { threshold: 135001, rate: 0.37, base: 43875 },
-                    { threshold: 190001, rate: 0.45, base: 63825 }
-                ],
-                medicareRate: 0.02,
-                medicareThreshold: 26266,
-                lito: { max: 700, threshold1: 37500, threshold2: 45000, threshold3: 66667 },
-                sapto: { max: 2230, threshold: 34919, cutout: 52759 },
-                helpThreshold: 54936,
-                helpRates: [
-                    { threshold: 54936, rate: 0.01 },
-                    { threshold: 63458, rate: 0.02 },
-                    { threshold: 69988, rate: 0.025 },
-                    { threshold: 74108, rate: 0.03 },
-                    { threshold: 79507, rate: 0.035 },
-                    { threshold: 91514, rate: 0.04 },
-                    { threshold: 104453, rate: 0.045 },
-                    { threshold: 109814, rate: 0.05 },
-                    { threshold: 116287, rate: 0.055 },
-                    { threshold: 123378, rate: 0.06 },
-                    { threshold: 130806, rate: 0.065 },
-                    { threshold: 138571, rate: 0.07 },
-                    { threshold: 147093, rate: 0.075 },
-                    { threshold: 156391, rate: 0.08 },
-                    { threshold: 166494, rate: 0.085 },
-                    { threshold: 177432, rate: 0.09 },
-                    { threshold: 189237, rate: 0.095 },
-                    { threshold: 201942, rate: 0.1 }
-                ]
-            },
-            '2024-25': {
-                resident: [
-                    { threshold: 0, rate: 0, base: 0 },
-                    { threshold: 18201, rate: 0.16, base: 0 },
-                    { threshold: 45001, rate: 0.3, base: 4308 },
-                    { threshold: 135001, rate: 0.37, base: 31208 },
-                    { threshold: 190001, rate: 0.45, base: 51708 }
-                ],
-                nonresident: [
-                    { threshold: 0, rate: 0.3, base: 0 },
-                    { threshold: 135001, rate: 0.37, base: 40500 },
-                    { threshold: 190001, rate: 0.45, base: 60450 }
-                ],
-                medicareRate: 0.02,
-                medicareThreshold: 25200,
-                lito: { max: 700, threshold1: 37500, threshold2: 45000, threshold3: 66667 },
-                sapto: { max: 2230, threshold: 34919, cutout: 52759 },
-                helpThreshold: 54000,
-                helpRates: 'marginal'
-            },
-            '2023-24': {
-                resident: [
-                    { threshold: 0, rate: 0, base: 0 },
-                    { threshold: 18201, rate: 0.19, base: 0 },
-                    { threshold: 45001, rate: 0.325, base: 5092 },
-                    { threshold: 120001, rate: 0.37, base: 29467 },
-                    { threshold: 180001, rate: 0.45, base: 51667 }
-                ],
-                nonresident: [
-                    { threshold: 0, rate: 0.325, base: 0 },
-                    { threshold: 120001, rate: 0.37, base: 39000 },
-                    { threshold: 180001, rate: 0.45, base: 61200 }
-                ],
-                medicareRate: 0.02,
-                medicareThreshold: 24676,
-                lito: { max: 700, threshold1: 37500, threshold2: 45000, threshold3: 66667 },
-                sapto: { max: 2230, threshold: 34919, cutout: 52759 },
-                helpThreshold: 51000,
-                helpRates: 'marginal'
-            },
-            '2022-23': {
-                resident: [
-                    { threshold: 0, rate: 0, base: 0 },
-                    { threshold: 18201, rate: 0.19, base: 0 },
-                    { threshold: 45001, rate: 0.325, base: 5092 },
-                    { threshold: 120001, rate: 0.37, base: 29467 },
-                    { threshold: 180001, rate: 0.45, base: 51667 }
-                ],
-                nonresident: [
-                    { threshold: 0, rate: 0.325, base: 0
+  <script src="assets/app.js"></script>
+</body>
+</html>
