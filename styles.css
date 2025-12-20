@@ -348,3 +348,15 @@ h2 {
 .foot-links { display: flex; gap: 14px; color: var(--text-muted); }
 .foot-links a:hover { color: var(--text-main); }
 .muted { color: var(--text-muted); font-size: 12px; }
+
+/* E-Book Section Responsive */
+@media (max-width: 768px) {
+  .ebook-grid {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+  .ebook-grid > div:first-child {
+    max-width: 250px;
+    margin: 0 auto;
+  }
+}
