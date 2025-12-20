@@ -248,7 +248,8 @@ h2 {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 16px;
-  display: block;
+  display: flex;
+  flex-direction: column;
   transition: all 0.15s ease-out;
 }
 
@@ -268,6 +269,7 @@ h2 {
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.6;
+  flex: 1;
 }
 
 .pill {
@@ -281,6 +283,7 @@ h2 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  align-self: flex-start;
 }
 
 .card:hover .pill {
