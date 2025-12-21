@@ -346,6 +346,14 @@ h2 {
 .foot-links a:hover { color: var(--text-main); }
 .muted { color: var(--text-muted); font-size: 12px; }
 
+/* E-Book Grid */
+.ebook-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
 /* Tablet Responsive */
 @media (max-width: 920px) {
   .grid3 { grid-template-columns: repeat(2, 1fr); }
