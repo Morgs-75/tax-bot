@@ -238,9 +238,6 @@ h2 {
   margin-top: 16px;
 }
 
-@media (max-width: 920px) {
-  .grid3 { grid-template-columns: 1fr; }
-}
 
 .card {
   background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 50%),
@@ -349,14 +346,148 @@ h2 {
 .foot-links a:hover { color: var(--text-main); }
 .muted { color: var(--text-muted); font-size: 12px; }
 
-/* E-Book Section Responsive */
+/* Tablet Responsive */
+@media (max-width: 920px) {
+  .grid3 { grid-template-columns: repeat(2, 1fr); }
+  .section { padding: 36px 0; }
+}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
+  /* Hero */
+  .hero { padding: 40px 0 24px; }
+
+  h1 {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  h2 { font-size: 20px; }
+
+  .lead { font-size: 14px; }
+
+  /* Navigation */
+  .nav { padding: 10px 0; }
+
+  .actions { gap: 6px; }
+
+  .actions .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Grid to single column */
+  .grid3 { grid-template-columns: 1fr; }
+
+  /* Sections */
+  .section { padding: 32px 0; }
+
+  /* E-Book Section */
   .ebook-grid {
-    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 24px !important;
+  }
+
+  .ebook-grid > div:first-child {
+    max-width: 220px;
+    margin: 0 auto;
+    order: 1;
+  }
+
+  .ebook-grid > div:last-child {
+    order: 2;
+    width: 100%;
+  }
+
+  .ebook-grid h2 {
+    font-size: 22px !important;
+    text-align: center;
+    margin-bottom: 16px !important;
+  }
+
+  .ebook-grid p {
+    font-size: 14px !important;
+    text-align: left !important;
+  }
+
+  .ebook-grid form {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 100% !important;
+  }
+
+  .ebook-grid form input,
+  .ebook-grid form button {
+    width: 100%;
     text-align: center;
   }
+
+  /* Cards */
+  .card { padding: 14px; }
+
+  .card-title { font-size: 15px; }
+
+  .card-sub { font-size: 12px; }
+
+  /* Panel */
+  .panel { padding: 14px; }
+
+  .panel-title { font-size: 16px; }
+
+  /* Footer */
+  .foot-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .foot-links { justify-content: center; }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .wrap { width: 94%; }
+
+  h1 { font-size: 26px; }
+
+  .brand { font-size: 14px; }
+
+  .actions .btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .cta {
+    flex-direction: column;
+  }
+
+  .cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .trust {
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* E-Book Section - Small Mobile */
   .ebook-grid > div:first-child {
-    max-width: 250px;
-    margin: 0 auto;
+    max-width: 180px;
+  }
+
+  .ebook-grid h2 {
+    font-size: 20px !important;
+  }
+
+  .ebook-grid p {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+  }
+
+  .ebook-grid form button {
+    font-size: 13px;
+    padding: 12px 16px !important;
   }
 }
