@@ -2140,6 +2140,8 @@
     document.getElementById('signOutBtn').addEventListener('click', async () => {
       if (!fbAuth) return;
       try { await fbAuth.signOut(); } catch (e) { console.warn(e); }
+      // Clear password field on sign out
+      document.getElementById('authPass').value = '';
     });
 
     authPass.addEventListener('keydown', (e) => {
