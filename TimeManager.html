@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raze - Task Management for Accountants</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' x='6' font-size='48'%3E%E2%8F%B1%3C/text%3E%3C/svg%3E">
+
+  <style>
+    :root {
+      --bg: #050509;
+      --panel: #0f151a;
+      --panel-2: #141420;
+      --text: #f5f5f7;
+      --muted: #9ca3af;
+      --border: #2a2a3d;
+      --accent: #3b82f6;
+      --accent-2: #60a5fa;
+      --teal: #3b82f6;
+      --teal-2: #60a5fa;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--text);
+    }
+
+    .meta {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    #activeTimer {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--teal-2);
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+    }
+
+    th, td {
+      height: 40px;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      padding: 4px 6px;
+      font-size: 14px;
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    th {
+      background: var(--panel-2);
+      text-align: left;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      box-sizing: border-box;
+      height: 36px;
+      padding: 4px 8px;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 8px;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--teal-2);
+    }
+
+    .controls {
+      margin: 10px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      background: transparent;
+      color: var(--text);
+      border-radius: 8px;
+    }
+
+    button:hover {
+      border-color: var(--teal-2);
+    }
+
+    .btn-danger {
+      border-color: rgba(255, 90, 95, 0.55);
+      color: rgba(255, 90, 95, 0.95);
+    }
+
+    .btn-danger:hover {
+      border-color: rgba(255, 90, 95, 0.95);
+    }
+
+    select {
+      height: 31px;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 8px;
+      background: var(--panel-2);
+      padding: 2px 8px;
+      color: var(--text);
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--teal-2);
+    }
+
+    option {
+      background: var(--panel);
+      color: var(--text);
+    }
+
+    input[type="date"] {
+      height: 31px;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 8px;
+      background: var(--panel-2);
+      padding: 2px 4px;
+      color: var(--text);
+      outline: none;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      max-width: 70px;
+    }
+
+    input[type="date"]:focus {
+      border-color: var(--teal-2);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      opacity: 0.6;
+      cursor: pointer;
+    }
+
+    .due-date-display:hover {
+      border-color: var(--teal-2);
+      background: var(--panel);
+    }
+
+    input[type="checkbox"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 4px;
+      background: #0f151a !important;
+      cursor: pointer;
+      position: relative;
+      outline: none;
+    }
+
+    input[type="checkbox"]:checked {
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--bg);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    input[type="checkbox"]:hover {
+      border-color: var(--teal-2);
+    }
+
+    .custom-checkbox:hover {
+      border-color: var(--teal-2) !important;
+    }
+
+    .custom-checkbox.checked {
+      background: var(--teal) !important;
+      color: #fff !important;
+    }
+
+    th[id^="sort"]:hover {
+      background: var(--panel);
+      color: var(--teal-2);
+    }
+
+    th[id^="sort"] span {
+      font-size: 12px;
+      margin-left: 2px;
+      color: var(--teal-2);
+      font-weight: bold;
+    }
+
+    .delete-btn {
+      cursor: pointer;
+      color: var(--danger);
+      font-weight: 900;
+      text-align: center;
+      user-select: none;
+    }
+
+    .completed {
+      background: rgba(255, 255, 255, 0.02);
+      color: rgba(232, 238, 242, 0.55);
+    }
+
+    tr.selected:not(.divider) {
+      background: rgba(45, 212, 191, 0.08);
+      outline: 1px solid rgba(45, 212, 191, 0.3);
+      outline-offset: -1px;
+    }
+
+    tr.divider td {
+      background: rgba(255, 255, 255, 0.03);
+      height: 26px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 8px;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .prio {
+      width: 100%;
+      height: 31px;
+      line-height: 31px;
+      text-align: center;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 8px;
+      user-select: none;
+      cursor: pointer;
+      font-weight: 800;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .prio.low { color: rgba(232, 238, 242, 0.75); }
+    .prio.medium { color: var(--accent-2); }
+    .prio.high { color: #ff9aa2; }
+
+    /* Due date styles */
+    .due-badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .due-overdue { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .due-soon { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .due-normal { background: rgba(59, 130, 246, 0.15); color: var(--accent-2); }
+
+    /* Status styles */
+    .status-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-not-started { background: rgba(107, 114, 128, 0.3); color: #9ca3af; }
+    .status-info-requested { background: rgba(245, 158, 11, 0.3); color: #fbbf24; }
+    .status-in-progress { background: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+    .status-review { background: rgba(139, 92, 246, 0.3); color: #a78bfa; }
+    .status-lodged { background: rgba(34, 197, 94, 0.3); color: #4ade80; }
+    .status-complete { background: rgba(16, 185, 129, 0.3); color: #34d399; }
+
+    /* Job type */
+    .job-type {
+      font-size: 10px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Billable indicator */
+    .billable-icon {
+      color: var(--success) !important;
+    }
+    .non-billable-icon {
+      color: var(--muted) !important;
+      opacity: 0.6;
+    }
+    [data-field="billable"]:hover {
+      border-color: var(--teal-2) !important;
+    }
+
+    /* Summary bar */
+    .summary-bar {
+      display: flex;
+      gap: 20px;
+      padding: 10px 0;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .summary-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .summary-value.overdue { color: var(--danger); }
+    .summary-value.accent { color: var(--accent-2); }
+    .summary-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .center { text-align: center; }
+
+    .timer-btn,
+    .icon-btn {
+      width: 100%;
+      height: 31px;
+      line-height: 31px;
+      text-align: center;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 8px;
+      user-select: none;
+      cursor: pointer;
+      font-weight: 900;
+      color: var(--text);
+      background: transparent;
+      font-size: 13px;
+      position: relative;
+    }
+
+    .timer-btn.running {
+      border-color: var(--teal-2);
+      color: var(--teal-2);
+    }
+
+    .timer-btn.disabled,
+    .icon-btn.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .has-dot::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--teal-2);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.35);
+    }
+
+    .subtle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+
+    .modal {
+      width: min(760px, 96vw);
+      background: var(--panel);
+      border: 1px solid rgba(20, 184, 166, 0.45);
+      border-radius: 12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-weight: 800;
+      color: var(--text);
+      font-size: 13px;
+      letter-spacing: 0.2px;
+    }
+
+    .modal-body {
+      padding: 12px 14px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      box-sizing: border-box;
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      padding: 10px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--teal-2);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.01);
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .list {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .list-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.01);
+    }
+
+    .list-item a {
+      color: var(--teal-2);
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+      max-width: 100%;
+    }
+
+    .pill {
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .mini {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .hidden-input { display: none; }
+
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      line-height: 0;
+    }
+
+    .icon svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Completion animation */
+    @keyframes liftAndDrop {
+      0%   { transform: translateY(0) scale(1); box-shadow: none; z-index:1; }
+      40%  { transform: translateY(-35px) scale(1.05); box-shadow: 0 45px 140px rgba(0,0,0,0.9); z-index:10; }
+      80%  { transform: translateY(-60px) scale(1.07); box-shadow: 0 60px 180px rgba(0,0,0,0.95); z-index:10; }
+      100% { transform: translateY(0) scale(1); box-shadow: none; z-index:1; }
+    }
+
+    tr.lift-move {
+      animation: liftAndDrop 1800ms cubic-bezier(.22,.75,.25,1);
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 15, 18, 0.88);
+      border: none;
+      color: var(--text);
+      padding: 24px;
+      font-weight: 900;
+      font-size: 32px;
+      letter-spacing: 0.4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+      z-index: 20000;
+      text-align: center;
+    }
+
+    #toast.show {
+      opacity: 1;
+    }
+  </style>
+
+  <!-- Firebase (compat build so this file runs in a plain <script> context) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Auth (Firebase email/password) -->
+  <div id="authBackdrop" class="modal-backdrop" style="display:flex;">
+    <div class="modal" style="width:min(520px, 96vw);">
+      <div class="modal-header">
+        <div class="modal-title">Sign in</div>
+        <div class="subtle" id="authStatus" style="margin-left:auto;">—</div>
+      </div>
+      <div class="modal-body">
+        <div class="subtle" style="margin-bottom:10px;">Email + password login. Tasks sync across devices when Firebase is configured.</div>
+        <div style="display:grid; gap:10px;">
+          <input id="authEmail" type="text" placeholder="Email" autocomplete="username" />
+          <input id="authPass" type="password" placeholder="Password" autocomplete="current-password" />
+        </div>
+        <div class="controls" style="margin-top:12px; justify-content:flex-end;">
+          <button id="signInBtn" type="button">Sign in</button>
+          <button id="signUpBtn" type="button">Create account</button>
+        </div>
+        <div class="subtle" style="margin-top:10px; line-height:1.35;">
+          <span style="color:rgba(255,90,95,0.9); font-weight:700;">Setup required:</span>
+          This page needs your Firebase project config to enable login and syncing.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <div class="header">
+      <div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button id="homeBtn" type="button" style="padding:6px 12px;">Home</button>
+          <span style="font-size:20px; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Raze</span>
+        </div>
+        <div class="subtle" style="margin-top:2px;">Task management for accountants</div>
+      </div>
+      <div class="meta">
+        <div id="activeTimer">⏱ —</div>
+      </div>
+    </div>
+
+    <!-- Summary Bar -->
+    <div class="summary-bar">
+      <div class="summary-stat">
+        <span class="summary-value" id="totalTasksCount">0</span>
+        <span class="summary-label">Total Tasks</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-value overdue" id="overdueCount">0</span>
+        <span class="summary-label">Overdue</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-value" id="dueThisWeekCount">0</span>
+        <span class="summary-label">Due This Week</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-value accent" id="timeThisWeek">0:00</span>
+        <span class="summary-label">Time This Week</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-value accent" id="billableTime">0:00</span>
+        <span class="summary-label">Billable Time</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="addBtn" type="button">Add Task</button>
+      <button id="emailBtn" type="button" title="Opens your email app with the current work list.">Email list</button>
+      <button id="copyBtn" type="button" title="Copies the current work list to clipboard.">Copy list</button>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span class="subtle">Status</span>
+        <select id="filterStatus">
+          <option value="all">All</option>
+          <option value="Not Started">Not Started</option>
+          <option value="Info Requested">Info Requested</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Review">Review</option>
+          <option value="Lodged">Lodged</option>
+          <option value="Complete">Complete</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span class="subtle">Job Type</span>
+        <select id="filterJobType">
+          <option value="all">All</option>
+          <option value="Tax Return">Tax Return</option>
+          <option value="BAS">BAS</option>
+          <option value="Financial Statements">Financial Statements</option>
+          <option value="Audit">Audit</option>
+          <option value="Bookkeeping">Bookkeeping</option>
+          <option value="Advisory">Advisory</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <button id="clearArchiveBtn" class="btn-danger" type="button" title="Permanently clears archived tasks (not visible in the list).">Clear Archive</button>
+      <span class="subtle" id="archiveCount">Archive: 0</span>
+      <button id="clearBlankBtn" type="button" title="Remove rows with no client and no task">Clear Blank Rows</button>
+
+      <span style="flex:1;"></span>
+      <span class="subtle" id="userBadge" title="Signed in user" style="white-space:nowrap;">—</span>
+      <button id="signOutBtn" class="mini" type="button" title="Sign out">Sign out</button>
+    </div>
+
+    <datalist id="clientList"></datalist>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px; text-align:center;">#</th>
+          <th id="sortClient" style="width:140px; cursor:pointer;" title="Click to sort by client">Client <span id="sortClientIcon"></span></th>
+          <th style="width:300px;">Task</th>
+          <th style="width:70px;">Job Type</th>
+          <th style="width:70px;">Status</th>
+          <th id="sortDue" style="width:70px; cursor:pointer;" title="Click to sort by due date">Due <span id="sortDueIcon"></span></th>
+          <th id="sortPriority" style="width:20px; text-align:center; cursor:pointer;" title="Click to sort by priority">P <span id="sortPriorityIcon"></span></th>
+          <th style="width:24px; text-align:center;">✓</th>
+          <th style="width:24px; text-align:center;">⏱</th>
+          <th style="width:24px; text-align:center;" title="Notes">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:middle; fill: currentColor; opacity:0.85;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.5L19.5 10H14V4.5zM8 13h8v2H8v-2zm0 4h8v2H8v-2zM8 9h4v2H8V9z"/></svg>
+          </th>
+          <th style="width:24px; text-align:center;" title="Links &amp; Documents">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:middle; fill: currentColor; opacity:0.85;"><path d="M10.59 13.41a1 1 0 0 1 0-1.41l3.18-3.18a3 3 0 0 1 4.24 4.24l-2.47 2.47a3 3 0 0 1-4.24 0 1 1 0 1 1 1.41-1.41 1 1 0 0 0 1.41 0l2.47-2.47a1 1 0 0 0-1.41-1.41l-3.18 3.18a1 1 0 0 1-1.41 0z"/><path d="M13.41 10.59a1 1 0 0 1 0 1.41l-3.18 3.18a3 3 0 0 1-4.24-4.24l2.47-2.47a3 3 0 0 1 4.24 0 1 1 0 0 1-1.41 1.41 1 1 0 0 0-1.41 0L7.41 11.35a1 1 0 0 0 1.41 1.41l3.18-3.18a1 1 0 0 1 1.41 0z"/></svg>
+          </th>
+          <th style="width:24px; padding:4px; text-align:center;"></th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"></tbody>
+    </table>
+
+    <div id="toast" aria-live="polite"></div>
+
+    <!-- Notes Modal -->
+    <div id="notesBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="notesTitle">Notes</div>
+          <button id="notesClose" class="mini" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <textarea id="notesTextarea" placeholder="Write detailed notes here. These do not affect the table layout."></textarea>
+          <div class="subtle" style="margin-top:6px;" id="notesHint">Saved automatically.</div>
+        </div>
+        <div class="modal-footer">
+          <div class="subtle" id="notesMeta">—</div>
+          <button id="notesSave" class="mini" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Links/Docs Modal -->
+    <div id="linksBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="linksTitle">Links &amp; Documents</div>
+          <button id="linksClose" class="mini" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <div class="link-row">
+            <input id="newLinkInput" type="text" placeholder="Paste a link (e.g. SharePoint/Drive/Netlify/Outlook link)" />
+            <button id="addLinkBtn" class="mini" type="button">Add</button>
+          </div>
+
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button id="uploadBtn" class="mini" type="button">Upload file</button>
+            <span class="subtle">Files are stored locally in this browser. Keep them small.</span>
+            <input id="filePicker" class="hidden-input" type="file" />
+          </div>
+
+          <div class="list" id="linksList" style="margin-top:12px;"></div>
+        </div>
+        <div class="modal-footer">
+          <div class="subtle" id="linksMeta">—</div>
+          <button id="linksDone" class="mini" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Firebase Auth + Firestore (email/password) =====
+    // Replace FIREBASE_CONFIG with your Firebase project config.
+    // Security (Firestore Rules):
+    // match /databases/{database}/documents {
+    //   match /users/{uid}/tasks/{doc} { allow read, write: if request.auth != null && request.auth.uid == uid; }
+    //   match /users/{uid}/archive/{doc} { allow read, write: if request.auth != null && request.auth.uid == uid; }
+    // }
+
+    const FIREBASE_CONFIG = {
+      apiKey: 'AIzaSyBpkfLUwhpByb3pvkUx4XYFoFp7qxSd0yQ',
+      authDomain: 'raze-9311c.firebaseapp.com',
+      projectId: 'raze-9311c',
+      appId: '1:567484969210:web:a94b5229a072cecfa95943'
+    };
+
+    function hasFirebaseConfig() {
+      return !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.authDomain && FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.appId);
+    }
+
+    let fbApp = null;
+    let fbAuth = null;
+    let fbDb = null;
+    let currentUser = null;
+
+    if (hasFirebaseConfig()) {
+      fbApp = firebase.initializeApp(FIREBASE_CONFIG);
+      fbAuth = firebase.auth();
+      fbDb = firebase.firestore();
+    } else {
+      console.warn('Firebase not configured. Running in local-only mode.');
+    }
+
+    // ===== Local keys =====
+    const STORAGE_KEY = 'tasks';
+    const ARCHIVE_KEY = 'archive';
+    const SORT_CLIENT_KEY = 'sortClient';
+    const SORT_DUE_KEY = 'sortDue';
+    const SORT_PRIORITY_KEY = 'sortPriority';
+    const BLANK_KEY = 'blankMode';
+    const EMAIL_TO_KEY = 'email_to';
+
+    // ===== State =====
+    /** @type {any[]} */
+    let tasks = [];
+    /** @type {any[]} */
+    let archive = [];
+
+    let selectedTaskIndex = null;
+    let saveTimer = null;
+
+    let sortClient = localStorage.getItem(SORT_CLIENT_KEY) || 'none'; // 'none', 'asc', 'desc'
+    let sortDue = localStorage.getItem(SORT_DUE_KEY) || 'none'; // 'none', 'asc', 'desc'
+    let sortPriority = localStorage.getItem(SORT_PRIORITY_KEY) || 'none'; // 'none', 'asc', 'desc'
+    let blankMode = localStorage.getItem(BLANK_KEY) || 'bottom';
+
+    // Timer state
+    let runningTaskIndex = null;
+    let ticker = null;
+
+    // Modal state
+    let notesTaskIndex = null;
+    let linksTaskIndex = null;
+
+    const userTasksCol = (uid) => fbDb.collection('users').doc(uid).collection('tasks');
+    const userArchiveCol = (uid) => fbDb.collection('users').doc(uid).collection('archive');
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function formatHMS(totalSeconds) {
+      const s = Math.max(0, Math.floor(totalSeconds || 0));
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      if (h > 0) return `${h}:${pad2(m)}:${pad2(sec)}`;
+      return `${m}:${pad2(sec)}`;
+    }
+
+    function stripId(t) {
+      const obj = (t || {});
+      const copy = { ...obj };
+      delete copy.id;
+      return copy;
+    }
+
+    function backfillTask(t) {
+      return {
+        id: t && t.id ? t.id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+        client: t && t.client != null ? t.client : '',
+        description: t && t.description != null ? t.description : '',
+        jobType: t && t.jobType ? t.jobType : 'Tax Return',
+        status: t && t.status ? t.status : 'Not Started',
+        dueDate: t && t.dueDate ? t.dueDate : '',
+        priority: t && t.priority ? t.priority : 'Medium',
+        billable: t && t.billable !== undefined ? t.billable : true,
+        completed: !!(t && t.completed),
+        seconds: Number.isFinite(t && t.seconds) ? t.seconds : 0,
+        notes: (t && typeof t.notes === 'string') ? t.notes : '',
+        items: Array.isArray(t && t.items) ? t.items : [],
+        createdAt: (t && t.createdAt) ? t.createdAt : new Date().toISOString(),
+        archivedAt: (t && t.archivedAt) ? t.archivedAt : null
+      };
+    }
+
+    // Due date helper functions
+    function formatShortDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      const day = date.getDate();
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return day + ' ' + months[date.getMonth()];
+    }
+
+    function isOverdue(dateStr) {
+      if (!dateStr) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(dateStr);
+      return due < today;
+    }
+
+    function isDueSoon(dateStr) {
+      if (!dateStr) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(dateStr);
+      const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 3;
+    }
+
+    function isThisWeek(dateStr) {
+      if (!dateStr) return false;
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+      const due = new Date(dateStr);
+      return due >= startOfWeek && due < endOfWeek;
+    }
+
+    function formatDueDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+    }
+
+    function getStatusClass(status) {
+      const map = {
+        'Not Started': 'status-not-started',
+        'Info Requested': 'status-info-requested',
+        'In Progress': 'status-in-progress',
+        'Review': 'status-review',
+        'Lodged': 'status-lodged',
+        'Complete': 'status-complete'
+      };
+      return map[status] || 'status-not-started';
+    }
+
+    function getStatusRank(status) {
+      const order = ['Not Started', 'Info Requested', 'In Progress', 'Review', 'Lodged', 'Complete'];
+      return order.indexOf(status);
+    }
+
+    function loadLocal() {
+      tasks = (JSON.parse(localStorage.getItem(STORAGE_KEY)) || []).map(backfillTask);
+      archive = (JSON.parse(localStorage.getItem(ARCHIVE_KEY)) || []).map(backfillTask);
+    }
+
+    async function loadFromFirestore() {
+      if (!currentUser || !fbDb) return;
+
+      const uid = currentUser.uid;
+      const tasksSnap = await userTasksCol(uid).get();
+      const archSnap = await userArchiveCol(uid).get();
+
+      const loadedTasks = [];
+      tasksSnap.forEach(d => loadedTasks.push(backfillTask({ id: d.id, ...d.data() })));
+
+      const loadedArchive = [];
+      archSnap.forEach(d => loadedArchive.push(backfillTask({ id: d.id, ...d.data() })));
+
+      loadedTasks.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || '') || String(a.id).localeCompare(String(b.id)));
+      loadedArchive.sort((a, b) => (a.archivedAt || '').localeCompare(b.archivedAt || '') || String(a.id).localeCompare(String(b.id)));
+
+      tasks = loadedTasks;
+      archive = loadedArchive;
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks.map(stripId)));
+      localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive.map(stripId)));
+    }
+
+    async function persistTaskToFirestore(task) {
+      if (!currentUser || !fbDb || !task || !task.id) return;
+      const uid = currentUser.uid;
+      await userTasksCol(uid).doc(task.id).set(stripId(task), { merge: true });
+    }
+
+    async function persistArchiveToFirestore(task) {
+      if (!currentUser || !fbDb || !task || !task.id) return;
+      const uid = currentUser.uid;
+      await userArchiveCol(uid).doc(task.id).set(stripId(task), { merge: true });
+    }
+
+    async function deleteTaskFromFirestore(task) {
+      if (!currentUser || !fbDb || !task || !task.id) return;
+      const uid = currentUser.uid;
+      await userTasksCol(uid).doc(task.id).delete();
+    }
+
+    function setSavedStamp() {
+      // Removed - no longer displaying save status
+    }
+
+    function setArchiveCount() {
+      document.getElementById('archiveCount').textContent = `Archive: ${archive.length}`;
+    }
+
+    function setActiveTimerStamp() {
+      const el = document.getElementById('activeTimer');
+      if (runningTaskIndex == null) {
+        el.textContent = '⏱ —';
+        el.title = '';
+        return;
+      }
+      const t = tasks[runningTaskIndex];
+      const label = (t && (t.client || t.description))
+        ? `${(t.client || '').trim()}${(t.client && t.description) ? ' — ' : ''}${(t.description || '').trim()}`
+        : 'Selected task';
+      el.textContent = `⏱ ${formatHMS(t.seconds)}`;
+      el.title = label;
+    }
+
+    function saveTasks(immediate = true) {
+      const doSave = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks.map(stripId)));
+        localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archive.map(stripId)));
+        setSavedStamp();
+        setArchiveCount();
+      };
+
+      if (immediate) {
+        doSave();
+        return;
+      }
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(doSave, 250);
+    }
+
+    function prioLetter(p) { return p === 'Low' ? 'L' : (p === 'Medium' ? 'M' : 'H'); }
+    function prioClass(p) { return p === 'Low' ? 'low' : (p === 'Medium' ? 'medium' : 'high'); }
+    function prioRank(p) { return p === 'High' ? 0 : (p === 'Medium' ? 1 : 2); }
+    function norm(s) { return (s || '').toString().trim().toLowerCase(); }
+
+    function isBlankRow(task) {
+      return norm(task.client) === '' && norm(task.description) === '';
+    }
+
+    function purgeBlankRowsIfNeeded() {
+      if (blankMode !== 'remove') return;
+
+      // Allow a small working buffer of blank rows so "Add Task" still feels like it adds rows.
+      // We then purge older blank rows to keep the list tidy.
+      const KEEP_BLANK_BUFFER = 5;
+
+      const oldTasks = tasks;
+      const beforeLen = oldTasks.length;
+
+      // Collect open blank rows (no text) with no time recorded.
+      const blankOpenIdx = [];
+      for (let i = 0; i < oldTasks.length; i++) {
+        const t = oldTasks[i];
+        if (t.completed) continue;
+        if (!isBlankRow(t)) continue;
+        if ((t.seconds || 0) > 0) continue;
+        blankOpenIdx.push(i);
+      }
+
+      // Always keep the selected blank row (if applicable)
+      const keepIdx = new Set();
+      if (
+        selectedTaskIndex != null &&
+        oldTasks[selectedTaskIndex] &&
+        !oldTasks[selectedTaskIndex].completed &&
+        isBlankRow(oldTasks[selectedTaskIndex]) &&
+        (oldTasks[selectedTaskIndex].seconds || 0) === 0
+      ) {
+        keepIdx.add(selectedTaskIndex);
+      }
+
+      // Keep the most recent N blank rows (from the bottom)
+      for (let k = blankOpenIdx.length - 1; k >= 0 && keepIdx.size < KEEP_BLANK_BUFFER; k--) {
+        keepIdx.add(blankOpenIdx[k]);
+      }
+
+      tasks = oldTasks.filter((t, idx) => {
+        if (t.completed) return true;
+        if (!isBlankRow(t)) return true;
+        if ((t.seconds || 0) > 0) return true;
+        return keepIdx.has(idx);
+      });
+
+      if (tasks.length !== beforeLen) {
+        const remapIndex = (oldIndex) => {
+          if (oldIndex == null) return null;
+          const old = oldTasks[oldIndex];
+          const newIdx = tasks.indexOf(old);
+          return newIdx >= 0 ? newIdx : null;
+        };
+
+        selectedTaskIndex = remapIndex(selectedTaskIndex);
+        runningTaskIndex = remapIndex(runningTaskIndex);
+        saveTasks(true);
+      }
+    }
+
+    function compareBySort(a, b) {
+      const ta = a.task;
+      const tb = b.task;
+
+      const ca = norm(ta.client);
+      const cb = norm(tb.client);
+      const da = norm(ta.description);
+      const db = norm(tb.description);
+
+      const pa = prioRank(ta.priority);
+      const pb = prioRank(tb.priority);
+
+      // Check if row is blank (no client and no description)
+      const aIsBlank = ca === '' && da === '';
+      const bIsBlank = cb === '' && db === '';
+
+      // Always push blank rows to the end
+      if (aIsBlank && !bIsBlank) return 1;
+      if (!aIsBlank && bIsBlank) return -1;
+
+      const caIsBlank = ca === '';
+      const cbIsBlank = cb === '';
+
+      const clientCompare = () => {
+        // Push blank clients to end
+        if (caIsBlank && !cbIsBlank) return 1;
+        if (!caIsBlank && cbIsBlank) return -1;
+        return ca.localeCompare(cb);
+      };
+
+      const dateCompare = () => {
+        // Push blank dates to end
+        if (!ta.dueDate && !tb.dueDate) return 0;
+        if (!ta.dueDate) return 1;
+        if (!tb.dueDate) return -1;
+        return new Date(ta.dueDate) - new Date(tb.dueDate);
+      };
+
+      // Sort by Client (alphabetical)
+      if (sortClient !== 'none') {
+        const c = clientCompare();
+        if (c !== 0) return sortClient === 'desc' ? -c : c;
+      }
+
+      // Sort by Due Date
+      if (sortDue !== 'none') {
+        const d = dateCompare();
+        if (d !== 0) return sortDue === 'desc' ? -d : d;
+      }
+
+      // Sort by Priority
+      if (sortPriority !== 'none') {
+        const p = pa - pb;
+        if (p !== 0) return sortPriority === 'desc' ? -p : p;
+      }
+
+      return a.index - b.index;
+    }
+
+    // Filter state
+    let filterStatus = 'all';
+    let filterJobType = 'all';
+
+    function buildClientDatalist() {
+      const dl = document.getElementById('clientList');
+      dl.innerHTML = '';
+      const set = new Set(
+        tasks
+          .map(t => (t.client || '').trim())
+          .filter(v => v.length > 0)
+      );
+      Array.from(set).sort((a, b) => a.localeCompare(b)).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        dl.appendChild(opt);
+      });
+    }
+
+    function setSelected(index) {
+      selectedTaskIndex = index;
+      const rows = document.querySelectorAll('tbody#taskBody tr[data-task-index]');
+      rows.forEach(r => r.classList.toggle('selected', Number(r.dataset.taskIndex) === index));
+    }
+
+    function focusClientForTaskIndex(taskIndex) {
+      const row = document.querySelector(`tr[data-task-index="${taskIndex}"]`);
+      if (!row) return;
+      const input = row.querySelector('input[data-field="client"]');
+      if (input) input.focus();
+    }
+
+    function addTask({ focus = true } = {}) {
+      const t = backfillTask({ client: '', description: '', priority: 'Medium', completed: false, seconds: 0, notes: '', items: [] });
+      tasks.push(t);
+      selectedTaskIndex = tasks.length - 1;
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+      renderTasks();
+      if (focus) focusClientForTaskIndex(tasks.length - 1);
+    }
+
+    function archiveTask(index) {
+      if (index == null || index < 0 || index >= tasks.length) return;
+      const task = tasks[index];
+      const archived = backfillTask({ ...task, archivedAt: new Date().toISOString() });
+      archive.push(archived);
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistArchiveToFirestore(archived).catch(console.warn);
+      deleteTask(index, { skipArchivePrompt: true });
+    }
+
+    function deleteTask(index, { skipArchivePrompt = false } = {}) {
+      if (index == null || index < 0 || index >= tasks.length) return;
+
+      if (!skipArchivePrompt && tasks[index] && tasks[index].completed) {
+        const yesArchive = confirm('Archive this completed task?\n\nOK = Archive (hidden)\nCancel = Delete permanently');
+        if (yesArchive) {
+          archiveTask(index);
+          return;
+        }
+      }
+
+      if (runningTaskIndex === index) stopTimer();
+
+      const removed = tasks[index];
+      tasks.splice(index, 1);
+
+      if (hasFirebaseConfig() && currentUser) deleteTaskFromFirestore(removed).catch(console.warn);
+
+      if (runningTaskIndex != null && index < runningTaskIndex) runningTaskIndex -= 1;
+      if (selectedTaskIndex != null && index < selectedTaskIndex) selectedTaskIndex -= 1;
+      if (selectedTaskIndex === index) selectedTaskIndex = null;
+
+      saveTasks(true);
+      renderTasks();
+    }
+
+    function toggleComplete(index, checked) {
+      tasks[index].completed = !!checked;
+      if (tasks[index].completed && runningTaskIndex === index) stopTimer();
+
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+
+      if (checked) {
+        const row = document.querySelector(`tr[data-task-index="${index}"]`);
+        if (row) {
+          row.classList.remove('lift-move');
+          void row.offsetWidth;
+          row.classList.add('lift-move');
+        }
+
+        // 1) animation completes
+        setTimeout(() => {
+          renderTasks();
+        }, 1800);
+
+        return;
+      }
+
+      renderTasks();
+    }
+
+    function cyclePriority(index) {
+      const cur = tasks[index].priority;
+      const next = cur === 'Low' ? 'Medium' : (cur === 'Medium' ? 'High' : 'Low');
+      tasks[index].priority = next;
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+      renderTasks();
+    }
+
+    function startTimer(index) {
+      if (index == null || index < 0 || index >= tasks.length) return;
+      if (tasks[index].completed) return;
+
+      if (runningTaskIndex != null && runningTaskIndex !== index) stopTimer();
+
+      runningTaskIndex = index;
+      setActiveTimerStamp();
+
+      if (ticker) clearInterval(ticker);
+      ticker = setInterval(() => {
+        if (runningTaskIndex == null) return;
+        tasks[runningTaskIndex].seconds = (tasks[runningTaskIndex].seconds || 0) + 1;
+        setActiveTimerStamp();
+        saveTasks(false);
+      }, 1000);
+
+      renderTasks();
+    }
+
+    function stopTimer() {
+      if (ticker) {
+        clearInterval(ticker);
+        ticker = null;
+      }
+      const was = runningTaskIndex;
+      runningTaskIndex = null;
+      setActiveTimerStamp();
+      saveTasks(true);
+      if (was != null && tasks[was] && hasFirebaseConfig() && currentUser) {
+        persistTaskToFirestore(tasks[was]).catch(console.warn);
+      }
+      renderTasks();
+    }
+
+    function toggleTimer(index) {
+      if (tasks[index].completed) return;
+      if (runningTaskIndex === index) stopTimer();
+      else startTimer(index);
+    }
+
+    function hasNotes(task) {
+      return (task.notes || '').trim().length > 0;
+    }
+
+    function hasItems(task) {
+      return Array.isArray(task.items) && task.items.length > 0;
+    }
+
+    function showModal(id) {
+      document.getElementById(id).style.display = 'flex';
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function openNotes(index) {
+      notesTaskIndex = index;
+      const t = tasks[index];
+      document.getElementById('notesTitle').textContent = `Notes — ${((t.client || '').trim() || '—')} `;
+      document.getElementById('notesTextarea').value = t.notes || '';
+      document.getElementById('notesMeta').textContent = `${(t.client || '').trim() || 'No client'}${(t.description || '').trim() ? ' — ' + (t.description || '').trim() : ''}`;
+      showModal('notesBackdrop');
+      setTimeout(() => document.getElementById('notesTextarea').focus(), 50);
+    }
+
+    function closeNotes() {
+      notesTaskIndex = null;
+      hideModal('notesBackdrop');
+    }
+
+    function openLinks(index) {
+      linksTaskIndex = index;
+      const t = tasks[index];
+      document.getElementById('linksTitle').textContent = `Links & Documents — ${((t.client || '').trim() || '—')} `;
+      document.getElementById('linksMeta').textContent = `${(t.client || '').trim() || 'No client'}${(t.description || '').trim() ? ' — ' + (t.description || '').trim() : ''}`;
+      document.getElementById('newLinkInput').value = '';
+      renderLinksList();
+      showModal('linksBackdrop');
+      setTimeout(() => document.getElementById('newLinkInput').focus(), 50);
+    }
+
+    function closeLinks() {
+      linksTaskIndex = null;
+      hideModal('linksBackdrop');
+    }
+
+    function addLinkToTask(raw) {
+      if (linksTaskIndex == null) return;
+
+      const parts = String(raw || '')
+        .split(/\r?\n|,|;/g)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (parts.length === 0) return;
+
+      tasks[linksTaskIndex].items = tasks[linksTaskIndex].items || [];
+      for (const url of parts) tasks[linksTaskIndex].items.push({ type: 'url', label: url, href: url });
+
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[linksTaskIndex]).catch(console.warn);
+      renderLinksList();
+      renderTasks();
+    }
+
+    function removeItemFromTask(itemIndex) {
+      if (linksTaskIndex == null) return;
+      const arr = tasks[linksTaskIndex].items || [];
+      arr.splice(itemIndex, 1);
+      tasks[linksTaskIndex].items = arr;
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[linksTaskIndex]).catch(console.warn);
+      renderLinksList();
+      renderTasks();
+    }
+
+    function renderLinksList() {
+      const list = document.getElementById('linksList');
+      list.innerHTML = '';
+      if (linksTaskIndex == null) return;
+      const t = tasks[linksTaskIndex];
+      const items = Array.isArray(t.items) ? t.items : [];
+
+      if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'subtle';
+        empty.textContent = 'No links or documents.';
+        list.appendChild(empty);
+        return;
+      }
+
+      items.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+
+        const label = document.createElement('div');
+        if (it.type === 'file') {
+          label.innerHTML = `<span class="pill">FILE</span> <span style="margin-left:8px;">${escapeHtml(it.label || 'file')}</span>`;
+        } else {
+          const a = document.createElement('a');
+          a.href = it.href;
+          a.target = '_blank';
+          a.rel = 'noreferrer';
+          a.textContent = it.label || it.href;
+          label.appendChild(a);
+        }
+
+        const openBtn = document.createElement('button');
+        openBtn.className = 'mini';
+        openBtn.type = 'button';
+        openBtn.textContent = 'Open';
+        openBtn.addEventListener('click', () => {
+          if (it.type === 'file') {
+            const dataUrl = it.dataUrl;
+            if (!dataUrl) return;
+            const win = window.open();
+            if (win) win.location.href = dataUrl;
+          } else {
+            window.open(it.href, '_blank', 'noreferrer');
+          }
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'mini btn-danger';
+        delBtn.type = 'button';
+        delBtn.textContent = 'Remove';
+        delBtn.addEventListener('click', () => removeItemFromTask(idx));
+
+        row.appendChild(label);
+        row.appendChild(openBtn);
+        row.appendChild(delBtn);
+        list.appendChild(row);
+      });
+    }
+
+    async function attachFileToTask(file) {
+      if (linksTaskIndex == null) return;
+      if (!file) return;
+
+      const maxBytes = 1_500_000;
+      if (file.size > maxBytes) {
+        alert('File is too large for local storage. Please upload it to Drive/SharePoint and paste the link instead.');
+        return;
+      }
+
+      const dataUrl = await readAsDataURL(file);
+      tasks[linksTaskIndex].items = tasks[linksTaskIndex].items || [];
+      tasks[linksTaskIndex].items.push({ type: 'file', label: file.name, dataUrl });
+      saveTasks(true);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[linksTaskIndex]).catch(console.warn);
+      renderLinksList();
+      renderTasks();
+    }
+
+    function readAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function buildWorkListText() {
+      const decorated = tasks.map((task, index) => ({ task, index }));
+      let open = decorated.filter(x => !x.task.completed);
+      if (sortClient !== 'none' || sortDue !== 'none' || sortPriority !== 'none') open = [...open].sort(compareBySort);
+
+      const now = new Date();
+      const header = `Prioritise & Execute — Work list\n${now.toLocaleString()}\n`;
+      if (open.length === 0) return header + `\n(No open tasks)\n`;
+
+      const lines = open.map((x, i) => {
+        const t = x.task;
+        const p = t.priority || 'Medium';
+        const c = (t.client || '').trim() || '—';
+        const d = (t.description || '').trim() || '—';
+        const tm = formatHMS(t.seconds || 0);
+        return `${String(i + 1).padStart(2, '0')}. [${p}] ${c} — ${d} (Time: ${tm})`;
+      });
+
+      return header + `\n` + lines.join(`\n`) + `\n`;
+    }
+
+    function emailWorkList() {
+      const body = buildWorkListText();
+      const subject = `Work list — ${new Date().toLocaleDateString()}`;
+
+      let to = localStorage.getItem(EMAIL_TO_KEY) || '';
+      const ask = prompt('Send to email address (leave blank to choose in your email app):', to);
+      if (ask === null) return;
+      to = (ask || '').trim();
+      localStorage.setItem(EMAIL_TO_KEY, to);
+
+      const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = url;
+    }
+
+    async function copyWorkList() {
+      const text = buildWorkListText();
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Copied to clipboard');
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    }
+
+    function updateSummaryStats() {
+      const openTasks = tasks.filter(t => !t.completed);
+
+      // Total tasks
+      document.getElementById('totalTasksCount').textContent = openTasks.length;
+
+      // Overdue
+      const overdue = openTasks.filter(t => isOverdue(t.dueDate) && t.status !== 'Complete').length;
+      document.getElementById('overdueCount').textContent = overdue;
+
+      // Due this week
+      const dueThisWeek = openTasks.filter(t => isThisWeek(t.dueDate)).length;
+      document.getElementById('dueThisWeekCount').textContent = dueThisWeek;
+
+      // Time this week (sum of all time from tasks created/modified this week)
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      let weekSeconds = 0;
+      let billableSeconds = 0;
+      tasks.forEach(t => {
+        weekSeconds += t.seconds || 0;
+        if (t.billable) billableSeconds += t.seconds || 0;
+      });
+      document.getElementById('timeThisWeek').textContent = formatHMS(weekSeconds);
+      document.getElementById('billableTime').textContent = formatHMS(billableSeconds);
+    }
+
+    function renderTasks() {
+      purgeBlankRowsIfNeeded();
+      buildClientDatalist();
+      setActiveTimerStamp();
+      setArchiveCount();
+      updateSummaryStats();
+
+      const body = document.getElementById('taskBody');
+      body.innerHTML = '';
+
+      const decorated = tasks.map((task, index) => ({ task, index }));
+      let open = decorated.filter(x => !x.task.completed);
+      const done = decorated.filter(x => x.task.completed);
+
+      // Apply filters
+      if (filterStatus !== 'all') {
+        open = open.filter(x => x.task.status === filterStatus);
+      }
+      if (filterJobType !== 'all') {
+        open = open.filter(x => x.task.jobType === filterJobType);
+      }
+
+      if (sortClient !== 'none' || sortDue !== 'none' || sortPriority !== 'none') open = [...open].sort(compareBySort);
+
+      const appendRow = (item, displayNumber) => {
+        const task = item.task;
+        const index = item.index;
+
+        const row = document.createElement('tr');
+        row.dataset.taskIndex = String(index);
+        if (task.completed) row.classList.add('completed');
+        if (selectedTaskIndex === index) row.classList.add('selected');
+
+        const isRunning = runningTaskIndex === index;
+        const timerLabel = task.completed ? formatHMS(task.seconds) : (isRunning ? '⏸' : '⏵');
+        const timerTitle = task.completed ? `Total time: ${formatHMS(task.seconds)}` : `Time: ${formatHMS(task.seconds)}`;
+
+        const noteClass = `icon-btn ${hasNotes(task) ? 'has-dot' : ''}`;
+        const linkClass = `icon-btn ${hasItems(task) ? 'has-dot' : ''}`;
+
+        // Due date display
+        let dueBadge = '';
+        if (task.dueDate) {
+          let dueClass = 'due-normal';
+          if (isOverdue(task.dueDate)) dueClass = 'due-overdue';
+          else if (isDueSoon(task.dueDate)) dueClass = 'due-soon';
+          dueBadge = `<span class="due-badge ${dueClass}">${formatDueDate(task.dueDate)}</span>`;
+        }
+
+        row.innerHTML = `
+          <td style="width:32px; text-align:center;">${displayNumber}</td>
+          <td style="width:140px;">
+            <input list="clientList" data-field="client" type="text" value="${escapeHtml(task.client)}" />
+          </td>
+          <td style="width:300px;">
+            <input data-field="description" type="text" value="${escapeHtml(task.description)}" />
+          </td>
+          <td style="width:70px;">
+            <select data-field="jobType" style="width:100%; height:31px; font-size:10px;">
+              <option value="Tax Return" ${task.jobType === 'Tax Return' ? 'selected' : ''}>Tax</option>
+              <option value="BAS" ${task.jobType === 'BAS' ? 'selected' : ''}>BAS</option>
+              <option value="Financial Statements" ${task.jobType === 'Financial Statements' ? 'selected' : ''}>Fin Stmts</option>
+              <option value="Audit" ${task.jobType === 'Audit' ? 'selected' : ''}>Audit</option>
+              <option value="Bookkeeping" ${task.jobType === 'Bookkeeping' ? 'selected' : ''}>Books</option>
+              <option value="Advisory" ${task.jobType === 'Advisory' ? 'selected' : ''}>Advisory</option>
+              <option value="Other" ${task.jobType === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+          </td>
+          <td style="width:70px;">
+            <select data-field="status" style="width:100%; height:31px; font-size:10px;">
+              <option value="Not Started" ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+              <option value="Info Requested" ${task.status === 'Info Requested' ? 'selected' : ''}>Info Req</option>
+              <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Prog</option>
+              <option value="Review" ${task.status === 'Review' ? 'selected' : ''}>Review</option>
+              <option value="Lodged" ${task.status === 'Lodged' ? 'selected' : ''}>Lodged</option>
+              <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
+            </select>
+          </td>
+          <td style="width:70px;">
+            <span class="due-date-display" data-field="dueDateDisplay" style="display:block; width:100%; height:31px; line-height:31px; font-size:10px; text-align:center; cursor:pointer; background:var(--panel-2); border:1px solid rgba(20,184,166,0.55); border-radius:8px;">${task.dueDate ? formatShortDate(task.dueDate) : '—'}</span>
+            <input data-field="dueDate" type="date" value="${task.dueDate || ''}" style="position:absolute; opacity:0; pointer-events:none;" />
+          </td>
+          <td style="width:20px; text-align:center;">
+            <div class="prio ${prioClass(task.priority)}" title="Click to cycle (L/M/H)">${prioLetter(task.priority)}</div>
+          </td>
+          <td class="center" style="width:24px; padding:4px;">
+            <span data-field="completed" class="custom-checkbox ${task.completed ? 'checked' : ''}" style="display:inline-block; width:18px; height:18px; background:#0f151a; border:1px solid rgba(20,184,166,0.55); border-radius:4px; cursor:pointer; text-align:center; line-height:16px; font-size:12px; color:#3b82f6;">${task.completed ? '✓' : ''}</span>
+          </td>
+          <td class="center" style="width:24px; padding:4px;">
+            <div class="timer-btn ${isRunning ? 'running' : ''} ${task.completed ? 'disabled' : ''}" title="${timerTitle}">${timerLabel}</div>
+          </td>
+          <td class="center" style="width:24px; padding:4px;">
+            <div class="${noteClass}" title="Notes"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.5L19.5 10H14V4.5zM8 13h8v2H8v-2zm0 4h8v2H8v-2zM8 9h4v2H8V9z"/></svg></span></div>
+          </td>
+          <td class="center" style="width:24px; padding:4px;">
+            <div class="${linkClass}" title="Links & Documents"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10.59 13.41a1 1 0 0 1 0-1.41l3.18-3.18a3 3 0 0 1 4.24 4.24l-2.47 2.47a3 3 0 0 1-4.24 0 1 1 0 1 1 1.41-1.41 1 1 0 0 0 1.41 0l2.47-2.47a1 1 0 0 0-1.41-1.41l-3.18 3.18a1 1 0 0 1-1.41 0z"/><path d="M13.41 10.59a1 1 0 0 1 0 1.41l-3.18 3.18a3 3 0 0 1-4.24-4.24l2.47-2.47a3 3 0 0 1 4.24 0 1 1 0 0 1-1.41 1.41 1 1 0 0 0-1.41 0L7.41 11.35a1 1 0 0 0 1.41 1.41l3.18-3.18a1 1 0 0 1 1.41 0z"/></svg></span></div>
+          </td>
+          <td class="delete-btn" style="width:24px; padding:4px; text-align:center;">X</td>
+        `;
+
+        row.addEventListener('mousedown', () => setSelected(index));
+
+        const clientInput = row.querySelector('input[data-field="client"]');
+        const descInput = row.querySelector('input[data-field="description"]');
+
+        clientInput.addEventListener('focus', () => setSelected(index));
+        descInput.addEventListener('focus', () => setSelected(index));
+
+        clientInput.addEventListener('input', (e) => {
+          tasks[index].client = e.target.value;
+          saveTasks(false);
+          if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+          buildClientDatalist();
+          if (runningTaskIndex === index) setActiveTimerStamp();
+        });
+
+        descInput.addEventListener('input', (e) => {
+          tasks[index].description = e.target.value;
+          saveTasks(false);
+          if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+          if (runningTaskIndex === index) setActiveTimerStamp();
+        });
+
+        // New field event listeners
+        const jobTypeSelect = row.querySelector('select[data-field="jobType"]');
+        const statusSelect = row.querySelector('select[data-field="status"]');
+        const dueDateInput = row.querySelector('input[data-field="dueDate"]');
+        const dueDateDisplay = row.querySelector('[data-field="dueDateDisplay"]');
+
+        jobTypeSelect.addEventListener('change', (e) => {
+          tasks[index].jobType = e.target.value;
+          saveTasks(false);
+          if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+        });
+
+        statusSelect.addEventListener('change', (e) => {
+          tasks[index].status = e.target.value;
+          saveTasks(false);
+          if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+          updateSummaryStats();
+        });
+
+        dueDateDisplay.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dueDateInput.showPicker();
+        });
+
+        dueDateInput.addEventListener('change', (e) => {
+          tasks[index].dueDate = e.target.value;
+          dueDateDisplay.textContent = e.target.value ? formatShortDate(e.target.value) : '—';
+          saveTasks(false);
+          if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+          updateSummaryStats();
+        });
+
+        const enterHandler = (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addTask({ focus: true });
+          }
+        };
+        clientInput.addEventListener('keydown', enterHandler);
+        descInput.addEventListener('keydown', enterHandler);
+
+        row.querySelector('.prio').addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          cyclePriority(index);
+        });
+
+        row.querySelector('span[data-field="completed"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          const isCompleted = !tasks[index].completed;
+          e.target.textContent = isCompleted ? '✓' : '';
+          e.target.classList.toggle('checked', isCompleted);
+          toggleComplete(index, isCompleted);
+        });
+
+        row.querySelector('.timer-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          if (tasks[index].completed) return;
+          toggleTimer(index);
+        });
+
+        row.querySelectorAll('.icon-btn')[0].addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          openNotes(index);
+        });
+
+        row.querySelectorAll('.icon-btn')[1].addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          openLinks(index);
+        });
+
+        row.querySelector('.delete-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTask(index);
+        });
+
+        body.appendChild(row);
+      };
+
+      let n = 1;
+      open.forEach(item => appendRow(item, n++));
+
+      if (open.length > 0 && done.length > 0) {
+        const div = document.createElement('tr');
+        div.className = 'divider';
+        div.innerHTML = `<td colspan="13">Completed</td>`;
+        body.appendChild(div);
+      }
+
+      done.forEach(item => appendRow(item, n++));
+    }
+
+    let toastTimer = null;
+
+    function showToast(message) {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.remove('show');
+      }, 2500);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    // Lightweight self-tests
+    (function runSelfTests() {
+      try {
+        console.assert(formatHMS(0) === '0:00', 'formatHMS(0) should be 0:00');
+        console.assert(formatHMS(65) === '1:05', 'formatHMS(65) should be 1:05');
+        console.assert(formatHMS(3661) === '1:01:01', 'formatHMS(3661) should be 1:01:01');
+
+        console.assert(escapeHtml('a&b') === 'a&amp;b', 'escapeHtml should escape &');
+        console.assert(escapeHtml('<x>') === '&lt;x&gt;', 'escapeHtml should escape <>');
+
+        const multi = 'https://a.com\nhttps://b.com, https://c.com;https://d.com';
+        const parts = String(multi)
+          .split(/\r?\n|,|;/g)
+          .map(s => s.trim())
+          .filter(Boolean);
+        console.assert(parts.length === 4, 'multi-link split should produce 4 links');
+
+        const bf = backfillTask({});
+        console.assert(!!bf.id, 'backfillTask should create id');
+
+        const txt = buildWorkListText();
+        console.assert(txt.includes('\n'), 'buildWorkListText should include newline separators');
+
+        // New test: toggleComplete should not throw on blank task
+        tasks = [backfillTask({ client: '', description: '' })];
+        toggleComplete(0, true);
+        console.assert(tasks[0].completed === true, 'toggleComplete should set completed');
+        tasks = [];
+
+        // New test: purgeBlankRowsIfNeeded keeps a small buffer so Add still "adds" rows
+        blankMode = 'remove';
+        tasks = [];
+        for (let i = 0; i < 8; i++) tasks.push(backfillTask({ client: '', description: '' }));
+        selectedTaskIndex = 7;
+        purgeBlankRowsIfNeeded();
+        console.assert(tasks.length <= 5, 'purge should keep at most 5 blank rows');
+        console.assert(selectedTaskIndex != null, 'selectedTaskIndex should remain valid after purge');
+        tasks = [];
+        blankMode = localStorage.getItem(BLANK_KEY) || 'bottom';
+      } catch (e) {
+        console.warn('Self-tests skipped:', e);
+      }
+    })();
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeNotes();
+        closeLinks();
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const t = e.target;
+        const isTyping = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+        if (isTyping) return;
+        if (selectedTaskIndex != null) {
+          e.preventDefault();
+          deleteTask(selectedTaskIndex);
+        }
+      }
+
+      if (e.key === ' ' || e.code === 'Space') {
+        const t = e.target;
+        const isTyping = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+        if (isTyping) return;
+        if (selectedTaskIndex != null && selectedTaskIndex >= 0 && selectedTaskIndex < tasks.length) {
+          e.preventDefault();
+          if (!tasks[selectedTaskIndex].completed) toggleTimer(selectedTaskIndex);
+        }
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (runningTaskIndex != null) saveTasks(true);
+    });
+
+    // Notes modal wiring
+    document.getElementById('notesClose').addEventListener('click', closeNotes);
+    document.getElementById('notesSave').addEventListener('click', closeNotes);
+    document.getElementById('notesBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'notesBackdrop') closeNotes();
+    });
+
+    const notesTextarea = document.getElementById('notesTextarea');
+    notesTextarea.addEventListener('input', () => {
+      if (notesTaskIndex == null) return;
+      tasks[notesTaskIndex].notes = notesTextarea.value;
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[notesTaskIndex]).catch(console.warn);
+    });
+
+    // Links modal wiring
+    document.getElementById('linksClose').addEventListener('click', closeLinks);
+    document.getElementById('linksDone').addEventListener('click', closeLinks);
+    document.getElementById('linksBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'linksBackdrop') closeLinks();
+    });
+
+    document.getElementById('addLinkBtn').addEventListener('click', () => {
+      addLinkToTask(document.getElementById('newLinkInput').value);
+      document.getElementById('newLinkInput').value = '';
+      document.getElementById('newLinkInput').focus();
+    });
+
+    document.getElementById('newLinkInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('addLinkBtn').click();
+      }
+    });
+
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      document.getElementById('filePicker').click();
+    });
+
+    document.getElementById('filePicker').addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      try {
+        await attachFileToTask(file);
+      } catch (err) {
+        console.warn(err);
+        alert('Could not attach file.');
+      }
+    });
+
+    // Controls
+    document.getElementById('addBtn').addEventListener('click', () => addTask({ focus: true }));
+    document.getElementById('emailBtn').addEventListener('click', emailWorkList);
+    document.getElementById('copyBtn').addEventListener('click', copyWorkList);
+
+    // Home button
+    document.getElementById('homeBtn').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    // Arrow key navigation for selected row
+    document.addEventListener('keydown', (e) => {
+      // Only handle arrow keys when not in an input/textarea/select
+      const tag = document.activeElement.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const rows = document.querySelectorAll('tbody#taskBody tr[data-task-index]');
+        if (rows.length === 0) return;
+
+        const indices = Array.from(rows).map(r => Number(r.dataset.taskIndex));
+
+        if (selectedTaskIndex === null) {
+          // Select first or last row
+          setSelected(e.key === 'ArrowDown' ? indices[0] : indices[indices.length - 1]);
+        } else {
+          const currentPos = indices.indexOf(selectedTaskIndex);
+          if (currentPos === -1) {
+            setSelected(indices[0]);
+          } else if (e.key === 'ArrowUp' && currentPos > 0) {
+            setSelected(indices[currentPos - 1]);
+          } else if (e.key === 'ArrowDown' && currentPos < indices.length - 1) {
+            setSelected(indices[currentPos + 1]);
+          }
+        }
+
+        // Scroll selected row into view
+        const selectedRow = document.querySelector(`tr[data-task-index="${selectedTaskIndex}"]`);
+        if (selectedRow) {
+          selectedRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+    });
+
+    // Filter controls
+    document.getElementById('filterStatus').addEventListener('change', (e) => {
+      filterStatus = e.target.value;
+      renderTasks();
+    });
+
+    document.getElementById('filterJobType').addEventListener('change', (e) => {
+      filterJobType = e.target.value;
+      renderTasks();
+    });
+
+    // Column header sorting
+    function updateSortIcons() {
+      const clientIcon = document.getElementById('sortClientIcon');
+      const dueIcon = document.getElementById('sortDueIcon');
+      const priorityIcon = document.getElementById('sortPriorityIcon');
+      clientIcon.textContent = sortClient === 'asc' ? '▲' : sortClient === 'desc' ? '▼' : '';
+      dueIcon.textContent = sortDue === 'asc' ? '▲' : sortDue === 'desc' ? '▼' : '';
+      priorityIcon.textContent = sortPriority === 'asc' ? '▲' : sortPriority === 'desc' ? '▼' : '';
+    }
+
+    function clearAllSorts() {
+      sortClient = 'none';
+      sortDue = 'none';
+      sortPriority = 'none';
+    }
+
+    document.getElementById('sortClient').addEventListener('click', () => {
+      const next = sortClient === 'none' ? 'asc' : sortClient === 'asc' ? 'desc' : 'none';
+      clearAllSorts();
+      sortClient = next;
+      localStorage.setItem(SORT_CLIENT_KEY, sortClient);
+      localStorage.setItem(SORT_DUE_KEY, sortDue);
+      localStorage.setItem(SORT_PRIORITY_KEY, sortPriority);
+      updateSortIcons();
+      renderTasks();
+    });
+
+    document.getElementById('sortDue').addEventListener('click', () => {
+      const next = sortDue === 'none' ? 'asc' : sortDue === 'asc' ? 'desc' : 'none';
+      clearAllSorts();
+      sortDue = next;
+      localStorage.setItem(SORT_CLIENT_KEY, sortClient);
+      localStorage.setItem(SORT_DUE_KEY, sortDue);
+      localStorage.setItem(SORT_PRIORITY_KEY, sortPriority);
+      updateSortIcons();
+      renderTasks();
+    });
+
+    document.getElementById('sortPriority').addEventListener('click', () => {
+      const next = sortPriority === 'none' ? 'asc' : sortPriority === 'asc' ? 'desc' : 'none';
+      clearAllSorts();
+      sortPriority = next;
+      localStorage.setItem(SORT_CLIENT_KEY, sortClient);
+      localStorage.setItem(SORT_DUE_KEY, sortDue);
+      localStorage.setItem(SORT_PRIORITY_KEY, sortPriority);
+      updateSortIcons();
+      renderTasks();
+    });
+
+    updateSortIcons();
+
+    document.getElementById('clearArchiveBtn').addEventListener('click', async () => {
+      if (archive.length === 0) return;
+      const ok = confirm('Clear archive permanently?\n\nThis cannot be undone.');
+      if (!ok) return;
+
+      if (hasFirebaseConfig() && currentUser && fbDb) {
+        try {
+          const uid = currentUser.uid;
+          const snap = await userArchiveCol(uid).get();
+          const batch = fbDb.batch();
+          snap.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      archive = [];
+      saveTasks(true);
+      renderTasks();
+    });
+
+    document.getElementById('clearBlankBtn').addEventListener('click', async () => {
+      const blankTasks = tasks.filter(t => {
+        const client = (t.client || '').trim();
+        const desc = (t.description || '').trim();
+        return client === '' && desc === '';
+      });
+
+      if (blankTasks.length === 0) {
+        showToast('No blank rows to remove');
+        return;
+      }
+
+      // Remove blank tasks from Firestore if logged in
+      if (hasFirebaseConfig() && currentUser && fbDb) {
+        try {
+          const uid = currentUser.uid;
+          for (const t of blankTasks) {
+            await userTasksCol(uid).doc(t.id).delete();
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      // Remove blank tasks from local array
+      tasks = tasks.filter(t => {
+        const client = (t.client || '').trim();
+        const desc = (t.description || '').trim();
+        return !(client === '' && desc === '');
+      });
+
+      saveTasks(true);
+      renderTasks();
+      showToast(`Removed ${blankTasks.length} blank row${blankTasks.length > 1 ? 's' : ''}`);
+    });
+
+    // ===== Auth wiring =====
+    const authBackdrop = document.getElementById('authBackdrop');
+    const appWrap = document.getElementById('app');
+    const authEmail = document.getElementById('authEmail');
+    const authPass = document.getElementById('authPass');
+    const authStatus = document.getElementById('authStatus');
+    const userBadge = document.getElementById('userBadge');
+
+    function showAuth(msg = '') {
+      authBackdrop.style.display = 'flex';
+      appWrap.style.display = 'none';
+      authStatus.textContent = msg || (hasFirebaseConfig() ? 'Not signed in' : 'Firebase not configured');
+    }
+
+    function showApp() {
+      authBackdrop.style.display = 'none';
+      appWrap.style.display = 'block';
+    }
+
+    async function doSignIn() {
+      if (!hasFirebaseConfig() || !fbAuth) {
+        alert('Firebase is not configured. Add FIREBASE_CONFIG values in the code.');
+        return;
+      }
+      const email = (authEmail.value || '').trim();
+      const pass = authPass.value || '';
+      if (!email || !pass) {
+        authStatus.textContent = 'Enter email + password';
+        return;
+      }
+      authStatus.textContent = 'Signing in…';
+      try {
+        await fbAuth.signInWithEmailAndPassword(email, pass);
+      } catch (e) {
+        authStatus.textContent = (e && e.message) ? e.message : 'Sign in failed';
+      }
+    }
+
+    async function doSignUp() {
+      if (!hasFirebaseConfig() || !fbAuth) {
+        alert('Firebase is not configured. Add FIREBASE_CONFIG values in the code.');
+        return;
+      }
+      const email = (authEmail.value || '').trim();
+      const pass = authPass.value || '';
+      if (!email || !pass) {
+        authStatus.textContent = 'Enter email + password';
+        return;
+      }
+      if (pass.length < 6) {
+        authStatus.textContent = 'Password must be at least 6 characters';
+        return;
+      }
+      authStatus.textContent = 'Creating…';
+      try {
+        await fbAuth.createUserWithEmailAndPassword(email, pass);
+      } catch (e) {
+        authStatus.textContent = (e && e.message) ? e.message : 'Create account failed';
+      }
+    }
+
+    document.getElementById('signInBtn').addEventListener('click', doSignIn);
+    document.getElementById('signUpBtn').addEventListener('click', doSignUp);
+    document.getElementById('signOutBtn').addEventListener('click', async () => {
+      if (!fbAuth) return;
+      try { await fbAuth.signOut(); } catch (e) { console.warn(e); }
+    });
+
+    authPass.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doSignIn();
+      }
+    });
+
+    // Boot
+    (async function init() {
+      loadLocal();
+
+      if (hasFirebaseConfig() && fbAuth) {
+        showAuth('Not signed in');
+        fbAuth.onAuthStateChanged(async (user) => {
+          currentUser = user || null;
+          if (!currentUser) {
+            userBadge.textContent = '—';
+            showAuth('Not signed in');
+            return;
+          }
+
+          userBadge.textContent = currentUser.email || 'Signed in';
+          showApp();
+          authStatus.textContent = '';
+
+          try {
+            await loadFromFirestore();
+          } catch (e) {
+            console.warn(e);
+          }
+
+          setSavedStamp();
+          setActiveTimerStamp();
+          setArchiveCount();
+          renderTasks();
+        });
+      } else {
+        showApp();
+        setSavedStamp();
+        setActiveTimerStamp();
+        setArchiveCount();
+        renderTasks();
+      }
+    })();
+  </script>
+</body>
+</html>
