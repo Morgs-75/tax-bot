@@ -599,11 +599,17 @@
         <div class="subtle" style="margin-bottom:10px;">Email + password login. Tasks sync across devices when Firebase is configured.</div>
         <div style="display:grid; gap:10px;">
           <input id="authEmail" type="text" placeholder="Email" autocomplete="username" />
-          <input id="authPass" type="password" placeholder="Password" autocomplete="current-password" />
+          <div style="position:relative;">
+            <input id="authPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%; padding-right:40px;" />
+            <button id="togglePassBtn" type="button" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px;">Show</button>
+          </div>
         </div>
         <div class="controls" style="margin-top:12px; justify-content:flex-end;">
           <button id="signInBtn" type="button">Sign in</button>
           <button id="signUpBtn" type="button">Create account</button>
+        </div>
+        <div style="margin-top:10px; text-align:center;">
+          <a id="forgotPassBtn" href="#" style="color:var(--teal-2); font-size:12px;">Forgot password?</a>
         </div>
       </div>
     </div>
@@ -2144,6 +2150,36 @@
       if (e.key === 'Enter') {
         e.preventDefault();
         doSignIn();
+      }
+    });
+
+    // Toggle password visibility
+    document.getElementById('togglePassBtn').addEventListener('click', () => {
+      const passInput = document.getElementById('authPass');
+      const toggleBtn = document.getElementById('togglePassBtn');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        toggleBtn.textContent = 'Hide';
+      } else {
+        passInput.type = 'password';
+        toggleBtn.textContent = 'Show';
+      }
+    });
+
+    // Forgot password
+    document.getElementById('forgotPassBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value.trim();
+      if (!email) {
+        alert('Please enter your email address first.');
+        return;
+      }
+      if (!fbAuth) return;
+      try {
+        await fbAuth.sendPasswordResetEmail(email);
+        alert('Password reset email sent. Check your inbox.');
+      } catch (err) {
+        alert('Error: ' + err.message);
       }
     });
 
