@@ -1339,9 +1339,13 @@
     let currentUser = null;
 
     if (hasFirebaseConfig()) {
-      fbApp = firebase.initializeApp(FIREBASE_CONFIG);
-      fbAuth = firebase.auth();
-      fbDb = firebase.firestore();
+      try {
+        fbApp = firebase.initializeApp(FIREBASE_CONFIG);
+        fbAuth = firebase.auth();
+        fbDb = firebase.firestore();
+      } catch (e) {
+        console.error('Firebase initialization failed:', e);
+      }
     } else {
       console.warn('Firebase not configured. Running in local-only mode.');
     }
@@ -4219,33 +4223,39 @@
     (async function init() {
       loadLocal();
 
-      if (hasFirebaseConfig() && fbAuth) {
-        showAuth('Not signed in');
-        fbAuth.onAuthStateChanged(async (user) => {
-          currentUser = user || null;
-          if (!currentUser) {
-            userBadge.textContent = '—';
-            showAuth('Not signed in');
-            return;
-          }
+      if (hasFirebaseConfig()) {
+        if (fbAuth) {
+          showAuth('Not signed in');
+          fbAuth.onAuthStateChanged(async (user) => {
+            currentUser = user || null;
+            if (!currentUser) {
+              userBadge.textContent = '—';
+              showAuth('Not signed in');
+              return;
+            }
 
-          userBadge.textContent = currentUser.email || 'Signed in';
-          showApp();
-          authStatus.textContent = '';
+            userBadge.textContent = currentUser.email || 'Signed in';
+            showApp();
+            authStatus.textContent = '';
 
-          try {
-            await loadFromFirestore();
-            await loadMasterLists();
-          } catch (e) {
-            console.warn(e);
-          }
+            try {
+              await loadFromFirestore();
+              await loadMasterLists();
+            } catch (e) {
+              console.warn(e);
+            }
 
-          setSavedStamp();
-          setActiveTimerStamp();
-          setArchiveCount();
-          renderTasks();
-        });
+            setSavedStamp();
+            setActiveTimerStamp();
+            setArchiveCount();
+            renderTasks();
+          });
+        } else {
+          // Firebase configured but failed to load - show error, don't bypass auth
+          showAuth('Firebase failed to load. Please refresh.');
+        }
       } else {
+        // No Firebase config - allow local-only mode
         showApp();
         setSavedStamp();
         setActiveTimerStamp();
