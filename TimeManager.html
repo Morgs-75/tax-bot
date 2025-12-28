@@ -721,6 +721,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      text-align: center;
       border-right: 1px solid var(--border);
       font-size: 10px;
       color: var(--muted);
@@ -810,6 +811,9 @@
     }
     .gantt-bar.tentative {
       background: #f59e0b;
+    }
+    .gantt-bar.likely {
+      background: #86efac;
     }
     .gantt-bar.overdue {
       background: var(--danger);
@@ -1192,11 +1196,11 @@
             <div id="schedSingleMode" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               <input type="date" id="schedNewDate" style="flex:1; min-width:100px;" />
               <input type="number" id="schedNewHours" min="0.5" max="24" step="0.5" placeholder="Hours" style="width:70px; height:31px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:var(--panel-2); color:var(--text); font-size:13px; text-align:center; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;" />
-              <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
-                <input type="checkbox" id="schedTentative" />
-                <span class="checkbox-box">✓</span>
-                Tentative
-              </label>
+              <select id="schedStatus" style="height:31px; font-size:12px;">
+                <option value="locked">Locked In</option>
+                <option value="likely">Likely</option>
+                <option value="tentative">Tentative</option>
+              </select>
               <button id="schedAddBtn" type="button" style="height:31px; box-sizing:border-box;">Add</button>
             </div>
 
@@ -1216,11 +1220,11 @@
                   <span class="checkbox-box">✓</span>
                   Weekdays only
                 </label>
-                <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
-                  <input type="checkbox" id="schedRangeTentative" />
-                  <span class="checkbox-box">✓</span>
-                  Tentative
-                </label>
+                <select id="schedRangeStatus" style="height:31px; font-size:12px;">
+                  <option value="locked">Locked In</option>
+                  <option value="likely">Likely</option>
+                  <option value="tentative">Tentative</option>
+                </select>
                 <button id="schedAddRangeBtn" type="button" style="height:31px; box-sizing:border-box; margin-left:auto;">Add Range</button>
               </div>
             </div>
@@ -1918,7 +1922,7 @@
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border);';
         row.innerHTML = `
-          <span style="color:var(--text);">${client}</span>
+          <span style="color:var(--text); font-size:10px;">${client}</span>
           <button class="mini btn-danger" type="button" style="padding:2px 8px; font-size:11px;">Remove</button>
         `;
         row.querySelector('button').addEventListener('click', () => removeClient(index));
@@ -1937,7 +1941,7 @@
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border);';
         row.innerHTML = `
-          <span style="color:var(--text);">${jobType}</span>
+          <span style="color:var(--text); font-size:10px;">${jobType}</span>
           <button class="mini btn-danger" type="button" style="padding:2px 8px; font-size:11px;">Remove</button>
         `;
         row.querySelector('button').addEventListener('click', () => removeJobType(index));
@@ -2168,7 +2172,7 @@
       const endDate = document.getElementById('schedRangeEnd').value;
       const hoursPerDay = parseFloat(document.getElementById('schedRangeHours').value);
       const weekdaysOnly = document.getElementById('schedWeekdaysOnly').checked;
-      const tentative = document.getElementById('schedRangeTentative').checked;
+      const status = document.getElementById('schedRangeStatus').value;
 
       if (!startDate) {
         toast('Please select a start date');
@@ -2206,7 +2210,7 @@
             id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random() + daysAdded,
             date: current.toISOString().split('T')[0],
             hours: hoursPerDay,
-            tentative: tentative
+            status: status
           });
           daysAdded++;
         }
@@ -2245,9 +2249,11 @@
         const item = document.createElement('div');
         item.className = 'schedule-item';
         const dateFormatted = formatScheduleDate(sched.date);
-        const tentativeIndicator = sched.tentative ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">(T)</span>' : '';
+        const statusIndicator = sched.status === 'tentative' ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">(T)</span>' :
+                                   sched.status === 'likely' ? '<span style="color:#86efac; font-size:10px; margin-left:4px;" title="Likely">(L)</span>' :
+                                   sched.tentative ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">(T)</span>' : '';
         item.innerHTML = `
-          <span class="schedule-item-date">${dateFormatted}${tentativeIndicator}</span>
+          <span class="schedule-item-date">${dateFormatted}${statusIndicator}</span>
           <input type="number" class="schedule-item-hours-input" value="${sched.hours}" min="0.5" step="0.5" data-id="${sched.id}" style="width:60px; height:28px; padding:4px 8px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:#141420; color:#f4f7fb; font-weight:600; font-size:13px; text-align:center;" />
           <span class="schedule-item-delete" data-id="${sched.id}">×</span>
         `;
@@ -2271,10 +2277,10 @@
     function addScheduleBlock() {
       const dateInput = document.getElementById('schedNewDate');
       const hoursInput = document.getElementById('schedNewHours');
-      const tentativeInput = document.getElementById('schedTentative');
+      const statusInput = document.getElementById('schedStatus');
       const date = dateInput.value;
       const hours = parseFloat(hoursInput.value);
-      const tentative = tentativeInput.checked;
+      const status = statusInput.value;
 
       if (!date) {
         toast('Please select a date');
@@ -2292,7 +2298,7 @@
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
         date: date,
         hours: hours,
-        tentative: tentative
+        status: status
       });
 
       saveTasks(false);
@@ -2534,11 +2540,12 @@
                   if (sched) {
                     let barClass = '';
                     if (task.completed) barClass = 'completed';
-                    else if (sched.tentative) barClass = 'tentative';
+                    else if (sched.status === 'tentative' || sched.tentative) barClass = 'tentative';
+                    else if (sched.status === 'likely') barClass = 'likely';
                     else if (task.dueDate && isOverdue(task.dueDate)) barClass = 'overdue';
                     else if (task.dueDate && isDueSoon(task.dueDate)) barClass = 'due-soon';
-                    const tentativeLabel = sched.tentative ? ' (T)' : '';
-                    barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${tentativeLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
+                    const statusLabel = sched.status === 'tentative' || sched.tentative ? ' (T)' : sched.status === 'likely' ? ' (L)' : '';
+                    barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${statusLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
                   }
 
                   // Check if due date marker should be here
@@ -2629,7 +2636,7 @@
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
         date: dateStr,
         hours: hoursPerDay,
-        tentative: false
+        status: 'locked'
       });
 
       saveTasks(false);
