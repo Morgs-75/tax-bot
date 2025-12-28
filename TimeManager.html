@@ -54,7 +54,7 @@
     }
 
     #activeTimer {
-      font-size: 22px;
+      font-size: 40px;
       font-weight: 700;
       color: var(--teal-2);
       white-space: nowrap;
@@ -163,7 +163,6 @@
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      max-width: 70px;
     }
 
     input[type="date"]:focus {
@@ -418,6 +417,26 @@
       padding: 16px;
       z-index: 9999;
     }
+    #scheduleModalBackdrop {
+      z-index: 10001;
+    }
+    #ganttModalBackdrop {
+      z-index: 10000;
+    }
+
+    .draggable-modal {
+      position: absolute;
+      margin: 0;
+    }
+    .draggable-handle {
+      cursor: move;
+      user-select: none;
+    }
+    .draggable-handle input,
+    .draggable-handle button,
+    .draggable-handle select {
+      cursor: pointer;
+    }
 
     .modal {
       width: min(760px, 96vw);
@@ -579,12 +598,302 @@
     #toast.show {
       opacity: 1;
     }
+
+    /* Schedule list item */
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: var(--panel-2);
+    }
+    .schedule-item-date {
+      color: var(--text);
+      font-weight: 600;
+      min-width: 90px;
+    }
+    .schedule-item-hours {
+      color: var(--accent-2);
+      font-weight: 700;
+      flex: 1;
+    }
+    .schedule-item-hours-input {
+      width: 60px !important;
+      height: 28px !important;
+      padding: 4px 8px !important;
+      border: 1px solid rgba(20, 184, 166, 0.55) !important;
+      border-radius: 8px !important;
+      background: #141420 !important;
+      color: #f4f7fb !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
+      text-align: center !important;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+    }
+    .schedule-item-hours-input:focus {
+      outline: none !important;
+      border-color: #2dd4bf !important;
+    }
+    .schedule-item-delete {
+      color: var(--danger);
+      cursor: pointer;
+      font-weight: 900;
+      padding: 2px 8px;
+    }
+    .schedule-item-delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-radius: 4px;
+    }
+
+    /* Gantt Chart */
+    .gantt-chart {
+      min-height: 300px;
+      position: relative;
+    }
+    .gantt-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .gantt-container {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .gantt-sidebar {
+      background: var(--panel-2);
+      border-right: 1px solid var(--border);
+    }
+    .gantt-sidebar-header {
+      height: 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .gantt-sidebar-row {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gantt-sidebar-row:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .gantt-timeline {
+      overflow-x: auto;
+      overflow-y: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+    .gantt-timeline .gantt-bar {
+      cursor: pointer;
+    }
+    .gantt-header {
+      display: flex;
+      height: 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-2);
+      position: sticky;
+      top: 0;
+    }
+    .gantt-header-cell {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .gantt-header-cell.weekend {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .gantt-header-cell.today {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-2);
+      font-weight: 700;
+    }
+    .gantt-rows {
+      position: relative;
+    }
+    .gantt-row {
+      height: 36px;
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .gantt-row-cell {
+      height: 36px;
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .gantt-row-cell:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .gantt-row-cell.weekend {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .gantt-row-cell.today {
+      background: rgba(59, 130, 246, 0.08);
+    }
+    .gantt-totals-row {
+      font-weight: 700;
+      background: rgba(20, 184, 166, 0.08);
+      border-top: 2px solid var(--teal);
+    }
+    .gantt-sidebar-row.gantt-totals-row {
+      color: var(--teal);
+    }
+    .gantt-total-cell {
+      font-size: 10px;
+      color: var(--teal);
+      cursor: default;
+    }
+    .gantt-total-cell.over-capacity {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .gantt-bar {
+      width: 80%;
+      max-width: calc(100% - 4px);
+      height: 24px;
+      border-radius: 4px;
+      background: var(--accent);
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 2px;
+      font-size: 9px;
+      color: white;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-sizing: border-box;
+    }
+    .gantt-bar:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+    }
+    .gantt-bar:active {
+      cursor: grabbing;
+    }
+    .gantt-bar.completed {
+      background: var(--success);
+    }
+    .gantt-bar.tentative {
+      background: #f59e0b;
+    }
+    .gantt-bar.overdue {
+      background: var(--danger);
+    }
+    .gantt-bar.due-soon {
+      background: var(--warning);
+    }
+    .gantt-bar-resize {
+      position: absolute;
+      top: 0;
+      width: 8px;
+      height: 100%;
+      cursor: ew-resize;
+    }
+    .gantt-bar-resize.left { left: 0; }
+    .gantt-bar-resize.right { right: 0; }
+    .gantt-due-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      background: var(--danger);
+      z-index: 2;
+    }
+    .gantt-due-marker::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: -4px;
+      width: 10px;
+      height: 10px;
+      background: var(--danger);
+      transform: rotate(45deg);
+    }
+    .gantt-zoom-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .sched-mode-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Custom visible checkboxes - hide native, show custom box */
+    .checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .checkbox-wrap input[type="checkbox"] {
+      display: none;
+    }
+    .checkbox-box {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--muted);
+      border-radius: 4px;
+      background: var(--panel);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: transparent;
+      font-weight: 700;
+    }
+    .checkbox-wrap input[type="checkbox"]:checked + .checkbox-box {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .checkbox-wrap:hover .checkbox-box {
+      border-color: var(--accent);
+    }
   </style>
 
   <!-- Firebase (compat build so this file runs in a plain <script> context) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -604,9 +913,12 @@
             <button id="togglePassBtn" type="button" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px;">Show</button>
           </div>
         </div>
-        <div class="controls" style="margin-top:12px; justify-content:flex-end;">
-          <button id="signInBtn" type="button">Sign in</button>
-          <button id="signUpBtn" type="button">Create account</button>
+        <div class="controls" style="margin-top:12px; justify-content:space-between;">
+          <button id="cancelAuthBtn" type="button" style="background:var(--panel); border:1px solid var(--border);">Cancel</button>
+          <div style="display:flex; gap:8px;">
+            <button id="signInBtn" type="button">Sign in</button>
+            <button id="signUpBtn" type="button">Create account</button>
+          </div>
         </div>
         <div style="margin-top:10px; text-align:center;">
           <a id="forgotPassBtn" href="#" style="color:var(--teal-2); font-size:12px;">Forgot password?</a>
@@ -622,7 +934,6 @@
           <button id="homeBtn" type="button" style="padding:6px 12px;">Home</button>
           <span style="font-size:20px; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">Raze</span>
         </div>
-        <div class="subtle" style="margin-top:2px;">Task management for accountants</div>
       </div>
       <div class="meta">
         <div id="activeTimer">⏱ —</div>
@@ -657,6 +968,10 @@
       <button id="addBtn" type="button">Add Task</button>
       <button id="emailBtn" type="button" title="Opens your email app with the current work list.">Email list</button>
       <button id="copyBtn" type="button" title="Copies the current work list to clipboard.">Copy list</button>
+      <button id="excelBtn" type="button" title="Download tasks to Excel file.">Download Excel</button>
+      <button id="adminBtn" type="button" title="Manage Clients and Job Types">Admin</button>
+      <button id="ganttBtn" type="button" title="View Execution Plan">Execution Plan</button>
+      <button id="capacityBtn" type="button" title="Check available capacity" style="background:var(--teal); color:white; border-color:var(--teal);">Capacity</button>
 
       <div style="display:flex; align-items:center; gap:6px;">
         <span class="subtle">Status</span>
@@ -708,6 +1023,9 @@
           <th id="sortPriority" style="width:20px; text-align:center; cursor:pointer;" title="Click to sort by priority">P <span id="sortPriorityIcon"></span></th>
           <th style="width:24px; text-align:center;">✓</th>
           <th style="width:24px; text-align:center;">⏱</th>
+          <th style="width:24px; text-align:center;" title="Schedule">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:middle; fill: currentColor; opacity:0.85;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+          </th>
           <th style="width:24px; text-align:center;" title="Notes">
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:middle; fill: currentColor; opacity:0.85;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.5L19.5 10H14V4.5zM8 13h8v2H8v-2zm0 4h8v2H8v-2zM8 9h4v2H8V9z"/></svg>
           </th>
@@ -767,6 +1085,228 @@
         </div>
       </div>
     </div>
+
+    <!-- Admin Modal -->
+    <div id="adminBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal" style="width:min(600px, 96vw);">
+        <div class="modal-header">
+          <div class="modal-title">Admin Settings</div>
+          <button id="adminClose" class="mini" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+            <!-- Clients Section -->
+            <div>
+              <div style="font-weight:700; margin-bottom:8px; color:var(--text);">Clients</div>
+              <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <input id="newClientInput" type="text" placeholder="Add new client" style="flex:1;" />
+                <button id="addClientBtn" class="mini" type="button">Add</button>
+              </div>
+              <div id="clientsMasterList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+            </div>
+            <!-- Job Types Section -->
+            <div>
+              <div style="font-weight:700; margin-bottom:8px; color:var(--text);">Job Types</div>
+              <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <input id="newJobTypeInput" type="text" placeholder="Add new job type" style="flex:1;" />
+                <button id="addJobTypeBtn" class="mini" type="button">Add</button>
+              </div>
+              <div id="jobTypesMasterList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+            </div>
+          </div>
+          <!-- Settings Section -->
+          <div style="border-top:1px solid var(--border); padding-top:16px;">
+            <div style="font-weight:700; margin-bottom:8px; color:var(--text);">Scheduling Settings</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <label style="color:var(--muted); font-size:13px;">Hours per day:</label>
+              <select id="hoursPerDaySelect" style="width:80px;">
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="7.5" selected>7.5</option>
+                <option value="8">8</option>
+                <option value="custom">Custom</option>
+              </select>
+              <input id="hoursPerDayCustom" type="number" min="1" max="24" step="0.5" style="width:60px; display:none;" placeholder="Hrs" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="subtle">Changes are saved automatically.</div>
+          <button id="adminDone" class="mini" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Client Search Modal -->
+    <div id="clientSearchBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal" style="width:min(400px, 96vw);">
+        <div class="modal-header">
+          <div class="modal-title">Search Clients</div>
+          <button id="clientSearchClose" class="mini" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <input id="clientSearchInput" type="text" placeholder="Type to search..." style="width:100%; margin-bottom:12px;" />
+          <div id="clientSearchResults" style="max-height:250px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Client Confirm Modal -->
+    <div id="addClientConfirmBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal" style="width:min(350px, 96vw);">
+        <div class="modal-header">
+          <div class="modal-title">Add to Client List?</div>
+        </div>
+        <div class="modal-body">
+          <p id="addClientConfirmText" style="margin:0; color:var(--text);"></p>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+          <button id="addClientConfirmNo" class="mini" type="button">No</button>
+          <button id="addClientConfirmYes" type="button">Yes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div id="scheduleModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal" style="width:min(520px, 96vw);">
+        <div class="modal-header">
+          <div class="modal-title">Schedule: <span id="schedTaskName"></span></div>
+          <button id="scheduleClose" class="mini" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+            <div style="color:var(--muted); font-size:13px;">Total Scheduled: <span id="schedTotalHours" style="color:var(--text); font-weight:700;">0h</span></div>
+            <button id="schedClearAll" class="mini" type="button" style="color:var(--danger); border-color:var(--danger);">Clear All</button>
+          </div>
+          <div id="scheduleList" style="max-height:180px; overflow-y:auto; margin-bottom:16px;"></div>
+
+          <!-- Add Time Section -->
+          <div style="padding-top:12px; border-top:1px solid var(--border);">
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <button id="schedModeSingle" class="mini sched-mode-btn active" type="button">Single Day</button>
+              <button id="schedModeRange" class="mini sched-mode-btn" type="button">Date Range</button>
+            </div>
+
+            <!-- Single Day Mode -->
+            <div id="schedSingleMode" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="date" id="schedNewDate" style="flex:1; min-width:100px;" />
+              <input type="number" id="schedNewHours" min="0.5" max="24" step="0.5" placeholder="Hours" style="width:70px; height:31px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:var(--panel-2); color:var(--text); font-size:13px; text-align:center; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;" />
+              <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+                <input type="checkbox" id="schedTentative" />
+                <span class="checkbox-box">✓</span>
+                Tentative
+              </label>
+              <button id="schedAddBtn" type="button" style="height:31px; box-sizing:border-box;">Add</button>
+            </div>
+
+            <!-- Range Mode -->
+            <div id="schedRangeMode" style="display:none;">
+              <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                <label style="color:var(--muted); font-size:12px; min-width:40px;">From</label>
+                <input type="date" id="schedRangeStart" style="flex:1;" />
+                <label style="color:var(--muted); font-size:12px; min-width:25px;">To</label>
+                <input type="date" id="schedRangeEnd" style="flex:1;" />
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label style="color:var(--muted); font-size:12px; min-width:40px;">Hrs/day</label>
+                <input type="number" id="schedRangeHours" min="0.5" max="24" step="0.5" placeholder="Hours" style="width:70px; height:31px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:var(--panel-2); color:var(--text); font-size:13px; text-align:center; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;" />
+                <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+                  <input type="checkbox" id="schedWeekdaysOnly" checked />
+                  <span class="checkbox-box">✓</span>
+                  Weekdays only
+                </label>
+                <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+                  <input type="checkbox" id="schedRangeTentative" />
+                  <span class="checkbox-box">✓</span>
+                  Tentative
+                </label>
+                <button id="schedAddRangeBtn" type="button" style="height:31px; box-sizing:border-box; margin-left:auto;">Add Range</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="schedViewGantt" class="mini" type="button">View Execution Plan</button>
+          <button id="scheduleDone" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gantt View Modal -->
+    <div id="ganttModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div id="ganttModal" class="modal draggable-modal" style="width:min(95vw, 1400px); max-height:90vh;">
+        <div class="modal-header draggable-handle" style="flex-wrap:wrap; gap:12px; cursor:move;">
+          <div class="modal-title">Execution Plan</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span style="color:var(--muted); font-size:12px;">From:</span>
+            <input type="date" id="ganttDateFrom" style="font-size:12px; padding:4px 8px;" />
+            <span style="color:var(--muted); font-size:12px;">To:</span>
+            <input type="date" id="ganttDateTo" style="font-size:12px; padding:4px 8px;" />
+            <button id="ganttDateReset" class="mini" type="button" style="font-size:11px;">Reset</button>
+            <span style="color:var(--border);">|</span>
+            <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+              <input type="checkbox" id="ganttHideWeekends" />
+              <span class="checkbox-box">✓</span>
+              Hide weekends
+            </label>
+            <span style="color:var(--border);">|</span>
+            <span style="color:var(--muted); font-size:12px;">Zoom:</span>
+            <button class="mini gantt-zoom-btn" data-zoom="narrow">-</button>
+            <button class="mini gantt-zoom-btn active" data-zoom="normal">○</button>
+            <button class="mini gantt-zoom-btn" data-zoom="wide">+</button>
+            <span style="color:var(--border);">|</span>
+            <button id="ganttWeeklyTotal" class="mini" type="button" style="background:var(--teal); color:white; border-color:var(--teal);">Weekly Total</button>
+            <button id="ganttClose" class="mini" type="button">Close</button>
+          </div>
+        </div>
+        <div class="modal-body" style="padding:0; overflow:auto; max-height:calc(90vh - 100px);">
+          <div id="ganttChart" class="gantt-chart"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Total Modal -->
+    <div id="weeklyTotalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10002;">
+      <div class="modal" style="width:min(650px, 95vw); max-height:95vh;">
+        <div class="modal-header" style="flex-wrap:wrap; gap:5px;">
+          <div class="modal-title">Weekly Totals</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="date" id="weeklyDateFrom" style="font-size:12px;padding:4px 8px;width:120.22222px;" />
+            <input type="date" id="weeklyDateTo" style="font-size:12px;padding:4px 8px;width:120.22222px;" />
+            <button id="weeklyDateReset" class="mini" type="button" style="font-size:11px; height:31px; box-sizing:border-box;">Reset</button>
+            <span style="color:var(--border);">|</span>
+            <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+              <input type="checkbox" id="weeklyShowAvailable" />
+              <span class="checkbox-box">✓</span>
+              Capacity
+            </label>
+          </div>
+          <button id="weeklyTotalClose" class="mini" type="button">×</button>
+        </div>
+        <div class="modal-body" style="padding:16px; overflow-y:auto; max-height:calc(95vh - 80px);">
+          <div id="weeklyTotalContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capacity Checker Modal -->
+    <div id="capacityModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10002;">
+      <div class="modal" style="width:min(550px, 95vw); max-height:90vh;">
+        <div class="modal-header" style="flex-wrap:wrap; gap:8px;">
+          <div class="modal-title">Capacity Checker</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="date" id="capacityDateFrom" style="font-size:12px;padding:4px 8px;width:120.22222px;" />
+            <input type="date" id="capacityDateTo" style="font-size:12px;padding:4px 8px;width:120.22222px;" />
+            <button id="capacityCheck" class="mini" type="button" style="font-size:11px; height:31px; box-sizing:border-box; background:var(--teal); color:white; border-color:var(--teal);">Check</button>
+          </div>
+          <button id="capacityClose" class="mini" type="button">×</button>
+        </div>
+        <div class="modal-body" style="padding:16px; overflow-y:auto; max-height:calc(90vh - 80px);">
+          <div id="capacityContent" style="color:var(--muted); text-align:center;">Select a date range and click Check</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -816,6 +1356,12 @@
     let tasks = [];
     /** @type {any[]} */
     let archive = [];
+    /** @type {string[]} */
+    let masterClients = [];
+    /** @type {string[]} */
+    let masterJobTypes = ['Tax Return', 'BAS', 'Financial Statements', 'Audit', 'Bookkeeping', 'Advisory', 'Other'];
+    /** @type {number} */
+    let hoursPerDay = 7.5;
 
     let selectedTaskIndex = null;
     let saveTimer = null;
@@ -868,6 +1414,7 @@
         seconds: Number.isFinite(t && t.seconds) ? t.seconds : 0,
         notes: (t && typeof t.notes === 'string') ? t.notes : '',
         items: Array.isArray(t && t.items) ? t.items : [],
+        schedules: Array.isArray(t && t.schedules) ? t.schedules : [],
         createdAt: (t && t.createdAt) ? t.createdAt : new Date().toISOString(),
         archivedAt: (t && t.archivedAt) ? t.archivedAt : null
       };
@@ -1153,11 +1700,11 @@
     function buildClientDatalist() {
       const dl = document.getElementById('clientList');
       dl.innerHTML = '';
-      const set = new Set(
-        tasks
-          .map(t => (t.client || '').trim())
-          .filter(v => v.length > 0)
-      );
+      // Combine master clients and clients from tasks
+      const set = new Set([
+        ...masterClients,
+        ...tasks.map(t => (t.client || '').trim()).filter(v => v.length > 0)
+      ]);
       Array.from(set).sort((a, b) => a.localeCompare(b)).forEach(name => {
         const opt = document.createElement('option');
         opt.value = name;
@@ -1347,6 +1894,1288 @@
       hideModal('linksBackdrop');
     }
 
+    // ===== Admin Modal Functions =====
+    function openAdmin() {
+      renderClientsMasterList();
+      renderJobTypesMasterList();
+      updateHoursPerDayUI();
+      showModal('adminBackdrop');
+      setTimeout(() => document.getElementById('newClientInput').focus(), 50);
+    }
+
+    function closeAdmin() {
+      hideModal('adminBackdrop');
+    }
+
+    function renderClientsMasterList() {
+      const container = document.getElementById('clientsMasterList');
+      container.innerHTML = '';
+      if (masterClients.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:10px;">No clients added yet</div>';
+        return;
+      }
+      masterClients.forEach((client, index) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border);';
+        row.innerHTML = `
+          <span style="color:var(--text);">${client}</span>
+          <button class="mini btn-danger" type="button" style="padding:2px 8px; font-size:11px;">Remove</button>
+        `;
+        row.querySelector('button').addEventListener('click', () => removeClient(index));
+        container.appendChild(row);
+      });
+    }
+
+    function renderJobTypesMasterList() {
+      const container = document.getElementById('jobTypesMasterList');
+      container.innerHTML = '';
+      if (masterJobTypes.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:10px;">No job types added yet</div>';
+        return;
+      }
+      masterJobTypes.forEach((jobType, index) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border);';
+        row.innerHTML = `
+          <span style="color:var(--text);">${jobType}</span>
+          <button class="mini btn-danger" type="button" style="padding:2px 8px; font-size:11px;">Remove</button>
+        `;
+        row.querySelector('button').addEventListener('click', () => removeJobType(index));
+        container.appendChild(row);
+      });
+    }
+
+    function addClient(name) {
+      const trimmed = (name || '').trim();
+      if (!trimmed) return;
+      if (masterClients.includes(trimmed)) return; // No duplicates
+      masterClients.push(trimmed);
+      masterClients.sort((a, b) => a.localeCompare(b));
+      saveMasterLists();
+      renderClientsMasterList();
+      updateClientDatalist();
+      document.getElementById('newClientInput').value = '';
+    }
+
+    function removeClient(index) {
+      masterClients.splice(index, 1);
+      saveMasterLists();
+      renderClientsMasterList();
+      updateClientDatalist();
+    }
+
+    function addJobType(name) {
+      const trimmed = (name || '').trim();
+      if (!trimmed) return;
+      if (masterJobTypes.includes(trimmed)) return; // No duplicates
+      masterJobTypes.push(trimmed);
+      masterJobTypes.sort((a, b) => a.localeCompare(b));
+      saveMasterLists();
+      renderJobTypesMasterList();
+      updateJobTypeSelects();
+      document.getElementById('newJobTypeInput').value = '';
+    }
+
+    function removeJobType(index) {
+      masterJobTypes.splice(index, 1);
+      saveMasterLists();
+      renderJobTypesMasterList();
+      updateJobTypeSelects();
+    }
+
+    function updateClientDatalist() {
+      const datalist = document.getElementById('clientList');
+      datalist.innerHTML = '';
+      masterClients.forEach(client => {
+        const opt = document.createElement('option');
+        opt.value = client;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function updateJobTypeSelects() {
+      // Update the filter dropdown
+      const filterSelect = document.getElementById('filterJobType');
+      const currentFilter = filterSelect.value;
+      filterSelect.innerHTML = '<option value="all">All</option>';
+      masterJobTypes.forEach(jt => {
+        const opt = document.createElement('option');
+        opt.value = jt;
+        opt.textContent = jt;
+        filterSelect.appendChild(opt);
+      });
+      filterSelect.value = currentFilter;
+
+      // Re-render tasks to update job type dropdowns in rows
+      renderTasks();
+    }
+
+    function updateHoursPerDayUI() {
+      const select = document.getElementById('hoursPerDaySelect');
+      const custom = document.getElementById('hoursPerDayCustom');
+      const standardValues = ['6', '7', '7.5', '8'];
+      if (standardValues.includes(String(hoursPerDay))) {
+        select.value = String(hoursPerDay);
+        custom.style.display = 'none';
+      } else {
+        select.value = 'custom';
+        custom.value = hoursPerDay;
+        custom.style.display = 'block';
+      }
+    }
+
+    function handleHoursPerDayChange() {
+      const select = document.getElementById('hoursPerDaySelect');
+      const custom = document.getElementById('hoursPerDayCustom');
+      if (select.value === 'custom') {
+        custom.style.display = 'block';
+        custom.focus();
+      } else {
+        custom.style.display = 'none';
+        hoursPerDay = parseFloat(select.value);
+        saveMasterLists();
+      }
+    }
+
+    function handleHoursPerDayCustom() {
+      const custom = document.getElementById('hoursPerDayCustom');
+      const val = parseFloat(custom.value);
+      if (val && val > 0 && val <= 24) {
+        hoursPerDay = val;
+        saveMasterLists();
+      }
+    }
+
+    function saveMasterLists() {
+      if (hasFirebaseConfig() && currentUser) {
+        const uid = currentUser.uid;
+        fbDb.collection('users').doc(uid).collection('settings').doc('masterLists').set({
+          clients: masterClients,
+          jobTypes: masterJobTypes,
+          hoursPerDay: hoursPerDay
+        }).catch(console.warn);
+      }
+    }
+
+    async function loadMasterLists() {
+      if (hasFirebaseConfig() && currentUser) {
+        const uid = currentUser.uid;
+        try {
+          const doc = await fbDb.collection('users').doc(uid).collection('settings').doc('masterLists').get();
+          if (doc.exists) {
+            const data = doc.data();
+            if (Array.isArray(data.clients)) masterClients = data.clients;
+            if (Array.isArray(data.jobTypes) && data.jobTypes.length > 0) masterJobTypes = data.jobTypes;
+            if (typeof data.hoursPerDay === 'number') hoursPerDay = data.hoursPerDay;
+          }
+        } catch (e) {
+          console.warn('Could not load master lists:', e);
+        }
+      }
+      updateClientDatalist();
+      updateJobTypeSelects();
+      updateHoursPerDayUI();
+    }
+
+    // ===== Schedule Modal =====
+    let currentScheduleTaskIndex = null;
+    let openedFromGantt = false;
+
+    let scheduleMode = 'single'; // 'single' or 'range'
+
+    function openScheduleModal(taskIndex) {
+      openedFromGantt = false;
+      currentScheduleTaskIndex = taskIndex;
+      const task = tasks[taskIndex];
+      const taskName = task.description || 'Untitled';
+      const clientName = task.client || 'No Client';
+      document.getElementById('schedTaskName').textContent = `${taskName} - ${clientName}`;
+      renderScheduleList();
+      showModal('scheduleModalBackdrop');
+
+      // Set default dates
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('schedNewDate').value = today;
+      document.getElementById('schedRangeStart').value = today;
+
+      // Set default end date to 1 week from now
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      document.getElementById('schedRangeEnd').value = nextWeek.toISOString().split('T')[0];
+
+      // Reset to single mode
+      setScheduleMode('single');
+    }
+
+    function openScheduleModalFromGantt(taskIndex) {
+      openedFromGantt = true;
+      currentScheduleTaskIndex = taskIndex;
+      const task = tasks[taskIndex];
+      const taskName = task.description || 'Untitled';
+      const clientName = task.client || 'No Client';
+      document.getElementById('schedTaskName').textContent = `${taskName} - ${clientName}`;
+      renderScheduleList();
+      showModal('scheduleModalBackdrop');
+
+      // Set default dates
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('schedNewDate').value = today;
+      document.getElementById('schedRangeStart').value = today;
+
+      // Set default end date to 1 week from now
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      document.getElementById('schedRangeEnd').value = nextWeek.toISOString().split('T')[0];
+
+      // Reset to single mode
+      setScheduleMode('single');
+    }
+
+    function closeScheduleModal() {
+      hideModal('scheduleModalBackdrop');
+      currentScheduleTaskIndex = null;
+
+      // If opened from Gantt, refresh and keep Gantt visible
+      if (openedFromGantt) {
+        openedFromGantt = false;
+
+        // Preserve scroll position
+        const modalBody = document.querySelector('#ganttModalBackdrop .modal-body');
+        const scrollLeft = modalBody ? modalBody.scrollLeft : 0;
+        const scrollTop = modalBody ? modalBody.scrollTop : 0;
+
+        renderGantt();
+        showModal('ganttModalBackdrop');
+
+        // Restore scroll position
+        if (modalBody) {
+          modalBody.scrollLeft = scrollLeft;
+          modalBody.scrollTop = scrollTop;
+        }
+      }
+    }
+
+    function setScheduleMode(mode) {
+      scheduleMode = mode;
+      document.getElementById('schedModeSingle').classList.toggle('active', mode === 'single');
+      document.getElementById('schedModeRange').classList.toggle('active', mode === 'range');
+      document.getElementById('schedSingleMode').style.display = mode === 'single' ? 'flex' : 'none';
+      document.getElementById('schedRangeMode').style.display = mode === 'range' ? 'block' : 'none';
+    }
+
+    function addScheduleRange() {
+      const startDate = document.getElementById('schedRangeStart').value;
+      const endDate = document.getElementById('schedRangeEnd').value;
+      const hoursPerDay = parseFloat(document.getElementById('schedRangeHours').value);
+      const weekdaysOnly = document.getElementById('schedWeekdaysOnly').checked;
+      const tentative = document.getElementById('schedRangeTentative').checked;
+
+      if (!startDate) {
+        toast('Please select a start date');
+        return;
+      }
+      if (!endDate) {
+        toast('Please select an end date');
+        return;
+      }
+      if (!hoursPerDay || hoursPerDay <= 0) {
+        toast('Please enter hours per day');
+        return;
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (end < start) {
+        toast('End date must be after start date');
+        return;
+      }
+
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task.schedules) task.schedules = [];
+
+      let daysAdded = 0;
+      const current = new Date(start);
+
+      while (current <= end) {
+        const dayOfWeek = current.getDay();
+        const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
+
+        if (!weekdaysOnly || isWeekday) {
+          task.schedules.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random() + daysAdded,
+            date: current.toISOString().split('T')[0],
+            hours: hoursPerDay,
+            tentative: tentative
+          });
+          daysAdded++;
+        }
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      renderScheduleList();
+      renderTasks();
+
+      toast(`Added ${daysAdded} days (${daysAdded * hoursPerDay}h total)`);
+
+      // Clear hours input
+      document.getElementById('schedRangeHours').value = '';
+    }
+
+    function renderScheduleList() {
+      const task = tasks[currentScheduleTaskIndex];
+      const schedules = task.schedules || [];
+      const container = document.getElementById('scheduleList');
+      container.innerHTML = '';
+
+      if (schedules.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:20px;">No time scheduled yet</div>';
+        document.getElementById('schedTotalHours').textContent = '0h';
+        return;
+      }
+
+      // Sort by date
+      const sorted = [...schedules].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      sorted.forEach(sched => {
+        const item = document.createElement('div');
+        item.className = 'schedule-item';
+        const dateFormatted = formatScheduleDate(sched.date);
+        const tentativeIndicator = sched.tentative ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">(T)</span>' : '';
+        item.innerHTML = `
+          <span class="schedule-item-date">${dateFormatted}${tentativeIndicator}</span>
+          <input type="number" class="schedule-item-hours-input" value="${sched.hours}" min="0.5" step="0.5" data-id="${sched.id}" style="width:60px; height:28px; padding:4px 8px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:#141420; color:#f4f7fb; font-weight:600; font-size:13px; text-align:center;" />
+          <span class="schedule-item-delete" data-id="${sched.id}">×</span>
+        `;
+        item.querySelector('.schedule-item-delete').addEventListener('click', () => deleteScheduleBlock(sched.id));
+        item.querySelector('.schedule-item-hours-input').addEventListener('change', (e) => updateScheduleHours(sched.id, e.target.value));
+        container.appendChild(item);
+      });
+
+      // Calculate total hours
+      const total = schedules.reduce((sum, s) => sum + (s.hours || 0), 0);
+      document.getElementById('schedTotalHours').textContent = `${total}h`;
+    }
+
+    function formatScheduleDate(dateStr) {
+      const date = new Date(dateStr);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
+    }
+
+    function addScheduleBlock() {
+      const dateInput = document.getElementById('schedNewDate');
+      const hoursInput = document.getElementById('schedNewHours');
+      const tentativeInput = document.getElementById('schedTentative');
+      const date = dateInput.value;
+      const hours = parseFloat(hoursInput.value);
+      const tentative = tentativeInput.checked;
+
+      if (!date) {
+        toast('Please select a date');
+        return;
+      }
+      if (!hours || hours <= 0) {
+        toast('Please enter hours');
+        return;
+      }
+
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task.schedules) task.schedules = [];
+
+      task.schedules.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+        date: date,
+        hours: hours,
+        tentative: tentative
+      });
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      renderScheduleList();
+      renderTasks();
+
+      // Clear inputs
+      hoursInput.value = '';
+      // Move date to next day
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+      dateInput.value = nextDate.toISOString().split('T')[0];
+    }
+
+    function deleteScheduleBlock(blockId) {
+      const task = tasks[currentScheduleTaskIndex];
+      task.schedules = (task.schedules || []).filter(s => s.id !== blockId);
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+      renderScheduleList();
+      renderTasks();
+    }
+
+    function updateScheduleHours(blockId, newHours) {
+      const hours = parseFloat(newHours);
+      if (!hours || hours <= 0) {
+        renderScheduleList(); // Reset to previous value
+        return;
+      }
+      const task = tasks[currentScheduleTaskIndex];
+      const sched = (task.schedules || []).find(s => s.id === blockId);
+      if (sched) {
+        sched.hours = hours;
+        saveTasks(false);
+        if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+        renderScheduleList();
+        renderTasks();
+      }
+    }
+
+    function clearAllSchedules() {
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task.schedules || task.schedules.length === 0) return;
+      if (!confirm('Clear all scheduled time for this task?')) return;
+      task.schedules = [];
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+      renderScheduleList();
+      renderTasks();
+    }
+
+    // ===== Gantt Chart =====
+    let ganttZoom = 'normal'; // 'narrow', 'normal', 'wide'
+    let ganttHideWeekends = false;
+    let ganttDateFrom = null;
+    let ganttDateTo = null;
+
+    function openGanttModal() {
+      // Set default date range if not set
+      if (!ganttDateFrom || !ganttDateTo) {
+        resetGanttDateRange();
+      }
+      renderGantt();
+      showModal('ganttModalBackdrop');
+    }
+
+    function updateGanttDateRange() {
+      const fromVal = document.getElementById('ganttDateFrom').value;
+      const toVal = document.getElementById('ganttDateTo').value;
+      ganttDateFrom = fromVal ? new Date(fromVal) : null;
+      ganttDateTo = toVal ? new Date(toVal) : null;
+      renderGantt();
+    }
+
+    function resetGanttDateRange() {
+      // Find actual date range from tasks
+      let minDate = null;
+      let maxDate = null;
+      tasks.forEach(task => {
+        if (!task.schedules || task.completed) return;
+        task.schedules.forEach(sched => {
+          const d = new Date(sched.date);
+          if (!minDate || d < minDate) minDate = new Date(d);
+          if (!maxDate || d > maxDate) maxDate = new Date(d);
+        });
+        if (task.dueDate) {
+          const due = new Date(task.dueDate);
+          if (!maxDate || due > maxDate) maxDate = new Date(due);
+        }
+      });
+
+      if (minDate && maxDate) {
+        minDate.setDate(minDate.getDate() - 7);
+        maxDate.setDate(maxDate.getDate() + 7);
+        ganttDateFrom = minDate;
+        ganttDateTo = maxDate;
+        document.getElementById('ganttDateFrom').value = minDate.toISOString().split('T')[0];
+        document.getElementById('ganttDateTo').value = maxDate.toISOString().split('T')[0];
+      }
+      renderGantt();
+    }
+
+    function closeGanttModal() {
+      hideModal('ganttModalBackdrop');
+    }
+
+    function setGanttZoom(zoom) {
+      ganttZoom = zoom;
+      document.querySelectorAll('.gantt-zoom-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.zoom === zoom);
+      });
+      renderGantt();
+    }
+
+    function toggleGanttWeekends() {
+      ganttHideWeekends = document.getElementById('ganttHideWeekends').checked;
+      renderGantt();
+    }
+
+    function renderGantt() {
+      const container = document.getElementById('ganttChart');
+      container.innerHTML = '';
+
+      // Collect all tasks with schedules
+      const tasksWithSchedules = tasks.filter(t => t.schedules && t.schedules.length > 0 && !t.completed);
+
+      if (tasksWithSchedules.length === 0) {
+        container.innerHTML = '<div class="gantt-empty">No scheduled time blocks. Add schedules to tasks to see them here.</div>';
+        return;
+      }
+
+      // Use date filter or calculate from tasks
+      let minDate = ganttDateFrom ? new Date(ganttDateFrom) : null;
+      let maxDate = ganttDateTo ? new Date(ganttDateTo) : null;
+
+      // If no filter set, calculate from tasks
+      if (!minDate || !maxDate) {
+        tasksWithSchedules.forEach(task => {
+          task.schedules.forEach(sched => {
+            const d = new Date(sched.date);
+            if (!minDate || d < minDate) minDate = new Date(d);
+            if (!maxDate || d > maxDate) maxDate = new Date(d);
+          });
+          if (task.dueDate) {
+            const due = new Date(task.dueDate);
+            if (!maxDate || due > maxDate) maxDate = new Date(due);
+          }
+        });
+        // Extend range by 1 week each side
+        if (minDate) minDate.setDate(minDate.getDate() - 7);
+        if (maxDate) maxDate.setDate(maxDate.getDate() + 7);
+      }
+
+      // Calculate cell width based on zoom (each cell = 1 day)
+      let cellWidth = 32;
+      if (ganttZoom === 'narrow') cellWidth = 20;
+      if (ganttZoom === 'wide') cellWidth = 48;
+
+      // Generate all dates in range
+      const allDates = [];
+      const current = new Date(minDate);
+      while (current <= maxDate) {
+        allDates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+      }
+
+      // Filter out weekends if hideWeekends is enabled
+      const dates = ganttHideWeekends
+        ? allDates.filter(d => d.getDay() !== 0 && d.getDay() !== 6)
+        : allDates;
+
+      // Create a map from date string to column index for bar positioning
+      const dateToColIndex = {};
+      dates.forEach((d, idx) => {
+        dateToColIndex[d.toISOString().split('T')[0]] = idx;
+      });
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Calculate totals per date
+      const totalsByDate = {};
+      tasksWithSchedules.forEach(task => {
+        (task.schedules || []).forEach(sched => {
+          if (!totalsByDate[sched.date]) totalsByDate[sched.date] = 0;
+          totalsByDate[sched.date] += sched.hours;
+        });
+      });
+
+      // Build HTML
+      const html = `
+        <div class="gantt-container">
+          <div class="gantt-sidebar">
+            <div class="gantt-sidebar-header">Task</div>
+            ${tasksWithSchedules.map((task, idx) => `
+              <div class="gantt-sidebar-row" data-task-index="${tasks.indexOf(task)}" title="${escapeHtml(task.description || 'Untitled')} - ${escapeHtml(task.client || '')}">
+                ${escapeHtml((task.description || 'Untitled').substring(0, 25))}${(task.description || '').length > 25 ? '...' : ''}
+              </div>
+            `).join('')}
+            <div class="gantt-sidebar-row gantt-totals-row">Total</div>
+          </div>
+          <div class="gantt-timeline">
+            <div class="gantt-header" style="width:${dates.length * (cellWidth + 1)}px;">
+              ${dates.map(d => {
+                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                const isToday = d.getTime() === today.getTime();
+                const isMonday = d.getDay() === 1;
+                const dayNum = d.getDate();
+                const dayName = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][d.getDay()];
+                const label = cellWidth >= 32 ? `${dayName}<br>${dayNum}` : dayNum;
+                return `<div class="gantt-header-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''}" style="width:${cellWidth}px;">${label}</div>`;
+              }).join('')}
+            </div>
+            <div class="gantt-rows" style="width:${dates.length * (cellWidth + 1)}px;">
+              ${tasksWithSchedules.map((task, rowIdx) => {
+                const taskIdx = tasks.indexOf(task);
+
+                // Create a map of date -> schedule for this task
+                const schedByDate = {};
+                (task.schedules || []).forEach(sched => {
+                  schedByDate[sched.date] = sched;
+                });
+
+                // Check if due date falls on this row
+                const dueDateStr = task.dueDate || null;
+
+                // Render cells with bars inside them
+                const cells = dates.map(d => {
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  const isToday = d.getTime() === today.getTime();
+                  const isMonday = d.getDay() === 1;
+                  const dateStr = d.toISOString().split('T')[0];
+
+                  // Check if there's a schedule for this date
+                  const sched = schedByDate[dateStr];
+                  let barHtml = '';
+                  if (sched) {
+                    let barClass = '';
+                    if (task.completed) barClass = 'completed';
+                    else if (sched.tentative) barClass = 'tentative';
+                    else if (task.dueDate && isOverdue(task.dueDate)) barClass = 'overdue';
+                    else if (task.dueDate && isDueSoon(task.dueDate)) barClass = 'due-soon';
+                    const tentativeLabel = sched.tentative ? ' (T)' : '';
+                    barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${tentativeLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
+                  }
+
+                  // Check if due date marker should be here
+                  let dueMarkerHtml = '';
+                  if (dueDateStr === dateStr) {
+                    dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
+                  }
+
+                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}">${barHtml}${dueMarkerHtml}</div>`;
+                }).join('');
+
+                return `<div class="gantt-row" data-row="${rowIdx}" data-task-index="${taskIdx}">${cells}</div>`;
+              }).join('')}
+              <div class="gantt-row gantt-totals-row">
+                ${dates.map(d => {
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  const isToday = d.getTime() === today.getTime();
+                  const isMonday = d.getDay() === 1;
+                  const dateStr = d.toISOString().split('T')[0];
+                  const total = totalsByDate[dateStr] || 0;
+                  const isOver = total > hoursPerDay;
+                  return `<div class="gantt-row-cell gantt-total-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isOver ? 'over-capacity' : ''}" style="width:${cellWidth}px;">${total > 0 ? total : ''}</div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+
+      // Add click handlers for bars - open schedule modal on top of Gantt
+      container.querySelectorAll('.gantt-bar').forEach(bar => {
+        bar.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(bar.dataset.taskIndex);
+          openScheduleModalFromGantt(idx);
+        });
+      });
+
+      // Add click handlers for sidebar rows
+      container.querySelectorAll('.gantt-sidebar-row').forEach(row => {
+        row.addEventListener('click', () => {
+          if (window._ganttPanned) return;
+          const idx = parseInt(row.dataset.taskIndex);
+          if (!isNaN(idx)) openScheduleModalFromGantt(idx);
+        });
+      });
+
+      // Add click handlers for empty cells to add schedule
+      container.querySelectorAll('.gantt-row-cell').forEach(cell => {
+        cell.addEventListener('click', (e) => {
+          // Don't trigger if clicking on a bar or if just finished panning
+          if (e.target.closest('.gantt-bar')) return;
+          if (window._ganttPanned) return;
+
+          const row = cell.closest('.gantt-row');
+          const taskIdx = parseInt(row.dataset.taskIndex);
+          const dateStr = cell.dataset.date;
+
+          if (taskIdx >= 0 && dateStr) {
+            addScheduleFromGantt(taskIdx, dateStr);
+          }
+        });
+      });
+
+      // Add drag handlers for bars
+      initGanttDragDrop(container, dates, minDate, cellWidth);
+
+      // Add pan functionality
+      initGanttPan();
+    }
+
+    function addScheduleFromGantt(taskIdx, dateStr) {
+      const task = tasks[taskIdx];
+      if (!task) return;
+
+      // Check if there's already a schedule for this date
+      const existing = (task.schedules || []).find(s => s.date === dateStr);
+      if (existing) {
+        // Already has entry - could edit or just return
+        return;
+      }
+
+      // Add new schedule with default hours
+      if (!task.schedules) task.schedules = [];
+      task.schedules.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+        date: dateStr,
+        hours: hoursPerDay,
+        tentative: false
+      });
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      // Preserve scroll position when re-rendering
+      const modalBody = document.querySelector('#ganttModalBackdrop .modal-body');
+      const scrollLeft = modalBody ? modalBody.scrollLeft : 0;
+      const scrollTop = modalBody ? modalBody.scrollTop : 0;
+
+      renderGantt();
+      renderTasks();
+
+      // Restore scroll position
+      if (modalBody) {
+        modalBody.scrollLeft = scrollLeft;
+        modalBody.scrollTop = scrollTop;
+      }
+    }
+
+    function initGanttDragDrop(container, dates, minDate, cellWidth) {
+      let dragBar = null;
+      let dragStartX = 0;
+      let dragSchedId = null;
+      let dragTaskIndex = null;
+
+      container.querySelectorAll('.gantt-bar').forEach(bar => {
+        bar.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          dragBar = bar;
+          dragStartX = e.clientX;
+          dragSchedId = bar.dataset.schedId;
+          dragTaskIndex = parseInt(bar.dataset.taskIndex);
+          bar.style.opacity = '0.7';
+          bar.style.position = 'relative';
+          bar.style.zIndex = '10';
+        });
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragBar) return;
+        const dx = e.clientX - dragStartX;
+        dragBar.style.transform = `translateX(${dx}px)`;
+      });
+
+      document.addEventListener('mouseup', (e) => {
+        if (!dragBar) return;
+
+        // Find which cell we dropped on
+        dragBar.style.visibility = 'hidden'; // Hide bar to get cell beneath
+        const elem = document.elementFromPoint(e.clientX, e.clientY);
+        dragBar.style.visibility = '';
+
+        // Find the cell (could be the cell itself or a child)
+        const cell = elem?.closest('.gantt-row-cell');
+        if (cell && cell.dataset.date) {
+          const newDateStr = cell.dataset.date;
+
+          // Update the schedule
+          const task = tasks[dragTaskIndex];
+          const sched = task.schedules.find(s => s.id === dragSchedId);
+          if (sched && sched.date !== newDateStr) {
+            sched.date = newDateStr;
+            saveTasks(false);
+            if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+            renderGantt();
+            renderTasks();
+          }
+        }
+
+        // Reset bar styles
+        dragBar.style.opacity = '1';
+        dragBar.style.transform = '';
+        dragBar.style.position = '';
+        dragBar.style.zIndex = '';
+        dragBar = null;
+        dragSchedId = null;
+        dragTaskIndex = null;
+      });
+    }
+
+    // Gantt pan functionality - called after render
+    let ganttPanState = { active: false, timeline: null, modalBody: null, startX: 0, startY: 0, scrollX: 0, scrollY: 0 };
+
+    function initGanttPan() {
+      const timeline = document.querySelector('.gantt-timeline');
+      const modalBody = document.querySelector('#ganttModalBackdrop .modal-body');
+      if (!timeline || !modalBody) return;
+
+      timeline.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.gantt-bar')) return;
+        if (e.button !== 0) return;
+
+        ganttPanState.active = true;
+        ganttPanState.timeline = timeline;
+        ganttPanState.modalBody = modalBody;
+        ganttPanState.startX = e.pageX;
+        ganttPanState.startY = e.pageY;
+        ganttPanState.scrollX = timeline.scrollLeft;
+        ganttPanState.scrollY = modalBody.scrollTop;
+        timeline.style.cursor = 'grabbing';
+        document.body.style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    }
+
+    // Global mouse handlers for pan
+    document.addEventListener('mousemove', (e) => {
+      if (!ganttPanState.active) return;
+      const dx = e.pageX - ganttPanState.startX;
+      const dy = e.pageY - ganttPanState.startY;
+      ganttPanState.timeline.scrollLeft = ganttPanState.scrollX - dx;
+      ganttPanState.modalBody.scrollTop = ganttPanState.scrollY - dy;
+
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        window._ganttPanned = true;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (ganttPanState.active) {
+        if (ganttPanState.timeline) ganttPanState.timeline.style.cursor = '';
+        document.body.style.cursor = '';
+        ganttPanState.active = false;
+        setTimeout(() => { window._ganttPanned = false; }, 100);
+      }
+    });
+
+    // Draggable modal functionality
+    function initDraggableModal(modalId, handleSelector) {
+      const modal = document.getElementById(modalId);
+      const handle = modal?.querySelector(handleSelector);
+      if (!modal || !handle) return;
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let modalX = 0;
+      let modalY = 0;
+
+      // Center modal initially
+      function centerModal() {
+        const rect = modal.getBoundingClientRect();
+        modalX = (window.innerWidth - rect.width) / 2;
+        modalY = (window.innerHeight - rect.height) / 2;
+        modal.style.left = modalX + 'px';
+        modal.style.top = modalY + 'px';
+      }
+
+      handle.addEventListener('mousedown', (e) => {
+        // Don't drag if clicking on interactive elements
+        if (e.target.closest('input') || e.target.closest('button') || e.target.closest('select') || e.target.closest('label')) return;
+
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        const rect = modal.getBoundingClientRect();
+        modalX = rect.left;
+        modalY = rect.top;
+
+        document.body.style.cursor = 'move';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        modal.style.left = (modalX + dx) + 'px';
+        modal.style.top = (modalY + dy) + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          document.body.style.cursor = '';
+        }
+      });
+
+      // Center when modal opens
+      const backdrop = modal.closest('.modal-backdrop');
+      if (backdrop) {
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'style') {
+              const display = backdrop.style.display;
+              if (display === 'flex' || display === 'block') {
+                centerModal();
+              }
+            }
+          });
+        });
+        observer.observe(backdrop, { attributes: true });
+      }
+    }
+
+    // Initialize draggable Gantt modal
+    initDraggableModal('ganttModal', '.draggable-handle');
+
+    // Weekly Total functionality
+    let weeklyDateFrom = '';
+    let weeklyDateTo = '';
+    let weeklyShowAvailableOnly = false;
+
+    function renderWeeklyTotal() {
+      // Get filter values
+      const filterFrom = weeklyDateFrom ? new Date(weeklyDateFrom) : null;
+      const filterTo = weeklyDateTo ? new Date(weeklyDateTo) : null;
+      const showAvailableOnly = weeklyShowAvailableOnly;
+      const weeklyAvailable = hoursPerDay * 5;
+
+      // Collect all scheduled hours from all tasks
+      const hoursByDate = {};
+      tasks.forEach(task => {
+        if (task.completed) return;
+        (task.schedules || []).forEach(sched => {
+          const schedDate = new Date(sched.date);
+          // Apply date filter
+          if (filterFrom && schedDate < filterFrom) return;
+          if (filterTo && schedDate > filterTo) return;
+
+          if (!hoursByDate[sched.date]) hoursByDate[sched.date] = 0;
+          hoursByDate[sched.date] += sched.hours;
+        });
+      });
+
+      // Group by week (Monday to Sunday)
+      const weeklyTotals = {};
+      Object.keys(hoursByDate).sort().forEach(dateStr => {
+        const date = new Date(dateStr);
+        // Get Monday of this week
+        const day = date.getDay();
+        const diff = day === 0 ? -6 : 1 - day; // Adjust for Monday start
+        const monday = new Date(date);
+        monday.setDate(date.getDate() + diff);
+        const weekKey = monday.toISOString().split('T')[0];
+
+        if (!weeklyTotals[weekKey]) {
+          weeklyTotals[weekKey] = { hours: 0, days: 0 };
+        }
+        weeklyTotals[weekKey].hours += hoursByDate[dateStr];
+        weeklyTotals[weekKey].days++;
+      });
+
+      // Build HTML
+      let weeks = Object.keys(weeklyTotals).sort();
+
+      // Filter to only weeks with capacity available if checkbox is checked
+      if (showAvailableOnly) {
+        weeks = weeks.filter(weekKey => {
+          const capacity = weeklyAvailable - weeklyTotals[weekKey].hours;
+          return capacity > 0;
+        });
+      }
+
+      let html = '';
+
+      if (weeks.length === 0) {
+        html = '<p style="color:var(--muted); text-align:center;">No scheduled time found.</p>';
+      } else {
+        let grandTotal = 0;
+        let weeksShown = 0;
+        html = '<table style="width:100%; border-collapse:collapse;">';
+        html += '<thead><tr style="border-bottom:2px solid var(--border);">';
+        html += '<th style="text-align:left; padding:8px; color:var(--muted);">Week Starting</th>';
+        html += '<th style="text-align:center; padding:8px; color:var(--muted);">Days</th>';
+        html += '<th style="text-align:right; padding:8px; color:var(--muted);">Hours</th>';
+        html += '<th style="text-align:right; padding:8px; color:var(--muted);">Available</th>';
+        html += '<th style="text-align:right; padding:8px; color:var(--muted);">Capacity</th>';
+        html += '<th style="text-align:right; padding:8px; color:var(--muted);">Avg/Day</th>';
+        html += '</tr></thead><tbody>';
+
+        weeks.forEach(weekKey => {
+          const data = weeklyTotals[weekKey];
+          const weekDate = new Date(weekKey);
+          const weekEnd = new Date(weekDate);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          const avgPerDay = (data.hours / data.days).toFixed(1);
+          grandTotal += data.hours;
+          weeksShown++;
+
+          const capacity = weeklyAvailable - data.hours;
+          const capacityColor = capacity >= 0 ? 'color:#22c55e;' : 'color:#ef4444;';
+
+          html += `<tr style="border-bottom:1px solid var(--border);">`;
+          html += `<td style="padding:8px;">${formatScheduleDate(weekKey)} - ${formatScheduleDate(weekEnd.toISOString().split('T')[0])}</td>`;
+          html += `<td style="text-align:center; padding:8px;">${data.days}</td>`;
+          html += `<td style="text-align:right; padding:8px; font-weight:700;">${data.hours.toFixed(1)}h</td>`;
+          html += `<td style="text-align:right; padding:8px;">${weeklyAvailable.toFixed(1)}h</td>`;
+          html += `<td style="text-align:right; padding:8px; font-weight:700; ${capacityColor}">${capacity >= 0 ? '+' : ''}${capacity.toFixed(1)}h</td>`;
+          html += `<td style="text-align:right; padding:8px;">${avgPerDay}h</td>`;
+          html += '</tr>';
+        });
+
+        html += '</tbody>';
+        const totalAvailable = weeklyAvailable * weeks.length;
+        const totalCapacity = totalAvailable - grandTotal;
+        const totalCapacityColor = totalCapacity >= 0 ? 'color:#22c55e;' : 'color:#ef4444;';
+        html += '<tfoot><tr style="border-top:2px solid var(--teal); background:rgba(20,184,166,0.1);">';
+        html += `<td style="padding:8px; font-weight:700; color:var(--teal);">Grand Total</td>`;
+        html += `<td style="text-align:center; padding:8px;"></td>`;
+        html += `<td style="text-align:right; padding:8px; font-weight:700; color:var(--teal);">${grandTotal.toFixed(1)}h</td>`;
+        html += `<td style="text-align:right; padding:8px; color:var(--teal);">${totalAvailable.toFixed(1)}h</td>`;
+        html += `<td style="text-align:right; padding:8px; font-weight:700; ${totalCapacityColor}">${totalCapacity >= 0 ? '+' : ''}${totalCapacity.toFixed(1)}h</td>`;
+        html += `<td style="text-align:right; padding:8px;"></td>`;
+        html += '</tr></tfoot></table>';
+      }
+
+      document.getElementById('weeklyTotalContent').innerHTML = html;
+    }
+
+    function showWeeklyTotal() {
+      // Sync UI with state
+      document.getElementById('weeklyDateFrom').value = weeklyDateFrom;
+      document.getElementById('weeklyDateTo').value = weeklyDateTo;
+      document.getElementById('weeklyShowAvailable').checked = weeklyShowAvailableOnly;
+      renderWeeklyTotal();
+      showModal('weeklyTotalBackdrop');
+    }
+
+    function updateWeeklyFilters() {
+      weeklyDateFrom = document.getElementById('weeklyDateFrom').value;
+      weeklyDateTo = document.getElementById('weeklyDateTo').value;
+      weeklyShowAvailableOnly = document.getElementById('weeklyShowAvailable').checked;
+      renderWeeklyTotal();
+    }
+
+    function resetWeeklyFilters() {
+      weeklyDateFrom = '';
+      weeklyDateTo = '';
+      document.getElementById('weeklyDateFrom').value = '';
+      document.getElementById('weeklyDateTo').value = '';
+      renderWeeklyTotal();
+    }
+
+    document.getElementById('ganttWeeklyTotal').addEventListener('click', showWeeklyTotal);
+    document.getElementById('weeklyTotalClose').addEventListener('click', () => hideModal('weeklyTotalBackdrop'));
+    document.getElementById('weeklyTotalBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'weeklyTotalBackdrop') hideModal('weeklyTotalBackdrop');
+    });
+    document.getElementById('weeklyDateFrom').addEventListener('change', updateWeeklyFilters);
+    document.getElementById('weeklyDateTo').addEventListener('change', updateWeeklyFilters);
+    document.getElementById('weeklyDateReset').addEventListener('click', resetWeeklyFilters);
+    document.getElementById('weeklyShowAvailable').addEventListener('change', updateWeeklyFilters);
+
+    // ===== Capacity Checker =====
+    function showCapacityChecker() {
+      // Default to next 30 days
+      const today = new Date();
+      const endDate = new Date(today);
+      endDate.setDate(endDate.getDate() + 30);
+
+      document.getElementById('capacityDateFrom').value = today.toISOString().split('T')[0];
+      document.getElementById('capacityDateTo').value = endDate.toISOString().split('T')[0];
+      document.getElementById('capacityContent').innerHTML = '<p style="color:var(--muted); text-align:center;">Select a date range and click Check</p>';
+      showModal('capacityModalBackdrop');
+    }
+
+    function checkCapacity() {
+      const fromDate = document.getElementById('capacityDateFrom').value;
+      const toDate = document.getElementById('capacityDateTo').value;
+
+      if (!fromDate || !toDate) {
+        toast('Please select both dates');
+        return;
+      }
+
+      const start = new Date(fromDate);
+      const end = new Date(toDate);
+
+      if (end < start) {
+        toast('End date must be after start date');
+        return;
+      }
+
+      // Collect all scheduled hours by date (excluding completed tasks)
+      const hoursByDate = {};
+      tasks.forEach(task => {
+        if (task.completed) return;
+        (task.schedules || []).forEach(sched => {
+          if (!hoursByDate[sched.date]) hoursByDate[sched.date] = 0;
+          hoursByDate[sched.date] += sched.hours;
+        });
+      });
+
+      // Find dates with available capacity
+      const availableDates = [];
+      const current = new Date(start);
+
+      while (current <= end) {
+        const dayOfWeek = current.getDay();
+        const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
+
+        if (isWeekday) {
+          const dateStr = current.toISOString().split('T')[0];
+          const scheduled = hoursByDate[dateStr] || 0;
+          const available = hoursPerDay - scheduled;
+
+          if (available > 0) {
+            availableDates.push({
+              date: dateStr,
+              scheduled: scheduled,
+              available: available
+            });
+          }
+        }
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      // Build HTML
+      let html = '';
+      if (availableDates.length === 0) {
+        html = '<p style="color:var(--muted); text-align:center;">No available capacity in this date range.</p>';
+      } else {
+        html = `<p style="color:var(--teal); margin-bottom:12px;">${availableDates.length} days with available capacity:</p>`;
+        html += '<table style="width:100%; border-collapse:collapse;">';
+        html += '<thead><tr style="border-bottom:2px solid var(--border);">';
+        html += '<th style="text-align:left; padding:8px; color:var(--muted);">Date</th>';
+        html += '<th style="text-align:right; padding:8px; color:var(--muted);">Scheduled</th>';
+        html += '<th style="text-align:right; padding:8px; color:var(--muted);">Available</th>';
+        html += '</tr></thead><tbody>';
+
+        availableDates.forEach(d => {
+          html += '<tr style="border-bottom:1px solid var(--border);">';
+          html += `<td style="padding:8px;">${formatScheduleDate(d.date)}</td>`;
+          html += `<td style="text-align:right; padding:8px;">${d.scheduled.toFixed(1)}h</td>`;
+          html += `<td style="text-align:right; padding:8px; color:#22c55e; font-weight:700;">${d.available.toFixed(1)}h</td>`;
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+
+        // Summary
+        const totalAvailable = availableDates.reduce((sum, d) => sum + d.available, 0);
+        html += `<p style="color:var(--teal); margin-top:16px; font-weight:700;">Total available: ${totalAvailable.toFixed(1)}h</p>`;
+      }
+
+      document.getElementById('capacityContent').innerHTML = html;
+    }
+
+    document.getElementById('capacityBtn').addEventListener('click', showCapacityChecker);
+    document.getElementById('capacityClose').addEventListener('click', () => hideModal('capacityModalBackdrop'));
+    document.getElementById('capacityModalBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'capacityModalBackdrop') hideModal('capacityModalBackdrop');
+    });
+    document.getElementById('capacityCheck').addEventListener('click', checkCapacity);
+
+    // ===== Client Search Modal =====
+    let clientSearchTaskIndex = null;
+
+    // ===== Add Client Confirm Modal =====
+    let pendingClientName = null;
+    let pendingClientDescInput = null;
+
+    function showAddClientConfirm(clientName, descInput) {
+      pendingClientName = clientName;
+      pendingClientDescInput = descInput;
+      document.getElementById('addClientConfirmText').textContent = `Add "${clientName}" to client list?`;
+      showModal('addClientConfirmBackdrop');
+    }
+
+    function handleAddClientYes() {
+      if (pendingClientName) {
+        masterClients.push(pendingClientName);
+        masterClients.sort((a, b) => a.localeCompare(b));
+        saveMasterLists();
+        updateClientDatalist();
+      }
+      hideModal('addClientConfirmBackdrop');
+      if (pendingClientDescInput) {
+        pendingClientDescInput.focus();
+      }
+      pendingClientName = null;
+      pendingClientDescInput = null;
+    }
+
+    function handleAddClientNo() {
+      hideModal('addClientConfirmBackdrop');
+      if (pendingClientDescInput) {
+        pendingClientDescInput.focus();
+      }
+      pendingClientName = null;
+      pendingClientDescInput = null;
+    }
+
+    function openClientSearch(taskIndex) {
+      clientSearchTaskIndex = taskIndex;
+      document.getElementById('clientSearchInput').value = '';
+      renderClientSearchResults('');
+      showModal('clientSearchBackdrop');
+      setTimeout(() => document.getElementById('clientSearchInput').focus(), 50);
+    }
+
+    function closeClientSearch() {
+      clientSearchTaskIndex = null;
+      hideModal('clientSearchBackdrop');
+    }
+
+    function renderClientSearchResults(query) {
+      const container = document.getElementById('clientSearchResults');
+      container.innerHTML = '';
+
+      const q = (query || '').toLowerCase().trim();
+      const filtered = masterClients.filter(c => c.toLowerCase().includes(q));
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:16px;">No clients found</div>';
+        return;
+      }
+
+      filtered.forEach(client => {
+        const row = document.createElement('div');
+        row.style.cssText = 'padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); color:var(--text);';
+        row.textContent = client;
+        row.addEventListener('mouseenter', () => row.style.background = 'var(--panel-2)');
+        row.addEventListener('mouseleave', () => row.style.background = 'transparent');
+        row.addEventListener('click', () => selectClientFromSearch(client));
+        container.appendChild(row);
+      });
+    }
+
+    function selectClientFromSearch(clientName) {
+      if (clientSearchTaskIndex === null) return;
+
+      tasks[clientSearchTaskIndex].client = clientName;
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[clientSearchTaskIndex]).catch(console.warn);
+
+      closeClientSearch();
+      renderTasks();
+
+      // Focus on description field of the selected row
+      setTimeout(() => {
+        const row = document.querySelector(`tr[data-task-index="${clientSearchTaskIndex}"]`);
+        if (row) {
+          const descInput = row.querySelector('input[data-field="description"]');
+          if (descInput) descInput.focus();
+        }
+      }, 50);
+    }
+
     function addLinkToTask(raw) {
       if (linksTaskIndex == null) return;
 
@@ -1470,7 +3299,9 @@
       if (sortClient !== 'none' || sortDue !== 'none' || sortPriority !== 'none') open = [...open].sort(compareBySort);
 
       const now = new Date();
-      const header = `Prioritise & Execute — Work list\n${now.toLocaleString()}\n`;
+      const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+      const timeStr = now.toLocaleTimeString();
+      const header = `Raze — Work list\n${dateStr}, ${timeStr}\n`;
       if (open.length === 0) return header + `\n(No open tasks)\n`;
 
       const lines = open.map((x, i) => {
@@ -1514,6 +3345,64 @@
         document.execCommand('copy');
         document.body.removeChild(ta);
       }
+    }
+
+    function downloadExcel() {
+      // Filter non-blank tasks (tasks with client or description)
+      const exportTasks = tasks.filter(t => (t.client || '').trim() || (t.description || '').trim());
+
+      // Build data array with headers
+      const data = [
+        ['No.', 'Client', 'Task', 'Job Type', 'Status', 'Due Date', 'Completed']
+      ];
+
+      exportTasks.forEach((t, index) => {
+        // Format due date as dd-mmm-yy
+        let dueDateFormatted = '';
+        if (t.dueDate) {
+          const d = new Date(t.dueDate);
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = months[d.getMonth()];
+          const year = String(d.getFullYear()).slice(-2);
+          dueDateFormatted = `${day}-${month}-${year}`;
+        }
+
+        data.push([
+          index + 1,
+          t.client || '',
+          t.description || '',
+          t.jobType || '',
+          t.status || '',
+          dueDateFormatted,
+          t.completed ? 'Yes' : 'No'
+        ]);
+      });
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+
+      // Set column widths (width in characters)
+      ws['!cols'] = [
+        { wch: 8 },   // Column 1: No.
+        { wch: 20 },  // Column 2: Client
+        { wch: 60 },  // Column 3: Task
+        { wch: 20 },  // Column 4: Job Type
+        { wch: 20 },  // Column 5: Status
+        { wch: 20 },  // Column 6: Due Date
+        { wch: 10 }   // Column 7: Completed
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+
+      // Generate filename with date
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const filename = `Raze_Tasks_${dateStr}.xlsx`;
+
+      // Download
+      XLSX.writeFile(wb, filename);
     }
 
     function updateSummaryStats() {
@@ -1596,20 +3485,17 @@
         row.innerHTML = `
           <td style="width:32px; text-align:center;">${displayNumber}</td>
           <td style="width:140px;">
-            <input list="clientList" data-field="client" type="text" value="${escapeHtml(task.client)}" />
+            <div style="display:flex; gap:4px;">
+              <input list="clientList" data-field="client" type="text" value="${escapeHtml(task.client)}" style="flex:1; min-width:0;" />
+              <button type="button" class="client-search-btn" style="padding:4px 8px; font-size:12px; flex-shrink:0;" title="Search clients">&#128269;</button>
+            </div>
           </td>
           <td style="width:300px;">
             <input data-field="description" type="text" value="${escapeHtml(task.description)}" />
           </td>
           <td style="width:70px;">
             <select data-field="jobType" style="width:100%; height:31px; font-size:10px;">
-              <option value="Tax Return" ${task.jobType === 'Tax Return' ? 'selected' : ''}>Tax</option>
-              <option value="BAS" ${task.jobType === 'BAS' ? 'selected' : ''}>BAS</option>
-              <option value="Financial Statements" ${task.jobType === 'Financial Statements' ? 'selected' : ''}>Fin Stmts</option>
-              <option value="Audit" ${task.jobType === 'Audit' ? 'selected' : ''}>Audit</option>
-              <option value="Bookkeeping" ${task.jobType === 'Bookkeeping' ? 'selected' : ''}>Books</option>
-              <option value="Advisory" ${task.jobType === 'Advisory' ? 'selected' : ''}>Advisory</option>
-              <option value="Other" ${task.jobType === 'Other' ? 'selected' : ''}>Other</option>
+              ${masterJobTypes.map(jt => `<option value="${escapeHtml(jt)}" ${task.jobType === jt ? 'selected' : ''}>${escapeHtml(getShortJobType(jt))}</option>`).join('')}
             </select>
           </td>
           <td style="width:70px;">
@@ -1636,6 +3522,9 @@
             <div class="timer-btn ${isRunning ? 'running' : ''} ${task.completed ? 'disabled' : ''}" title="${timerTitle}">${timerLabel}</div>
           </td>
           <td class="center" style="width:24px; padding:4px;">
+            <div class="icon-btn schedule-btn ${(task.schedules && task.schedules.length > 0) ? 'has-dot' : ''}" title="Schedule"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg></span></div>
+          </td>
+          <td class="center" style="width:24px; padding:4px;">
             <div class="${noteClass}" title="Notes"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.5L19.5 10H14V4.5zM8 13h8v2H8v-2zm0 4h8v2H8v-2zM8 9h4v2H8V9z"/></svg></span></div>
           </td>
           <td class="center" style="width:24px; padding:4px;">
@@ -1659,6 +3548,40 @@
           buildClientDatalist();
           if (runningTaskIndex === index) setActiveTimerStamp();
         });
+
+        let clientPromptShown = false;
+
+        clientInput.addEventListener('keydown', (e) => {
+          if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter') {
+            const clientName = (e.target.value || '').trim();
+            if (clientName && !masterClients.includes(clientName)) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              clientPromptShown = true;
+              showAddClientConfirm(clientName, descInput);
+              return false;
+            } else if (e.key === 'Enter' && clientName) {
+              // Existing client, just move to description
+              e.preventDefault();
+              descInput.focus();
+              return false;
+            }
+          }
+        });
+
+        clientInput.addEventListener('blur', (e) => {
+          if (clientPromptShown) {
+            clientPromptShown = false;
+            return;
+          }
+          const clientName = (e.target.value || '').trim();
+          if (clientName && !masterClients.includes(clientName)) {
+            showAddClientConfirm(clientName, descInput);
+          }
+        });
+
+        const clientSearchBtn = row.querySelector('.client-search-btn');
+        clientSearchBtn.addEventListener('click', () => openClientSearch(index));
 
         descInput.addEventListener('input', (e) => {
           tasks[index].description = e.target.value;
@@ -1733,10 +3656,16 @@
         row.querySelectorAll('.icon-btn')[0].addEventListener('click', (e) => {
           e.stopPropagation();
           setSelected(index);
-          openNotes(index);
+          openScheduleModal(index);
         });
 
         row.querySelectorAll('.icon-btn')[1].addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          openNotes(index);
+        });
+
+        row.querySelectorAll('.icon-btn')[2].addEventListener('click', (e) => {
           e.stopPropagation();
           setSelected(index);
           openLinks(index);
@@ -1756,7 +3685,7 @@
       if (open.length > 0 && done.length > 0) {
         const div = document.createElement('tr');
         div.className = 'divider';
-        div.innerHTML = `<td colspan="13">Completed</td>`;
+        div.innerHTML = `<td colspan="14">Completed</td>`;
         body.appendChild(div);
       }
 
@@ -1783,6 +3712,19 @@
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+    }
+
+    function getShortJobType(jobType) {
+      const shortNames = {
+        'Tax Return': 'Tax',
+        'BAS': 'BAS',
+        'Financial Statements': 'Fin Stmts',
+        'Audit': 'Audit',
+        'Bookkeeping': 'Books',
+        'Advisory': 'Advisory',
+        'Other': 'Other'
+      };
+      return shortNames[jobType] || jobType;
     }
 
     // Lightweight self-tests
@@ -1915,6 +3857,84 @@
     document.getElementById('addBtn').addEventListener('click', () => addTask({ focus: true }));
     document.getElementById('emailBtn').addEventListener('click', emailWorkList);
     document.getElementById('copyBtn').addEventListener('click', copyWorkList);
+    document.getElementById('excelBtn').addEventListener('click', downloadExcel);
+    document.getElementById('adminBtn').addEventListener('click', openAdmin);
+    document.getElementById('ganttBtn').addEventListener('click', openGanttModal);
+
+    // Admin modal
+    document.getElementById('adminClose').addEventListener('click', closeAdmin);
+    document.getElementById('adminDone').addEventListener('click', closeAdmin);
+    document.getElementById('addClientBtn').addEventListener('click', () => {
+      addClient(document.getElementById('newClientInput').value);
+    });
+    document.getElementById('newClientInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addClient(e.target.value);
+    });
+    document.getElementById('addJobTypeBtn').addEventListener('click', () => {
+      addJobType(document.getElementById('newJobTypeInput').value);
+    });
+    document.getElementById('newJobTypeInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addJobType(e.target.value);
+    });
+    document.getElementById('adminBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'adminBackdrop') closeAdmin();
+    });
+    document.getElementById('hoursPerDaySelect').addEventListener('change', handleHoursPerDayChange);
+    document.getElementById('hoursPerDayCustom').addEventListener('change', handleHoursPerDayCustom);
+    document.getElementById('hoursPerDayCustom').addEventListener('blur', handleHoursPerDayCustom);
+
+    // Client search modal
+    document.getElementById('clientSearchClose').addEventListener('click', closeClientSearch);
+    document.getElementById('clientSearchInput').addEventListener('input', (e) => {
+      renderClientSearchResults(e.target.value);
+    });
+    document.getElementById('clientSearchBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'clientSearchBackdrop') closeClientSearch();
+    });
+
+    // Add client confirm modal
+    document.getElementById('addClientConfirmYes').addEventListener('click', handleAddClientYes);
+    document.getElementById('addClientConfirmNo').addEventListener('click', handleAddClientNo);
+    document.getElementById('addClientConfirmBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'addClientConfirmBackdrop') handleAddClientNo();
+    });
+
+    // Schedule modal
+    document.getElementById('scheduleClose').addEventListener('click', closeScheduleModal);
+    document.getElementById('scheduleDone').addEventListener('click', closeScheduleModal);
+    document.getElementById('schedAddBtn').addEventListener('click', addScheduleBlock);
+    document.getElementById('schedClearAll').addEventListener('click', clearAllSchedules);
+    document.getElementById('schedNewHours').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addScheduleBlock();
+    });
+    document.getElementById('schedViewGantt').addEventListener('click', () => {
+      closeScheduleModal();
+      openGanttModal();
+    });
+    document.getElementById('scheduleModalBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'scheduleModalBackdrop') closeScheduleModal();
+    });
+    // Mode toggle buttons
+    document.getElementById('schedModeSingle').addEventListener('click', () => setScheduleMode('single'));
+    document.getElementById('schedModeRange').addEventListener('click', () => setScheduleMode('range'));
+    // Add range button
+    document.getElementById('schedAddRangeBtn').addEventListener('click', addScheduleRange);
+    document.getElementById('schedRangeHours').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addScheduleRange();
+    });
+
+    // Gantt modal
+    document.getElementById('ganttClose').addEventListener('click', closeGanttModal);
+    document.getElementById('ganttModalBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'ganttModalBackdrop') closeGanttModal();
+    });
+    document.querySelectorAll('.gantt-zoom-btn').forEach(btn => {
+      btn.addEventListener('click', () => setGanttZoom(btn.dataset.zoom));
+    });
+    document.getElementById('ganttHideWeekends').addEventListener('change', toggleGanttWeekends);
+    document.getElementById('ganttDateFrom').addEventListener('change', updateGanttDateRange);
+    document.getElementById('ganttDateTo').addEventListener('change', updateGanttDateRange);
+    document.getElementById('ganttDateReset').addEventListener('click', resetGanttDateRange);
 
     // Home button
     document.getElementById('homeBtn').addEventListener('click', () => {
@@ -2153,6 +4173,11 @@
       }
     });
 
+    // Cancel button - return to home
+    document.getElementById('cancelAuthBtn').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
     // Toggle password visibility
     document.getElementById('togglePassBtn').addEventListener('click', () => {
       const passInput = document.getElementById('authPass');
@@ -2203,6 +4228,7 @@
 
           try {
             await loadFromFirestore();
+            await loadMasterLists();
           } catch (e) {
             console.warn(e);
           }
