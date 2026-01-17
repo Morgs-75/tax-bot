@@ -867,11 +867,14 @@
     .gantt-bar.completed {
       background: var(--success);
     }
-    .gantt-bar.tentative {
-      background: #f59e0b;
+    .gantt-bar.locked-in {
+      background: #22c55e; /* Green */
     }
     .gantt-bar.likely {
-      background: #86efac;
+      background: #3b82f6; /* Blue */
+    }
+    .gantt-bar.tentative {
+      background: #f59e0b; /* Orange */
     }
     .gantt-bar.overdue {
       background: var(--danger);
@@ -1601,7 +1604,14 @@
     <div id="ganttModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
       <div id="ganttModal" class="modal draggable-modal" style="width:min(95vw, 1400px); max-height:90vh;">
         <div class="modal-header draggable-handle" style="flex-wrap:wrap; gap:12px; cursor:move;">
-          <div class="modal-title">Execution Plan</div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <div class="modal-title">Execution Plan</div>
+            <div style="display:flex; gap:12px; font-size:11px;">
+              <span style="display:flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#22c55e; border-radius:3px;"></span> Locked In</span>
+              <span style="display:flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#3b82f6; border-radius:3px;"></span> Likely</span>
+              <span style="display:flex; align-items:center; gap:4px;"><span style="width:12px; height:12px; background:#f59e0b; border-radius:3px;"></span> Tentative</span>
+            </div>
+          </div>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <span style="color:var(--muted); font-size:12px;">From:</span>
             <input type="date" id="ganttDateFrom" style="font-size:12px; padding:4px 8px;" />
@@ -4483,9 +4493,10 @@
         const item = document.createElement('div');
         item.className = 'schedule-item';
         const dateFormatted = formatScheduleDate(sched.date);
-        const statusIndicator = sched.status === 'tentative' ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">(T)</span>' :
-                                   sched.status === 'likely' ? '<span style="color:#86efac; font-size:10px; margin-left:4px;" title="Likely">(L)</span>' :
-                                   sched.tentative ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">(T)</span>' : '';
+        const statusIndicator = sched.status === 'locked' ? '<span style="color:#22c55e; font-size:10px; margin-left:4px;" title="Locked In">●</span>' :
+                                   sched.status === 'likely' ? '<span style="color:#3b82f6; font-size:10px; margin-left:4px;" title="Likely">●</span>' :
+                                   sched.status === 'tentative' || sched.tentative ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">●</span>' :
+                                   '<span style="color:#22c55e; font-size:10px; margin-left:4px;" title="Locked In">●</span>';
         item.innerHTML = `
           <span class="schedule-item-date">${dateFormatted}${statusIndicator}</span>
           <input type="number" class="schedule-item-hours-input" value="${sched.hours}" min="0.5" step="0.5" data-id="${sched.id}" style="width:60px; height:28px; padding:4px 8px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:#141420; color:#f4f7fb; font-weight:600; font-size:13px; text-align:center;" />
@@ -4774,10 +4785,10 @@
                   if (sched) {
                     let barClass = '';
                     if (task.completed) barClass = 'completed';
-                    else if (sched.status === 'tentative' || sched.tentative) barClass = 'tentative';
+                    else if (sched.status === 'locked') barClass = 'locked-in';
                     else if (sched.status === 'likely') barClass = 'likely';
-                    else if (task.dueDate && isOverdue(task.dueDate)) barClass = 'overdue';
-                    else if (task.dueDate && isDueSoon(task.dueDate)) barClass = 'due-soon';
+                    else if (sched.status === 'tentative' || sched.tentative) barClass = 'tentative';
+                    else barClass = 'locked-in'; // Default to locked-in (green)
                     const statusLabel = sched.status === 'tentative' || sched.tentative ? ' (T)' : sched.status === 'likely' ? ' (L)' : '';
                     barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${statusLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
                   }
