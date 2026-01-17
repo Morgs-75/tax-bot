@@ -1,0 +1,194 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAppAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/appAdmins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/appAdmins/$(request.auth.uid)).data.isActive == true;
+    }
+
+    function isFirmMember(firmId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/firms/$(firmId)/members/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/firms/$(firmId)/members/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isFirmAdmin(firmId) {
+      return isFirmMember(firmId) &&
+        get(/databases/$(database)/documents/firms/$(firmId)/members/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // ============================================
+    // APP ADMINS COLLECTION
+    // ============================================
+
+    match /appAdmins/{uid} {
+      // Users can read their own admin status
+      // App admins can read all admin records
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAppAdmin());
+
+      // Only app admins can modify admin records
+      allow write: if isAppAdmin();
+    }
+
+    // ============================================
+    // APP CONFIG (System Settings)
+    // ============================================
+
+    match /appConfig/{configId} {
+      // All signed-in users can read app config (maintenance mode, announcements, etc.)
+      allow read: if isSignedIn();
+
+      // Only app admins can modify app config
+      allow write: if isAppAdmin();
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+
+    match /users/{userId} {
+      // Users can read their own profile
+      // App admins can read any user profile
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAppAdmin());
+
+      // Users can only write to their own profile
+      allow write: if isSignedIn() && request.auth.uid == userId;
+
+      // User subcollections (tasks, archive, settings for solo mode)
+      match /{subcollection}/{docId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+        allow read: if isAppAdmin();
+      }
+    }
+
+    // ============================================
+    // FIRMS COLLECTION - CORE MULTI-TENANT ISOLATION
+    // ============================================
+
+    match /firms/{firmId} {
+      // Only firm members and app admins can read firm document
+      allow read: if isFirmMember(firmId) || isAppAdmin();
+
+      // Any signed-in user can create a new firm
+      allow create: if isSignedIn();
+
+      // Only firm admins and app admins can update firm settings
+      allow update: if isFirmAdmin(firmId) || isAppAdmin();
+
+      // Only app admins can delete firms
+      allow delete: if isAppAdmin();
+
+      // ----------------------------------------
+      // Firm Members
+      // ----------------------------------------
+      match /members/{memberId} {
+        // Firm members can read member list, app admins can read all
+        allow read: if isFirmMember(firmId) || isAppAdmin();
+
+        // Firm admins and app admins can manage members
+        allow write: if isFirmAdmin(firmId) || isAppAdmin();
+      }
+
+      // ----------------------------------------
+      // Firm Tasks
+      // ----------------------------------------
+      match /tasks/{taskId} {
+        // App admins have full access
+        allow read, write: if isAppAdmin();
+
+        // Firm members can read all tasks in their firm
+        allow read: if isFirmMember(firmId);
+
+        // Firm members can create tasks
+        allow create: if isFirmMember(firmId);
+
+        // Users can update/delete if they are assigned, created the task, or are firm admin
+        allow update, delete: if isFirmMember(firmId) && (
+          resource.data.assignedTo == request.auth.uid ||
+          resource.data.createdBy == request.auth.uid ||
+          isFirmAdmin(firmId)
+        );
+      }
+
+      // ----------------------------------------
+      // Firm Archive
+      // ----------------------------------------
+      match /archive/{taskId} {
+        // App admins have full access
+        allow read, write: if isAppAdmin();
+
+        // Firm members can read and create archive entries
+        allow read, create: if isFirmMember(firmId);
+
+        // Only firm admins can delete from archive
+        allow delete: if isFirmAdmin(firmId);
+      }
+
+      // ----------------------------------------
+      // Firm Clients
+      // ----------------------------------------
+      match /clients/{clientId} {
+        // Firm members can read clients, app admins can read all
+        allow read: if isFirmMember(firmId) || isAppAdmin();
+
+        // Only firm admins and app admins can manage clients
+        allow write: if isFirmAdmin(firmId) || isAppAdmin();
+      }
+
+      // ----------------------------------------
+      // Firm Settings/Config
+      // ----------------------------------------
+      match /settings/{settingId} {
+        allow read: if isFirmMember(firmId) || isAppAdmin();
+        allow write: if isFirmAdmin(firmId) || isAppAdmin();
+      }
+
+      // ----------------------------------------
+      // Firm Roles (custom role definitions)
+      // ----------------------------------------
+      match /roles/{roleId} {
+        allow read: if isFirmMember(firmId) || isAppAdmin();
+        allow write: if isFirmAdmin(firmId) || isAppAdmin();
+      }
+
+      // ----------------------------------------
+      // Firm Master Lists (job types, statuses, etc.)
+      // ----------------------------------------
+      match /masterLists/{listId} {
+        allow read: if isFirmMember(firmId) || isAppAdmin();
+        allow write: if isFirmAdmin(firmId) || isAppAdmin();
+      }
+    }
+
+    // ============================================
+    // INVITATIONS (for firm invites)
+    // ============================================
+
+    match /invitations/{inviteId} {
+      // Anyone signed in can read invitations sent to their email
+      allow read: if isSignedIn() && resource.data.email == request.auth.token.email;
+
+      // Firm admins can create invitations
+      allow create: if isSignedIn();
+
+      // Firm admins can update/delete their invitations
+      allow update, delete: if isSignedIn() && (
+        resource.data.createdBy == request.auth.uid ||
+        isAppAdmin()
+      );
+
+      // App admins can read all invitations
+      allow read: if isAppAdmin();
+    }
+  }
+}

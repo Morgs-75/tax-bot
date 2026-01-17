@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raze Admin Portal</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' x='6' font-size='48'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
+
+  <!-- Flatpickr Date Picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <style>
+    :root {
+      --bg: #050509;
+      --panel: #0f151a;
+      --panel-2: #141420;
+      --text: #f5f5f7;
+      --muted: #9ca3af;
+      --border: #2a2a3d;
+      --accent: #3b82f6;
+      --accent-2: #60a5fa;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* Flatpickr Custom Styling */
+    .flatpickr-calendar {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+    }
+    .flatpickr-months .flatpickr-month {
+      background: var(--panel-2) !important;
+      color: var(--text) !important;
+    }
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+      background: var(--panel-2) !important;
+      color: var(--text) !important;
+    }
+    .flatpickr-current-month input.cur-year {
+      color: var(--text) !important;
+    }
+    .flatpickr-weekdays {
+      background: var(--panel-2) !important;
+    }
+    span.flatpickr-weekday {
+      color: var(--muted) !important;
+    }
+    .flatpickr-day {
+      color: var(--text) !important;
+    }
+    .flatpickr-day:hover {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+    }
+    .flatpickr-day.selected {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+    }
+    .flatpickr-day.today {
+      border-color: var(--accent-2) !important;
+    }
+    .flatpickr-time {
+      background: var(--panel-2) !important;
+      border-top: 1px solid var(--border) !important;
+    }
+    .flatpickr-time input {
+      color: var(--text) !important;
+    }
+    .flatpickr-time .flatpickr-am-pm {
+      color: var(--text) !important;
+    }
+    .flatpickr-months .flatpickr-prev-month,
+    .flatpickr-months .flatpickr-next-month {
+      color: var(--text) !important;
+      fill: var(--text) !important;
+    }
+    .flatpickr-months .flatpickr-prev-month:hover svg,
+    .flatpickr-months .flatpickr-next-month:hover svg {
+      fill: var(--accent) !important;
+    }
+    .numInputWrapper span {
+      border-color: var(--border) !important;
+    }
+    .numInputWrapper span:hover {
+      background: var(--accent) !important;
+    }
+
+    /* Loading State */
+    #loadingScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loader {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Layout */
+    .admin-layout {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .admin-layout.visible {
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h1 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--accent-2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-header .badge {
+      font-size: 10px;
+      background: var(--accent);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-2);
+      border-left-color: var(--accent);
+    }
+
+    .nav-item .icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .sidebar-footer .user-email {
+      color: var(--text);
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+
+    .sidebar-footer a {
+      color: var(--accent-2);
+      text-decoration: none;
+    }
+
+    .sidebar-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 240px;
+      padding: 24px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-header h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .page-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-card .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-card .value.accent { color: var(--accent-2); }
+    .stat-card .value.success { color: var(--success); }
+    .stat-card .value.warning { color: var(--warning); }
+    .stat-card .value.danger { color: var(--danger); }
+
+    .stat-card .change {
+      font-size: 12px;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table th {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .data-table .empty-row td {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .btn-success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .btn-success:hover {
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent);
+    }
+
+    .form-control::placeholder {
+      color: var(--muted);
+    }
+
+    textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle-switch input {
+      display: none;
+    }
+
+    .toggle-switch .toggle {
+      width: 48px;
+      height: 26px;
+      background: var(--border);
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: var(--text);
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle {
+      background: var(--accent);
+    }
+
+    .toggle-switch input:checked + .toggle::after {
+      transform: translateX(22px);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 600;
+    }
+
+    .status-active { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+    .status-suspended { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-inactive { background: rgba(107, 114, 128, 0.2); color: var(--muted); }
+
+    /* Search Bar */
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .search-bar .form-control {
+      max-width: 300px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 24px;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 10000;
+    }
+
+    #toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #toast.success { border-color: var(--success); }
+    #toast.error { border-color: var(--danger); }
+
+    /* Confirmation Dialog */
+    .confirm-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+
+      .sidebar-header h1 span,
+      .sidebar-header .badge,
+      .nav-item span:not(.icon),
+      .sidebar-footer {
+        display: none;
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .main-content {
+        margin-left: 60px;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loadingScreen">
+    <div class="loader"></div>
+  </div>
+
+  <!-- Admin Layout -->
+  <div id="adminLayout" class="admin-layout">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h1>
+          <span>Raze</span>
+          <span class="badge">Admin</span>
+        </h1>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-item active" data-page="dashboard">
+          <span class="icon">&#128200;</span>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-page="firms">
+          <span class="icon">&#127970;</span>
+          <span>Firms</span>
+        </div>
+        <div class="nav-item" data-page="users">
+          <span class="icon">&#128101;</span>
+          <span>Users</span>
+        </div>
+        <div class="nav-item" data-page="config">
+          <span class="icon">&#9881;</span>
+          <span>App Config</span>
+        </div>
+        <div class="nav-item" data-page="admins">
+          <span class="icon">&#128272;</span>
+          <span>Admins</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-email" id="adminEmail">Loading...</div>
+        <a href="TimeManager.html">Back to App</a>
+        <span style="margin: 0 8px;">|</span>
+        <a href="#" id="signOutBtn">Sign Out</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- Dashboard Page -->
+      <div id="pageDashboard" class="page active">
+        <div class="page-header">
+          <h2>Dashboard</h2>
+          <p>Overview of your Raze deployment</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">Total Firms</div>
+            <div class="value accent" id="statFirms">-</div>
+            <div class="change" id="statFirmsActive">Loading...</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Users</div>
+            <div class="value" id="statUsers">-</div>
+            <div class="change" id="statUsersActive">Loading...</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Tasks</div>
+            <div class="value success" id="statTasks">-</div>
+            <div class="change">Across all firms</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">System Status</div>
+            <div class="value" id="statStatus">-</div>
+            <div class="change" id="statStatusMsg">Loading...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Firms</h3>
+            <button class="btn btn-sm" onclick="navigateTo('firms')">View All</button>
+          </div>
+          <div class="card-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Firm Name</th>
+                  <th>Members</th>
+                  <th>Created</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recentFirmsTable">
+                <tr class="empty-row"><td colspan="4">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firms Page -->
+      <div id="pageFirms" class="page">
+        <div class="page-header">
+          <h2>Firms Management</h2>
+          <p>View and manage all firms in the system</p>
+        </div>
+
+        <div class="search-bar">
+          <input type="text" class="form-control" id="firmSearchInput" placeholder="Search firms...">
+          <button class="btn" onclick="loadFirms()">Refresh</button>
+          <button class="btn btn-primary" onclick="showCreateFirmModal()">+ Create Firm</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Firm Name</th>
+                  <th>Owner</th>
+                  <th>Members</th>
+                  <th>Tasks</th>
+                  <th>Created</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="firmsTable">
+                <tr class="empty-row"><td colspan="7">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Page -->
+      <div id="pageUsers" class="page">
+        <div class="page-header">
+          <h2>Users Management</h2>
+          <p>View all users across all firms</p>
+        </div>
+
+        <div class="search-bar">
+          <input type="text" class="form-control" id="userSearchInput" placeholder="Search users by email...">
+          <button class="btn" onclick="loadUsers()">Refresh</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Display Name</th>
+                  <th>Firm</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable">
+                <tr class="empty-row"><td colspan="6">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Config Page -->
+      <div id="pageConfig" class="page">
+        <div class="page-header">
+          <h2>App Configuration</h2>
+          <p>System-wide settings and maintenance mode</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Maintenance Mode</h3>
+          </div>
+          <div class="card-body">
+            <div class="toggle-switch">
+              <input type="checkbox" id="maintenanceToggle">
+              <label class="toggle" for="maintenanceToggle"></label>
+              <span>Enable maintenance mode</span>
+            </div>
+            <p style="color: var(--muted); font-size: 13px; margin-top: 12px;">
+              When enabled, users will see a maintenance message and cannot access the app.
+            </p>
+            <div class="form-group" style="margin-top: 16px;">
+              <label>Maintenance Message</label>
+              <textarea class="form-control" id="maintenanceMessage" placeholder="We're currently performing scheduled maintenance. Please check back soon."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveMaintenanceSettings()">Save Changes</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>System Announcements</h3>
+            <button class="btn btn-primary" onclick="showAddAnnouncementForm()" style="font-size:12px;">+ Add Announcement</button>
+          </div>
+          <div class="card-body">
+            <!-- Announcements List -->
+            <div id="announcementsList"></div>
+
+            <!-- Add/Edit Announcement Form (hidden by default) -->
+            <div id="announcementForm" style="display:none; border:1px solid var(--border); border-radius:8px; padding:16px; margin-top:16px; background:var(--panel-2);">
+              <h4 style="margin:0 0 16px 0; font-size:14px;" id="announcementFormTitle">Add Announcement</h4>
+              <input type="hidden" id="editAnnouncementId">
+              <div class="form-row">
+                <div class="form-group" style="flex:2;">
+                  <label>Title</label>
+                  <input type="text" class="form-control" id="announcementTitle" placeholder="e.g., Scheduled Maintenance">
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label>Type</label>
+                  <select class="form-control" id="announcementType">
+                    <option value="info">Info (Blue)</option>
+                    <option value="success">Success (Green)</option>
+                    <option value="warning">Warning (Yellow)</option>
+                    <option value="danger">Critical (Red)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea class="form-control" id="announcementMessage" placeholder="Announcement details..." style="min-height:60px;"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Start Date & Time</label>
+                  <input type="text" class="form-control" id="announcementStart" placeholder="Click to select...">
+                </div>
+                <div class="form-group">
+                  <label>End Date & Time</label>
+                  <input type="text" class="form-control" id="announcementEnd" placeholder="Click to select...">
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                <button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
+                <button class="btn btn-secondary" onclick="hideAnnouncementForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>App Version</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Current Version</label>
+              <input type="text" class="form-control" id="appVersion" placeholder="e.g., 1.0.0">
+            </div>
+            <button class="btn btn-primary" onclick="saveAppVersion()">Update Version</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admins Page -->
+      <div id="pageAdmins" class="page">
+        <div class="page-header">
+          <h2>App Administrators</h2>
+          <p>Manage users with admin portal access</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Current Admins</h3>
+            <button class="btn btn-primary btn-sm" onclick="showAddAdminModal()">Add Admin</button>
+          </div>
+          <div class="card-body" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Display Name</th>
+                  <th>Added</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminsTable">
+                <tr class="empty-row"><td colspan="5">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Add Admin Modal -->
+  <div id="addAdminModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add New Admin</h3>
+        <button class="modal-close" onclick="hideModal('addAdminModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>User ID (UID)</label>
+          <input type="text" class="form-control" id="newAdminUid" placeholder="Firebase User UID">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-control" id="newAdminEmail" placeholder="admin@example.com">
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" class="form-control" id="newAdminName" placeholder="John Smith">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="hideModal('addAdminModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addNewAdmin()">Add Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Firm Modal -->
+  <div id="createFirmModal" class="modal-backdrop">
+    <div class="modal" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3>Create New Firm</h3>
+        <button class="modal-close" onclick="hideModal('createFirmModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Firm Name *</label>
+          <input type="text" class="form-control" id="newFirmName" placeholder="e.g., Smith & Associates">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Owner Email *</label>
+            <input type="email" class="form-control" id="newFirmOwnerEmail" placeholder="owner@example.com">
+          </div>
+          <div class="form-group">
+            <label>Owner Name</label>
+            <input type="text" class="form-control" id="newFirmOwnerName" placeholder="John Smith">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Owner Password *</label>
+          <input type="password" class="form-control" id="newFirmOwnerPassword" placeholder="Min 6 characters">
+          <small style="color: var(--muted); font-size: 11px;">A new user account will be created with this password</small>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Industry</label>
+            <select class="form-control" id="newFirmIndustry">
+              <option value="accounting">Accounting</option>
+              <option value="legal">Legal</option>
+              <option value="consulting">Consulting</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Plan</label>
+            <select class="form-control" id="newFirmPlan">
+              <option value="trial">Trial</option>
+              <option value="starter">Starter</option>
+              <option value="professional">Professional</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="hideModal('createFirmModal')">Cancel</button>
+        <button class="btn btn-primary" id="createFirmBtn" onclick="createNewFirm()">Create Firm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Firm Modal -->
+  <div id="editFirmModal" class="modal-backdrop">
+    <div class="modal" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3>Edit Firm</h3>
+        <button class="modal-close" onclick="hideModal('editFirmModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editFirmId">
+        <div class="form-group">
+          <label>Firm ID</label>
+          <input type="text" class="form-control" id="editFirmIdDisplay" disabled style="opacity: 0.6;">
+        </div>
+        <div class="form-group">
+          <label>Firm Name *</label>
+          <input type="text" class="form-control" id="editFirmName">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Industry</label>
+            <select class="form-control" id="editFirmIndustry">
+              <option value="accounting">Accounting</option>
+              <option value="legal">Legal</option>
+              <option value="consulting">Consulting</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Plan</label>
+            <select class="form-control" id="editFirmPlan">
+              <option value="trial">Trial</option>
+              <option value="starter">Starter</option>
+              <option value="professional">Professional</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-control" id="editFirmStatus">
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Timezone</label>
+            <select class="form-control" id="editFirmTimezone">
+              <option value="Australia/Sydney">Australia/Sydney</option>
+              <option value="Australia/Melbourne">Australia/Melbourne</option>
+              <option value="Australia/Brisbane">Australia/Brisbane</option>
+              <option value="Australia/Perth">Australia/Perth</option>
+              <option value="Pacific/Auckland">New Zealand</option>
+              <option value="America/New_York">US Eastern</option>
+              <option value="America/Los_Angeles">US Pacific</option>
+              <option value="Europe/London">UK</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes (internal)</label>
+          <textarea class="form-control" id="editFirmNotes" placeholder="Internal notes about this firm..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="confirmDeleteFirm()" style="margin-right: auto;">Delete Firm</button>
+        <button class="btn" onclick="hideModal('editFirmModal')">Cancel</button>
+        <button class="btn btn-primary" id="saveFirmBtn" onclick="saveEditFirm()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal-backdrop">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 id="confirmTitle">Confirm Action</h3>
+        <button class="modal-close" onclick="hideModal('confirmModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">Are you sure?</p>
+        <div class="confirm-actions">
+          <button class="btn" onclick="hideModal('confirmModal')">Cancel</button>
+          <button class="btn btn-danger" id="confirmBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firm Details Modal -->
+  <div id="firmDetailsModal" class="modal-backdrop">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Firm Details</h3>
+        <button class="modal-close" onclick="hideModal('firmDetailsModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="firmDetailsContent">
+        Loading...
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="hideModal('firmDetailsModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase Configuration =====
+    const FIREBASE_CONFIG = {
+      apiKey: 'AIzaSyBpkfLUwhpByb3pvkUx4XYFoFp7qxSd0yQ',
+      authDomain: 'raze-9311c.firebaseapp.com',
+      projectId: 'raze-9311c',
+      appId: '1:567484969210:web:a94b5229a072cecfa95943'
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // State
+    let currentAdmin = null;
+    let firmsData = [];
+    let usersData = [];
+    let adminsData = [];
+
+    // ===== Auth Check =====
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        // Not signed in - redirect to login
+        window.location.href = 'login.html?redirect=admin';
+        return;
+      }
+
+      // Check if user is an app admin
+      try {
+        const adminDoc = await db.collection('appAdmins').doc(user.uid).get();
+
+        if (!adminDoc.exists || !adminDoc.data().isActive) {
+          // Not an admin - redirect to main app
+          toast('Access denied. You are not an administrator.', 'error');
+          setTimeout(() => {
+            window.location.href = 'TimeManager.html';
+          }, 2000);
+          return;
+        }
+
+        // User is admin - initialize portal
+        currentAdmin = { uid: user.uid, ...adminDoc.data() };
+        document.getElementById('adminEmail').textContent = user.email;
+        initializeAdminPortal();
+
+      } catch (error) {
+        console.error('Admin check failed:', error);
+        toast('Failed to verify admin status', 'error');
+        setTimeout(() => {
+          window.location.href = 'TimeManager.html';
+        }, 2000);
+      }
+    });
+
+    // ===== Initialize Portal =====
+    function initializeAdminPortal() {
+      document.getElementById('loadingScreen').style.display = 'none';
+      document.getElementById('adminLayout').classList.add('visible');
+
+      // Setup navigation
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const page = item.dataset.page;
+          navigateTo(page);
+        });
+      });
+
+      // Setup sign out
+      document.getElementById('signOutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        auth.signOut().then(() => {
+          window.location.href = 'login.html';
+        });
+      });
+
+      // Setup search inputs
+      document.getElementById('firmSearchInput').addEventListener('input', filterFirms);
+      document.getElementById('userSearchInput').addEventListener('input', filterUsers);
+
+      // Load initial data
+      loadDashboard();
+      loadFirms();
+      loadUsers();
+      loadAdmins();
+      loadAppConfig();
+    }
+
+    // ===== Navigation =====
+    function navigateTo(page) {
+      // Update nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.page === page);
+      });
+
+      // Update pages
+      document.querySelectorAll('.page').forEach(p => {
+        p.classList.toggle('active', p.id === 'page' + page.charAt(0).toUpperCase() + page.slice(1));
+      });
+    }
+
+    // ===== Dashboard =====
+    async function loadDashboard() {
+      try {
+        // Get firms count
+        const firmsSnap = await db.collection('firms').get();
+        const firmsCount = firmsSnap.size;
+        const activeFirms = firmsSnap.docs.filter(d => d.data().isActive !== false).length;
+
+        document.getElementById('statFirms').textContent = firmsCount;
+        document.getElementById('statFirmsActive').textContent = `${activeFirms} active`;
+
+        // Get users count
+        const usersSnap = await db.collection('users').get();
+        document.getElementById('statUsers').textContent = usersSnap.size;
+        document.getElementById('statUsersActive').textContent = 'Registered users';
+
+        // Get tasks count (approximate - from first 10 firms)
+        let taskCount = 0;
+        const firmDocs = firmsSnap.docs.slice(0, 10);
+        for (const firmDoc of firmDocs) {
+          const tasksSnap = await db.collection('firms').doc(firmDoc.id).collection('tasks').get();
+          taskCount += tasksSnap.size;
+        }
+        document.getElementById('statTasks').textContent = taskCount + (firmsSnap.size > 10 ? '+' : '');
+
+        // Check maintenance mode
+        const configDoc = await db.collection('appConfig').doc('main').get();
+        const config = configDoc.exists ? configDoc.data() : {};
+
+        if (config.maintenanceMode) {
+          document.getElementById('statStatus').textContent = 'MAINT';
+          document.getElementById('statStatus').className = 'value warning';
+          document.getElementById('statStatusMsg').textContent = 'Maintenance mode active';
+        } else {
+          document.getElementById('statStatus').textContent = 'OK';
+          document.getElementById('statStatus').className = 'value success';
+          document.getElementById('statStatusMsg').textContent = 'All systems operational';
+        }
+
+        // Recent firms
+        const recentFirms = firmsSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+          .slice(0, 5);
+
+        const tbody = document.getElementById('recentFirmsTable');
+        if (recentFirms.length === 0) {
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No firms yet</td></tr>';
+        } else {
+          tbody.innerHTML = recentFirms.map(firm => `
+            <tr>
+              <td>${escapeHtml(firm.name || 'Unnamed')}</td>
+              <td>-</td>
+              <td>${formatDate(firm.createdAt)}</td>
+              <td><span class="status-badge ${firm.isActive === false ? 'status-suspended' : 'status-active'}">
+                ${firm.isActive === false ? 'Suspended' : 'Active'}
+              </span></td>
+            </tr>
+          `).join('');
+        }
+
+      } catch (error) {
+        console.error('Dashboard load error:', error);
+        toast('Failed to load dashboard data', 'error');
+      }
+    }
+
+    // ===== Firms =====
+    async function loadFirms() {
+      try {
+        const snapshot = await db.collection('firms').get();
+        firmsData = [];
+
+        for (const doc of snapshot.docs) {
+          const firm = { id: doc.id, ...doc.data() };
+
+          // Get member count
+          const membersSnap = await db.collection('firms').doc(doc.id).collection('members').get();
+          firm.memberCount = membersSnap.size;
+
+          // Get task count
+          const tasksSnap = await db.collection('firms').doc(doc.id).collection('tasks').get();
+          firm.taskCount = tasksSnap.size;
+
+          // Find owner
+          const owner = membersSnap.docs.find(m => m.data().isAdmin);
+          firm.ownerEmail = owner ? owner.data().email : '-';
+
+          firmsData.push(firm);
+        }
+
+        renderFirmsTable();
+      } catch (error) {
+        console.error('Firms load error:', error);
+        toast('Failed to load firms', 'error');
+      }
+    }
+
+    function renderFirmsTable(data = firmsData) {
+      const tbody = document.getElementById('firmsTable');
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No firms found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(firm => `
+        <tr>
+          <td><strong>${escapeHtml(firm.name || 'Unnamed')}</strong></td>
+          <td>${escapeHtml(firm.ownerEmail || '-')}</td>
+          <td>${firm.memberCount || 0}</td>
+          <td>${firm.taskCount || 0}</td>
+          <td>${formatDate(firm.createdAt)}</td>
+          <td><span class="status-badge ${firm.isActive === false ? 'status-suspended' : 'status-active'}">
+            ${firm.isActive === false ? 'Suspended' : 'Active'}
+          </span></td>
+          <td style="white-space: nowrap;">
+            <button class="btn btn-sm btn-primary" onclick="enterFirm('${firm.id}')">Enter</button>
+            <button class="btn btn-sm" onclick="showEditFirmModal('${firm.id}')">Edit</button>
+            <button class="btn btn-sm" onclick="viewFirmDetails('${firm.id}')">View</button>
+            ${firm.isActive === false
+              ? `<button class="btn btn-sm btn-success" onclick="toggleFirmStatus('${firm.id}', true)">Activate</button>`
+              : `<button class="btn btn-sm btn-danger" onclick="toggleFirmStatus('${firm.id}', false)">Suspend</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterFirms() {
+      const query = document.getElementById('firmSearchInput').value.toLowerCase();
+      const filtered = firmsData.filter(f =>
+        (f.name || '').toLowerCase().includes(query) ||
+        (f.ownerEmail || '').toLowerCase().includes(query)
+      );
+      renderFirmsTable(filtered);
+    }
+
+    async function viewFirmDetails(firmId) {
+      const firm = firmsData.find(f => f.id === firmId);
+      if (!firm) return;
+
+      // Get members
+      const membersSnap = await db.collection('firms').doc(firmId).collection('members').get();
+      const members = membersSnap.docs.map(d => d.data());
+
+      document.getElementById('firmDetailsContent').innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <strong>Firm ID:</strong> <code>${firmId}</code>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Name:</strong> ${escapeHtml(firm.name || 'Unnamed')}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Created:</strong> ${formatDate(firm.createdAt)}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Status:</strong>
+          <span class="status-badge ${firm.isActive === false ? 'status-suspended' : 'status-active'}">
+            ${firm.isActive === false ? 'Suspended' : 'Active'}
+          </span>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Members (${members.length}):</strong>
+          <table class="data-table" style="margin-top: 8px;">
+            <thead>
+              <tr><th>Email</th><th>Role</th><th>Admin</th></tr>
+            </thead>
+            <tbody>
+              ${members.map(m => `
+                <tr>
+                  <td>${escapeHtml(m.email || '-')}</td>
+                  <td>${escapeHtml(m.role || '-')}</td>
+                  <td>${m.isAdmin ? 'Yes' : 'No'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      showModal('firmDetailsModal');
+    }
+
+    async function toggleFirmStatus(firmId, activate) {
+      const action = activate ? 'activate' : 'suspend';
+      const confirmed = await showConfirm(
+        `${activate ? 'Activate' : 'Suspend'} Firm`,
+        `Are you sure you want to ${action} this firm?`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        await db.collection('firms').doc(firmId).update({
+          isActive: activate
+        });
+        toast(`Firm ${action}d successfully`, 'success');
+        loadFirms();
+        loadDashboard();
+      } catch (error) {
+        console.error('Toggle firm status error:', error);
+        toast(`Failed to ${action} firm`, 'error');
+      }
+    }
+
+    // Enter a firm as admin (opens TimeManager with admin override)
+    function enterFirm(firmId) {
+      // Store admin override in sessionStorage
+      sessionStorage.setItem('adminOverrideFirm', firmId);
+      sessionStorage.setItem('adminOverrideUid', currentAdmin.uid);
+      window.location.href = 'TimeManager.html?adminFirm=' + firmId;
+    }
+
+    // Show edit firm modal
+    async function showEditFirmModal(firmId) {
+      const firm = firmsData.find(f => f.id === firmId);
+      if (!firm) {
+        toast('Firm not found', 'error');
+        return;
+      }
+
+      // Fetch fresh data from Firestore
+      try {
+        const firmDoc = await db.collection('firms').doc(firmId).get();
+        const firmData = firmDoc.data();
+
+        document.getElementById('editFirmId').value = firmId;
+        document.getElementById('editFirmIdDisplay').value = firmId;
+        document.getElementById('editFirmName').value = firmData.name || '';
+        document.getElementById('editFirmIndustry').value = firmData.industry || 'accounting';
+        document.getElementById('editFirmPlan').value = firmData.plan || 'trial';
+        document.getElementById('editFirmStatus').value = firmData.isActive === false ? 'suspended' : 'active';
+        document.getElementById('editFirmTimezone').value = firmData.settings?.timezone || 'Australia/Sydney';
+        document.getElementById('editFirmNotes').value = firmData.adminNotes || '';
+
+        showModal('editFirmModal');
+      } catch (error) {
+        console.error('Load firm error:', error);
+        toast('Failed to load firm details', 'error');
+      }
+    }
+
+    // Save edited firm
+    async function saveEditFirm() {
+      const firmId = document.getElementById('editFirmId').value;
+      const firmName = document.getElementById('editFirmName').value.trim();
+      const industry = document.getElementById('editFirmIndustry').value;
+      const plan = document.getElementById('editFirmPlan').value;
+      const status = document.getElementById('editFirmStatus').value;
+      const timezone = document.getElementById('editFirmTimezone').value;
+      const notes = document.getElementById('editFirmNotes').value.trim();
+
+      if (!firmName) {
+        toast('Firm name is required', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('saveFirmBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        await db.collection('firms').doc(firmId).update({
+          name: firmName,
+          industry: industry,
+          plan: plan,
+          isActive: status === 'active',
+          'settings.timezone': timezone,
+          adminNotes: notes,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedBy: currentAdmin.uid
+        });
+
+        toast('Firm updated successfully', 'success');
+        hideModal('editFirmModal');
+        loadFirms();
+        loadDashboard();
+      } catch (error) {
+        console.error('Save firm error:', error);
+        toast('Failed to save firm', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+      }
+    }
+
+    // Delete firm
+    async function confirmDeleteFirm() {
+      const firmId = document.getElementById('editFirmId').value;
+      const firmName = document.getElementById('editFirmName').value;
+
+      hideModal('editFirmModal');
+
+      const confirmed = await showConfirm(
+        'Delete Firm',
+        `Are you sure you want to permanently delete "${firmName}"? This will delete all tasks, members, and data. This action cannot be undone.`
+      );
+
+      if (!confirmed) {
+        showModal('editFirmModal');
+        return;
+      }
+
+      try {
+        // Delete subcollections first
+        const batch = db.batch();
+
+        // Delete members
+        const membersSnap = await db.collection('firms').doc(firmId).collection('members').get();
+        membersSnap.docs.forEach(doc => batch.delete(doc.ref));
+
+        // Delete tasks
+        const tasksSnap = await db.collection('firms').doc(firmId).collection('tasks').get();
+        tasksSnap.docs.forEach(doc => batch.delete(doc.ref));
+
+        // Delete archive
+        const archiveSnap = await db.collection('firms').doc(firmId).collection('archive').get();
+        archiveSnap.docs.forEach(doc => batch.delete(doc.ref));
+
+        // Delete clients
+        const clientsSnap = await db.collection('firms').doc(firmId).collection('clients').get();
+        clientsSnap.docs.forEach(doc => batch.delete(doc.ref));
+
+        await batch.commit();
+
+        // Delete the firm document
+        await db.collection('firms').doc(firmId).delete();
+
+        // Update users who belonged to this firm
+        const usersSnap = await db.collection('users').where('firmId', '==', firmId).get();
+        const userBatch = db.batch();
+        usersSnap.docs.forEach(doc => {
+          userBatch.update(doc.ref, { firmId: firebase.firestore.FieldValue.delete() });
+        });
+        await userBatch.commit();
+
+        toast('Firm deleted successfully', 'success');
+        loadFirms();
+        loadDashboard();
+        loadUsers();
+      } catch (error) {
+        console.error('Delete firm error:', error);
+        toast('Failed to delete firm: ' + error.message, 'error');
+      }
+    }
+
+    // ===== Users =====
+    async function loadUsers() {
+      try {
+        const snapshot = await db.collection('users').get();
+        usersData = [];
+
+        for (const doc of snapshot.docs) {
+          const user = { id: doc.id, ...doc.data() };
+
+          // Get firm info if they belong to one
+          if (user.firmId) {
+            const firmDoc = await db.collection('firms').doc(user.firmId).get();
+            user.firmName = firmDoc.exists ? firmDoc.data().name : 'Unknown';
+
+            // Get member info
+            const memberDoc = await db.collection('firms').doc(user.firmId)
+              .collection('members').doc(doc.id).get();
+            if (memberDoc.exists) {
+              user.role = memberDoc.data().role || '-';
+              user.memberStatus = memberDoc.data().status || 'active';
+            }
+          }
+
+          usersData.push(user);
+        }
+
+        renderUsersTable();
+      } catch (error) {
+        console.error('Users load error:', error);
+        toast('Failed to load users', 'error');
+      }
+    }
+
+    function renderUsersTable(data = usersData) {
+      const tbody = document.getElementById('usersTable');
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(user => `
+        <tr>
+          <td>${escapeHtml(user.email || user.id)}</td>
+          <td>${escapeHtml(user.displayName || '-')}</td>
+          <td>${escapeHtml(user.firmName || 'Solo')}</td>
+          <td>${escapeHtml(user.role || '-')}</td>
+          <td><span class="status-badge ${user.memberStatus === 'active' ? 'status-active' : 'status-inactive'}">
+            ${user.memberStatus || 'Active'}
+          </span></td>
+          <td>
+            <button class="btn btn-sm" onclick="viewUserDetails('${user.id}')">View</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterUsers() {
+      const query = document.getElementById('userSearchInput').value.toLowerCase();
+      const filtered = usersData.filter(u =>
+        (u.email || '').toLowerCase().includes(query) ||
+        (u.displayName || '').toLowerCase().includes(query) ||
+        (u.firmName || '').toLowerCase().includes(query)
+      );
+      renderUsersTable(filtered);
+    }
+
+    function viewUserDetails(userId) {
+      const user = usersData.find(u => u.id === userId);
+      if (!user) return;
+
+      document.getElementById('firmDetailsContent').innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <strong>User ID:</strong> <code>${userId}</code>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Email:</strong> ${escapeHtml(user.email || '-')}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Display Name:</strong> ${escapeHtml(user.displayName || '-')}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Firm:</strong> ${escapeHtml(user.firmName || 'Solo Mode')}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Role:</strong> ${escapeHtml(user.role || '-')}
+        </div>
+      `;
+
+      showModal('firmDetailsModal');
+    }
+
+    // ===== App Config =====
+    let announcements = [];
+
+    async function loadAppConfig() {
+      try {
+        const doc = await db.collection('appConfig').doc('main').get();
+        const config = doc.exists ? doc.data() : {};
+
+        // Maintenance
+        document.getElementById('maintenanceToggle').checked = config.maintenanceMode || false;
+        document.getElementById('maintenanceMessage').value = config.maintenanceMessage || '';
+
+        // Announcements (array)
+        announcements = config.announcements || [];
+        renderAnnouncementsList();
+
+        // Version
+        document.getElementById('appVersion').value = config.appVersion || '';
+
+      } catch (error) {
+        console.error('Config load error:', error);
+        toast('Failed to load app config', 'error');
+      }
+    }
+
+    function renderAnnouncementsList() {
+      const container = document.getElementById('announcementsList');
+      if (announcements.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted); font-size:13px;">No announcements. Click "Add Announcement" to create one.</p>';
+        return;
+      }
+
+      const now = Date.now();
+      container.innerHTML = announcements.map((ann, idx) => {
+        const hasStarted = !ann.startsAt || now >= ann.startsAt;
+        const hasEnded = ann.endsAt && now > ann.endsAt;
+        const isActive = ann.enabled && hasStarted && !hasEnded;
+        const statusBadge = hasEnded ? '<span style="background:var(--muted);color:white;padding:2px 8px;border-radius:4px;font-size:10px;">EXPIRED</span>' :
+                           isActive ? '<span style="background:var(--success);color:white;padding:2px 8px;border-radius:4px;font-size:10px;">ACTIVE</span>' :
+                           !ann.enabled ? '<span style="background:var(--muted);color:white;padding:2px 8px;border-radius:4px;font-size:10px;">DISABLED</span>' :
+                           '<span style="background:var(--warning);color:white;padding:2px 8px;border-radius:4px;font-size:10px;">SCHEDULED</span>';
+
+        const typeColors = { info: 'var(--accent)', success: 'var(--success)', warning: 'var(--warning)', danger: 'var(--danger)' };
+        const typeColor = typeColors[ann.type] || 'var(--accent)';
+
+        const formatDate = (ts) => ts ? new Date(ts).toLocaleString() : 'Not set';
+
+        return `
+          <div style="border:1px solid var(--border); border-left:4px solid ${typeColor}; border-radius:8px; padding:12px; margin-bottom:12px; background:var(--panel);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <div>
+                <strong style="font-size:14px;">${escapeHtml(ann.title || 'Untitled')}</strong>
+                ${statusBadge}
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-secondary" onclick="editAnnouncement(${idx})" style="font-size:11px; padding:4px 10px;">Edit</button>
+                <button class="btn btn-danger" onclick="deleteAnnouncement(${idx})" style="font-size:11px; padding:4px 10px;">Delete</button>
+              </div>
+            </div>
+            <p style="margin:0 0 8px 0; font-size:13px; color:var(--muted);">${escapeHtml(ann.message || '')}</p>
+            <div style="font-size:11px; color:var(--muted);">
+              <span>Start: ${formatDate(ann.startsAt)}</span> &nbsp;|&nbsp;
+              <span>End: ${formatDate(ann.endsAt)}</span>
+            </div>
+            <div style="margin-top:8px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+                <input type="checkbox" ${ann.enabled ? 'checked' : ''} onchange="toggleAnnouncement(${idx}, this.checked)">
+                Enabled
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Flatpickr instances
+    let startPicker = null;
+    let endPicker = null;
+
+    function initDatePickers() {
+      const fpConfig = {
+        enableTime: true,
+        dateFormat: "d M Y, h:i K",
+        time_24hr: false,
+        allowInput: true,
+        theme: "dark"
+      };
+
+      startPicker = flatpickr("#announcementStart", fpConfig);
+      endPicker = flatpickr("#announcementEnd", fpConfig);
+    }
+
+    function showAddAnnouncementForm() {
+      document.getElementById('announcementFormTitle').textContent = 'Add Announcement';
+      document.getElementById('editAnnouncementId').value = '';
+      document.getElementById('announcementTitle').value = '';
+      document.getElementById('announcementMessage').value = '';
+      document.getElementById('announcementType').value = 'info';
+
+      // Initialize pickers if not done
+      if (!startPicker) initDatePickers();
+
+      // Clear dates
+      startPicker.clear();
+      endPicker.clear();
+
+      document.getElementById('announcementForm').style.display = 'block';
+    }
+
+    function hideAnnouncementForm() {
+      document.getElementById('announcementForm').style.display = 'none';
+    }
+
+    function editAnnouncement(idx) {
+      const ann = announcements[idx];
+      if (!ann) return;
+
+      document.getElementById('announcementFormTitle').textContent = 'Edit Announcement';
+      document.getElementById('editAnnouncementId').value = idx;
+      document.getElementById('announcementTitle').value = ann.title || '';
+      document.getElementById('announcementMessage').value = ann.message || '';
+      document.getElementById('announcementType').value = ann.type || 'info';
+
+      // Initialize pickers if not done
+      if (!startPicker) initDatePickers();
+
+      // Set dates
+      if (ann.startsAt) {
+        startPicker.setDate(new Date(ann.startsAt), true);
+      } else {
+        startPicker.clear();
+      }
+
+      if (ann.endsAt) {
+        endPicker.setDate(new Date(ann.endsAt), true);
+      } else {
+        endPicker.clear();
+      }
+
+      document.getElementById('announcementForm').style.display = 'block';
+    }
+
+    async function saveAnnouncement() {
+      const title = document.getElementById('announcementTitle').value.trim();
+      const message = document.getElementById('announcementMessage').value.trim();
+      const type = document.getElementById('announcementType').value;
+      const editId = document.getElementById('editAnnouncementId').value;
+
+      if (!title) {
+        toast('Title is required', 'error');
+        return;
+      }
+
+      // Get dates from Flatpickr
+      const startDates = startPicker.selectedDates;
+      const endDates = endPicker.selectedDates;
+      const startsAt = startDates.length > 0 ? startDates[0].getTime() : null;
+      const endsAt = endDates.length > 0 ? endDates[0].getTime() : null;
+
+      const annData = {
+        title,
+        message,
+        type,
+        startsAt,
+        endsAt,
+        enabled: true,
+        updatedAt: Date.now()
+      };
+
+      if (editId !== '') {
+        announcements[parseInt(editId)] = { ...announcements[parseInt(editId)], ...annData };
+      } else {
+        annData.createdAt = Date.now();
+        announcements.push(annData);
+      }
+
+      try {
+        await db.collection('appConfig').doc('main').set({
+          announcements: announcements
+        }, { merge: true });
+
+        toast('Announcement saved', 'success');
+        hideAnnouncementForm();
+        renderAnnouncementsList();
+      } catch (error) {
+        console.error('Save announcement error:', error);
+        toast('Failed to save announcement', 'error');
+      }
+    }
+
+    async function deleteAnnouncement(idx) {
+      if (!confirm('Delete this announcement?')) return;
+
+      announcements.splice(idx, 1);
+
+      try {
+        await db.collection('appConfig').doc('main').set({
+          announcements: announcements
+        }, { merge: true });
+
+        toast('Announcement deleted', 'success');
+        renderAnnouncementsList();
+      } catch (error) {
+        console.error('Delete announcement error:', error);
+        toast('Failed to delete announcement', 'error');
+      }
+    }
+
+    async function toggleAnnouncement(idx, enabled) {
+      announcements[idx].enabled = enabled;
+
+      try {
+        await db.collection('appConfig').doc('main').set({
+          announcements: announcements
+        }, { merge: true });
+
+        renderAnnouncementsList();
+      } catch (error) {
+        console.error('Toggle announcement error:', error);
+        toast('Failed to update announcement', 'error');
+      }
+    }
+
+    async function saveMaintenanceSettings() {
+      try {
+        await db.collection('appConfig').doc('main').set({
+          maintenanceMode: document.getElementById('maintenanceToggle').checked,
+          maintenanceMessage: document.getElementById('maintenanceMessage').value
+        }, { merge: true });
+
+        toast('Maintenance settings saved', 'success');
+        loadDashboard();
+      } catch (error) {
+        console.error('Save maintenance error:', error);
+        toast('Failed to save settings', 'error');
+      }
+    }
+
+    async function saveAppVersion() {
+      try {
+        await db.collection('appConfig').doc('main').set({
+          appVersion: document.getElementById('appVersion').value
+        }, { merge: true });
+
+        toast('App version updated', 'success');
+      } catch (error) {
+        console.error('Save version error:', error);
+        toast('Failed to save version', 'error');
+      }
+    }
+
+    // ===== Admins =====
+    async function loadAdmins() {
+      try {
+        const snapshot = await db.collection('appAdmins').get();
+        adminsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        renderAdminsTable();
+      } catch (error) {
+        console.error('Admins load error:', error);
+        toast('Failed to load admins', 'error');
+      }
+    }
+
+    function renderAdminsTable() {
+      const tbody = document.getElementById('adminsTable');
+
+      if (adminsData.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No admins found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = adminsData.map(admin => `
+        <tr>
+          <td>${escapeHtml(admin.email || '-')}</td>
+          <td>${escapeHtml(admin.displayName || '-')}</td>
+          <td>${formatDate(admin.addedAt)}</td>
+          <td><span class="status-badge ${admin.isActive ? 'status-active' : 'status-inactive'}">
+            ${admin.isActive ? 'Active' : 'Inactive'}
+          </span></td>
+          <td>
+            ${admin.id !== currentAdmin.uid ? `
+              ${admin.isActive
+                ? `<button class="btn btn-sm btn-danger" onclick="toggleAdminStatus('${admin.id}', false)">Deactivate</button>`
+                : `<button class="btn btn-sm btn-success" onclick="toggleAdminStatus('${admin.id}', true)">Activate</button>`
+              }
+            ` : '<span style="color: var(--muted);">You</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ===== Create Firm =====
+    function showCreateFirmModal() {
+      document.getElementById('newFirmName').value = '';
+      document.getElementById('newFirmOwnerEmail').value = '';
+      document.getElementById('newFirmOwnerName').value = '';
+      document.getElementById('newFirmOwnerPassword').value = '';
+      document.getElementById('newFirmIndustry').value = 'accounting';
+      document.getElementById('newFirmPlan').value = 'trial';
+      showModal('createFirmModal');
+    }
+
+    async function createNewFirm() {
+      const firmName = document.getElementById('newFirmName').value.trim();
+      const ownerEmail = document.getElementById('newFirmOwnerEmail').value.trim();
+      const ownerName = document.getElementById('newFirmOwnerName').value.trim();
+      const ownerPassword = document.getElementById('newFirmOwnerPassword').value;
+      const industry = document.getElementById('newFirmIndustry').value;
+      const plan = document.getElementById('newFirmPlan').value;
+
+      // Validation
+      if (!firmName) {
+        toast('Firm name is required', 'error');
+        return;
+      }
+      if (!ownerEmail) {
+        toast('Owner email is required', 'error');
+        return;
+      }
+      if (!ownerPassword || ownerPassword.length < 6) {
+        toast('Password must be at least 6 characters', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('createFirmBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        // Create user account using Firebase Auth REST API (admin SDK not available in browser)
+        // We'll use a secondary Firebase app instance to create the user without signing out current admin
+        const secondaryApp = firebase.initializeApp(firebase.app().options, 'Secondary');
+        const secondaryAuth = secondaryApp.auth();
+
+        // Create the new user
+        const userCredential = await secondaryAuth.createUserWithEmailAndPassword(ownerEmail, ownerPassword);
+        const newUser = userCredential.user;
+        const newUserId = newUser.uid;
+
+        // Update display name
+        if (ownerName) {
+          await newUser.updateProfile({ displayName: ownerName });
+        }
+
+        // Sign out from secondary app (don't affect main session)
+        await secondaryAuth.signOut();
+        await secondaryApp.delete();
+
+        // Create firm document
+        const firmRef = db.collection('firms').doc();
+        const firmId = firmRef.id;
+
+        const batch = db.batch();
+
+        // Create firm
+        batch.set(firmRef, {
+          name: firmName,
+          industry: industry,
+          plan: plan,
+          isActive: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: currentAdmin.uid,
+          settings: {
+            timezone: 'Australia/Sydney',
+            dateFormat: 'DD/MM/YYYY'
+          }
+        });
+
+        // Add owner as firm member
+        batch.set(db.collection('firms').doc(firmId).collection('members').doc(newUserId), {
+          email: ownerEmail,
+          displayName: ownerName || ownerEmail.split('@')[0],
+          role: 'Partner',
+          isAdmin: true,
+          status: 'active',
+          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Link user to firm (use firmIds array for multi-firm support)
+        batch.set(db.collection('users').doc(newUserId), {
+          email: ownerEmail,
+          displayName: ownerName || ownerEmail.split('@')[0],
+          firmId: firmId,
+          firmIds: [firmId]
+        });
+
+        await batch.commit();
+
+        toast('Firm created successfully!', 'success');
+        hideModal('createFirmModal');
+        loadFirms();
+        loadDashboard();
+
+      } catch (error) {
+        console.error('Create firm error:', error);
+
+        // Clean up secondary app if it exists
+        try {
+          const secondaryApp = firebase.app('Secondary');
+          await secondaryApp.delete();
+        } catch (e) {}
+
+        if (error.code === 'auth/email-already-in-use') {
+          toast('Email already in use. Use a different email or add existing user to a firm.', 'error');
+        } else {
+          toast('Failed to create firm: ' + error.message, 'error');
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Firm';
+      }
+    }
+
+    function showAddAdminModal() {
+      document.getElementById('newAdminUid').value = '';
+      document.getElementById('newAdminEmail').value = '';
+      document.getElementById('newAdminName').value = '';
+      showModal('addAdminModal');
+    }
+
+    async function addNewAdmin() {
+      const uid = document.getElementById('newAdminUid').value.trim();
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const displayName = document.getElementById('newAdminName').value.trim();
+
+      if (!uid || !email) {
+        toast('UID and Email are required', 'error');
+        return;
+      }
+
+      try {
+        await db.collection('appAdmins').doc(uid).set({
+          email,
+          displayName,
+          isActive: true,
+          addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          addedBy: currentAdmin.uid
+        });
+
+        toast('Admin added successfully', 'success');
+        hideModal('addAdminModal');
+        loadAdmins();
+      } catch (error) {
+        console.error('Add admin error:', error);
+        toast('Failed to add admin', 'error');
+      }
+    }
+
+    async function toggleAdminStatus(adminId, activate) {
+      const confirmed = await showConfirm(
+        `${activate ? 'Activate' : 'Deactivate'} Admin`,
+        `Are you sure you want to ${activate ? 'activate' : 'deactivate'} this admin?`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        await db.collection('appAdmins').doc(adminId).update({
+          isActive: activate
+        });
+
+        toast(`Admin ${activate ? 'activated' : 'deactivated'}`, 'success');
+        loadAdmins();
+      } catch (error) {
+        console.error('Toggle admin error:', error);
+        toast('Failed to update admin', 'error');
+      }
+    }
+
+    // ===== Utilities =====
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(timestamp) {
+      if (!timestamp) return '-';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function showModal(id) {
+      document.getElementById(id).classList.add('visible');
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).classList.remove('visible');
+    }
+
+    function toast(message, type = 'info') {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.className = 'visible ' + type;
+      setTimeout(() => {
+        el.classList.remove('visible');
+      }, 3000);
+    }
+
+    function showConfirm(title, message) {
+      return new Promise((resolve) => {
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+
+        const btn = document.getElementById('confirmBtn');
+        const handler = () => {
+          btn.removeEventListener('click', handler);
+          hideModal('confirmModal');
+          resolve(true);
+        };
+        btn.addEventListener('click', handler);
+
+        // Handle cancel/close
+        const cancelHandler = () => {
+          resolve(false);
+        };
+        document.querySelector('#confirmModal .modal-close').onclick = () => {
+          hideModal('confirmModal');
+          cancelHandler();
+        };
+        document.querySelector('#confirmModal .confirm-actions .btn:not(.btn-danger)').onclick = () => {
+          hideModal('confirmModal');
+          cancelHandler();
+        };
+
+        showModal('confirmModal');
+      });
+    }
+  </script>
+
+</body>
+</html>

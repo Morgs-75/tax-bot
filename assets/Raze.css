@@ -1,0 +1,36 @@
+/* ===== RAZE Logo Styles ===== */
+.raze-wrap{
+  display:inline-block;
+  padding:18px 22px;
+  border-radius:16px;
+  background: transparent; /* parent controls background */
+}
+
+.raze-logo{
+  width: 520px;
+  max-width: 90vw;
+  height: auto;
+  display:block;
+}
+
+/* Default (light background) */
+.raze-logo .wordmark{ fill:#0b0f14; }
+.raze-logo .slash{ fill:#e23b2e; }
+.raze-logo .tagline{
+  fill:#5b6672;
+  font: 700 20px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  letter-spacing: 4px;
+}
+
+/* Auto-dark mode */
+@media (prefers-color-scheme: dark){
+  .raze-logo .wordmark{ fill:#f4f7fb; }
+  .raze-logo .tagline{ fill:#c9d3dd; }
+}
+
+/* Optional: force modes manually by adding class to body */
+body.force-dark .raze-logo .wordmark{ fill:#f4f7fb; }
+body.force-dark .raze-logo .tagline{ fill:#c9d3dd; }
+
+body.force-light .raze-logo .wordmark{ fill:#0b0f14; }
+body.force-light .raze-logo .tagline{ fill:#5b6672; }

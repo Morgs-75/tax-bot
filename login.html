@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login — Raze</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-panel {
+      width: 100%;
+      max-width: 400px;
+      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 56%),
+                  radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.09), transparent 60%),
+                  var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+      padding: 32px 28px;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .login-header h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--accent-2);
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: rgba(2, 6, 23, 0.9);
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(79, 156, 255, 0.25);
+    }
+
+    .form-group input::placeholder {
+      color: #6b7280;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+      margin-top: 8px;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toggle-form {
+      text-align: center;
+      margin-top: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .toggle-form a {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toggle-form a:hover {
+      text-decoration: underline;
+    }
+
+    .forgot-password {
+      text-align: right;
+      margin-top: 8px;
+    }
+
+    .forgot-password a {
+      color: var(--text-muted);
+      font-size: 12px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .forgot-password a:hover {
+      color: var(--accent-2);
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .success-message {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      color: #86efac;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .divider span {
+      padding: 0 12px;
+    }
+
+    .btn-google {
+      width: 100%;
+      padding: 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-google:hover {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(15, 23, 42, 0.95));
+    }
+
+    .btn-google svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .back-home {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .back-home a {
+      color: var(--text-muted);
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back-home a:hover {
+      color: var(--text-main);
+    }
+
+    #resetForm {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-panel">
+      <div class="login-header">
+        <h1>Raze</h1>
+        <p id="formTitle">Sign in to your account</p>
+      </div>
+
+      <div id="errorMessage" class="error-message"></div>
+      <div id="successMessage" class="success-message"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required />
+        </div>
+
+        <div class="forgot-password">
+          <a onclick="showResetForm()">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signupForm" style="display: none;">
+        <div class="form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="John Smith" required />
+        </div>
+
+        <div class="form-group">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)" required minlength="6" />
+        </div>
+
+        <button type="submit" class="btn-login" id="signupBtn">Create Account</button>
+      </form>
+
+      <!-- Reset Password Form -->
+      <form id="resetForm">
+        <div class="form-group">
+          <label for="resetEmail">Email</label>
+          <input type="email" id="resetEmail" placeholder="you@example.com" required />
+        </div>
+
+        <button type="submit" class="btn-login" id="resetBtn">Send Reset Link</button>
+      </form>
+
+      <div class="divider"><span>or</span></div>
+
+      <button class="btn-google" id="googleBtn">
+        <svg viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="toggle-form" id="toggleText">
+        Don't have an account? <a onclick="showSignupForm()">Sign up</a>
+      </div>
+
+      <div class="back-home">
+        <a href="index.html">&larr; Back to home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: 'AIzaSyBpkfLUwhpByb3pvkUx4XYFoFp7qxSd0yQ',
+      authDomain: 'raze-9311c.firebaseapp.com',
+      projectId: 'raze-9311c',
+      appId: '1:567484969210:web:a94b5229a072cecfa95943'
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Get redirect parameter from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectTo = urlParams.get('redirect');
+
+    // DOM Elements
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const resetForm = document.getElementById('resetForm');
+    const formTitle = document.getElementById('formTitle');
+    const toggleText = document.getElementById('toggleText');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+
+    // Check if user is already logged in
+    auth.onAuthStateChanged(async function(user) {
+      if (user) {
+        // Check if admin and redirect accordingly
+        redirectAfterAuth(user);
+      }
+    });
+
+    // Show/Hide Forms
+    function showLoginForm() {
+      loginForm.style.display = 'block';
+      signupForm.style.display = 'none';
+      resetForm.style.display = 'none';
+      formTitle.textContent = 'Sign in to your account';
+      toggleText.innerHTML = 'Don\'t have an account? <a onclick="showSignupForm()">Sign up</a>';
+      hideMessages();
+    }
+
+    function showSignupForm() {
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'block';
+      resetForm.style.display = 'none';
+      formTitle.textContent = 'Create your account';
+      toggleText.innerHTML = 'Already have an account? <a onclick="showLoginForm()">Sign in</a>';
+      hideMessages();
+    }
+
+    function showResetForm() {
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'none';
+      resetForm.style.display = 'block';
+      formTitle.textContent = 'Reset your password';
+      toggleText.innerHTML = 'Remember your password? <a onclick="showLoginForm()">Sign in</a>';
+      hideMessages();
+    }
+
+    function hideMessages() {
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      successMessage.style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      successMessage.textContent = message;
+      successMessage.style.display = 'block';
+      errorMessage.style.display = 'none';
+    }
+
+    // Redirect user after auth (check if admin)
+    async function redirectAfterAuth(user) {
+      try {
+        const adminDoc = await db.collection('appAdmins').doc(user.uid).get();
+        if (adminDoc.exists && adminDoc.data().isActive) {
+          // Admin goes to admin portal
+          window.location.href = 'admin.html';
+          return;
+        }
+      } catch (e) {
+        console.warn('Admin check failed:', e);
+      }
+      // Regular users go to TimeManager
+      window.location.href = 'TimeManager.html';
+    }
+
+    // Login
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(function(userCredential) {
+          // Signed in successfully - check admin and redirect
+          redirectAfterAuth(userCredential.user);
+        })
+        .catch(function(error) {
+          showError(getErrorMessage(error.code));
+          btn.disabled = false;
+          btn.textContent = 'Sign In';
+        });
+    });
+
+    // Signup
+    signupForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const btn = document.getElementById('signupBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(function(userCredential) {
+          // Update display name
+          return userCredential.user.updateProfile({
+            displayName: name
+          }).then(() => userCredential.user);
+        })
+        .then(function(user) {
+          redirectAfterAuth(user);
+        })
+        .catch(function(error) {
+          showError(getErrorMessage(error.code));
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        });
+    });
+
+    // Reset Password
+    resetForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('resetEmail').value;
+      const btn = document.getElementById('resetBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      auth.sendPasswordResetEmail(email)
+        .then(function() {
+          showSuccess('Password reset email sent! Check your inbox.');
+          btn.disabled = false;
+          btn.textContent = 'Send Reset Link';
+        })
+        .catch(function(error) {
+          showError(getErrorMessage(error.code));
+          btn.disabled = false;
+          btn.textContent = 'Send Reset Link';
+        });
+    });
+
+    // Google Sign In
+    document.getElementById('googleBtn').addEventListener('click', function() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(function(result) {
+          redirectAfterAuth(result.user);
+        })
+        .catch(function(error) {
+          showError(getErrorMessage(error.code));
+        });
+    });
+
+    // Error messages
+    function getErrorMessage(code) {
+      switch (code) {
+        case 'auth/email-already-in-use':
+          return 'This email is already registered. Try signing in.';
+        case 'auth/invalid-email':
+          return 'Please enter a valid email address.';
+        case 'auth/operation-not-allowed':
+          return 'Email/password sign in is not enabled.';
+        case 'auth/weak-password':
+          return 'Password must be at least 6 characters.';
+        case 'auth/user-disabled':
+          return 'This account has been disabled.';
+        case 'auth/user-not-found':
+          return 'No account found with this email.';
+        case 'auth/wrong-password':
+          return 'Incorrect password. Please try again.';
+        case 'auth/invalid-credential':
+          return 'Invalid email or password.';
+        case 'auth/too-many-requests':
+          return 'Too many failed attempts. Please try again later.';
+        case 'auth/popup-closed-by-user':
+          return 'Sign in was cancelled.';
+        default:
+          return 'An error occurred. Please try again.';
+      }
+    }
+  </script>
+
+</body>
+</html>
