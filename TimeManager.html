@@ -736,20 +736,44 @@
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 10px;
       font-weight: 700;
       color: var(--muted);
       font-size: 12px;
+      position: sticky;
+      top: 0;
+      background: var(--panel-2);
+      z-index: 2;
+    }
+    .gantt-sidebar-header .client-col {
+      width: 120px;
+      padding: 0 8px;
+      border-right: 1px solid var(--border);
+    }
+    .gantt-sidebar-header .task-col {
+      flex: 1;
+      padding: 0 8px;
     }
     .gantt-sidebar-row {
       height: 36px;
       display: flex;
       align-items: center;
-      padding: 0 10px;
       border-bottom: 1px solid var(--border);
       font-size: 12px;
       color: var(--text);
       cursor: pointer;
+      overflow: hidden;
+    }
+    .gantt-sidebar-row .client-col {
+      width: 120px;
+      padding: 0 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-right: 1px solid var(--border);
+    }
+    .gantt-sidebar-row .task-col {
+      flex: 1;
+      padding: 0 8px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -817,6 +841,29 @@
     .gantt-row-cell.weekend {
       background: rgba(255, 255, 255, 0.02);
     }
+    .gantt-row-cell.holiday {
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .gantt-row-cell.holiday::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(239, 68, 68, 0.1) 3px,
+        rgba(239, 68, 68, 0.1) 6px
+      );
+      pointer-events: none;
+    }
+    .gantt-header-cell.holiday {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: #ef4444;
+    }
     .gantt-row-cell.today {
       background: rgba(59, 130, 246, 0.08);
     }
@@ -838,8 +885,7 @@
       background: rgba(239, 68, 68, 0.15);
     }
     .gantt-bar {
-      width: 80%;
-      max-width: calc(100% - 4px);
+      width: calc(100% - 6px);
       height: 24px;
       border-radius: 4px;
       background: var(--accent);
@@ -856,6 +902,7 @@
       text-overflow: ellipsis;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       box-sizing: border-box;
+      margin: 0 auto;
     }
     .gantt-bar:hover {
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
@@ -918,6 +965,14 @@
     .sched-mode-btn.active {
       background: var(--accent);
       border-color: var(--accent);
+    }
+    .sched-team-tab {
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .sched-team-tab.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: white;
     }
 
     /* Custom visible checkboxes - hide native, show custom box */
@@ -1321,7 +1376,7 @@
       <button id="adminBtn" type="button" title="Manage Clients and Job Types">Admin</button>
       <button id="teamBtn" type="button" title="Manage Team Members" style="display:none;">Team</button>
       <button id="rolesBtn" type="button" title="Manage Roles and Hierarchy" style="display:none;">Roles</button>
-      <button id="firmsBtn" type="button" title="Manage Firms" style="display:none;">Firms</button>
+      <button id="holidaysBtn" type="button" title="Manage Holidays and Blocked Days" style="display:none;">Holidays</button>
       <button id="ganttBtn" type="button" title="View Execution Plan">Execution Plan</button>
       <button id="capacityBtn" type="button" title="Check available capacity" style="background:var(--teal); color:white; border-color:var(--teal);">Capacity</button>
       <button id="dashboardBtn" type="button" title="View analytics dashboard">Dashboard</button>
@@ -1536,67 +1591,157 @@
 
     <!-- Schedule Modal -->
     <div id="scheduleModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
-      <div class="modal" style="width:min(520px, 96vw);">
-        <div class="modal-header">
-          <div class="modal-title">Schedule: <span id="schedTaskName"></span></div>
-          <button id="scheduleClose" class="mini" type="button">Close</button>
-        </div>
-        <div class="modal-body">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border);">
-            <div style="color:var(--muted); font-size:13px;">Total Scheduled: <span id="schedTotalHours" style="color:var(--text); font-weight:700;">0h</span></div>
-            <button id="schedClearAll" class="mini" type="button" style="color:var(--danger); border-color:var(--danger);">Clear All</button>
+      <div class="modal" id="scheduleModal" style="width:min(95vw, 1000px); max-height:90vh;">
+        <div class="modal-header" style="flex-wrap:wrap; gap:6px; padding:8px 12px;">
+          <div class="modal-title" style="font-size:13px;">Schedule: <span id="schedTaskName"></span></div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span style="color:var(--muted); font-size:10px;">From:</span>
+            <input type="date" id="schedGridDateFrom" style="font-size:10px; padding:2px 4px; height:24px;" />
+            <span style="color:var(--muted); font-size:10px;">To:</span>
+            <input type="date" id="schedGridDateTo" style="font-size:10px; padding:2px 4px; height:24px;" />
+            <label class="checkbox-wrap" style="color:var(--muted); font-size:10px;">
+              <input type="checkbox" id="schedGridWeekdaysOnly" checked />
+              <span class="checkbox-box" style="width:14px; height:14px; font-size:10px;">✓</span>
+              Wkdays
+            </label>
+            <button id="scheduleClose" class="mini" type="button" style="font-size:10px; padding:2px 8px;">Close</button>
           </div>
-          <div id="scheduleList" style="max-height:180px; overflow-y:auto; margin-bottom:16px;"></div>
-
-          <!-- Add Time Section -->
-          <div style="padding-top:12px; border-top:1px solid var(--border);">
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-              <button id="schedModeSingle" class="mini sched-mode-btn active" type="button">Single Day</button>
-              <button id="schedModeRange" class="mini sched-mode-btn" type="button">Date Range</button>
+        </div>
+        <div class="modal-body" style="padding:0; overflow:auto; max-height:calc(90vh - 100px);">
+          <!-- Summary Bar -->
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px; border-bottom:1px solid var(--border); background:var(--panel); position:sticky; top:0; z-index:1;">
+            <div style="color:var(--muted); font-size:12px;">
+              Total: <span id="schedTotalHours" style="color:var(--text); font-weight:700;">0h</span>
+              <span id="schedMemberBreakdown" style="font-size:10px; margin-left:8px;"></span>
             </div>
-
-            <!-- Single Day Mode -->
-            <div id="schedSingleMode" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <input type="date" id="schedNewDate" style="flex:1; min-width:100px;" />
-              <input type="number" id="schedNewHours" min="0.5" max="24" step="0.5" placeholder="Hours" style="width:70px; height:31px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:var(--panel-2); color:var(--text); font-size:13px; text-align:center; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;" />
-              <select id="schedStatus" style="height:31px; font-size:12px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button id="schedAddRange" class="mini" type="button" style="font-size:10px; padding:2px 8px; background:var(--teal); color:white; border-color:var(--teal);">+ Add Range</button>
+              <select id="schedGridDefaultStatus" style="height:24px; font-size:10px; padding:1px 4px;">
                 <option value="locked">Locked In</option>
                 <option value="likely">Likely</option>
                 <option value="tentative">Tentative</option>
               </select>
-              <button id="schedAddBtn" type="button" style="height:31px; box-sizing:border-box;">Add</button>
+              <button id="schedClearAll" class="mini" type="button" style="color:var(--danger); border-color:var(--danger); font-size:10px; padding:2px 6px;">Clear All</button>
             </div>
+          </div>
 
-            <!-- Range Mode -->
-            <div id="schedRangeMode" style="display:none;">
-              <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                <label style="color:var(--muted); font-size:12px; min-width:40px;">From</label>
-                <input type="date" id="schedRangeStart" style="flex:1;" />
-                <label style="color:var(--muted); font-size:12px; min-width:25px;">To</label>
-                <input type="date" id="schedRangeEnd" style="flex:1;" />
-              </div>
+          <!-- Grid Container -->
+          <div id="scheduleGridContainer" style="padding:8px; min-height:200px;"></div>
+
+          <!-- Legacy list view (hidden, for solo mode) -->
+          <div id="scheduleLegacyView" style="display:none; padding:16px;">
+            <div id="scheduleList" style="max-height:200px; overflow-y:auto; margin-bottom:16px;"></div>
+            <!-- Add Time Section for solo mode -->
+            <div style="padding-top:12px; border-top:1px solid var(--border);">
               <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <label style="color:var(--muted); font-size:12px; min-width:40px;">Hrs/day</label>
-                <input type="number" id="schedRangeHours" min="0.5" max="24" step="0.5" placeholder="Hours" style="width:70px; height:31px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:var(--panel-2); color:var(--text); font-size:13px; text-align:center; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;" />
-                <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
-                  <input type="checkbox" id="schedWeekdaysOnly" checked />
-                  <span class="checkbox-box">✓</span>
-                  Weekdays only
-                </label>
-                <select id="schedRangeStatus" style="height:31px; font-size:12px;">
+                <input type="date" id="schedNewDate" style="flex:1; min-width:100px;" />
+                <input type="number" id="schedNewHours" min="0.5" max="24" step="0.5" placeholder="Hours" style="width:70px; height:31px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:var(--panel-2); color:var(--text); font-size:13px; text-align:center; box-sizing:border-box;" />
+                <select id="schedStatus" style="height:31px; font-size:12px;">
                   <option value="locked">Locked In</option>
                   <option value="likely">Likely</option>
                   <option value="tentative">Tentative</option>
                 </select>
-                <button id="schedAddRangeBtn" type="button" style="height:31px; box-sizing:border-box; margin-left:auto;">Add Range</button>
+                <button id="schedAddBtn" type="button" style="height:31px; box-sizing:border-box;">Add</button>
               </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button id="schedViewGantt" class="mini" type="button">View Execution Plan</button>
-          <button id="scheduleDone" type="button">Done</button>
+        <div class="modal-footer" style="padding:6px 12px;">
+          <button id="schedViewGantt" class="mini" type="button" style="font-size:10px; padding:4px 10px;">View Execution Plan</button>
+          <button id="scheduleDone" type="button" style="font-size:11px; padding:4px 14px;">Done</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Member Range Popout (for bulk scheduling per team member) -->
+    <div id="memberRangePopout" style="display:none; position:fixed; z-index:10005; background:var(--panel); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,0.3); padding:10px; min-width:280px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="font-weight:600; font-size:12px; color:var(--text);">
+          <span id="memberRangeTitle">Add Hours</span>
+        </div>
+        <button id="memberRangeClose" class="mini" type="button" style="padding:1px 6px; font-size:10px;">✕</button>
+      </div>
+
+      <!-- Member Selector (shown when opened from button) -->
+      <div id="memberRangeSelectorRow" style="margin-bottom:8px;">
+        <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">Team Member</label>
+        <select id="memberRangeSelector" style="width:100%; height:26px; font-size:10px;"></select>
+      </div>
+
+      <!-- Action Tabs -->
+      <div style="display:flex; gap:3px; margin-bottom:8px;">
+        <button class="mini member-range-tab active" data-tab="add" type="button" style="flex:1; font-size:10px; padding:3px 6px;">Add</button>
+        <button class="mini member-range-tab" data-tab="edit" type="button" style="flex:1; font-size:10px; padding:3px 6px;">Edit</button>
+        <button class="mini member-range-tab" data-tab="clear" type="button" style="flex:1; font-size:10px; padding:3px 6px; color:var(--danger); border-color:var(--danger);">Clear</button>
+      </div>
+
+      <!-- Add Hours Tab -->
+      <div id="memberRangeAddTab" class="member-range-content">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">From</label>
+            <input type="date" id="memberRangeFrom" style="width:100%; height:26px; font-size:10px;" />
+          </div>
+          <div>
+            <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">To</label>
+            <input type="date" id="memberRangeTo" style="width:100%; height:26px; font-size:10px;" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">Hrs/Day</label>
+            <input type="number" id="memberRangeHours" min="0.5" max="24" step="0.5" value="8" style="width:100%; height:26px; font-size:10px; text-align:center;" />
+          </div>
+          <div>
+            <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">Status</label>
+            <select id="memberRangeStatus" style="width:100%; height:26px; font-size:10px;">
+              <option value="locked">Locked In</option>
+              <option value="likely">Likely</option>
+              <option value="tentative">Tentative</option>
+            </select>
+          </div>
+        </div>
+        <label class="checkbox-wrap" style="color:var(--muted); font-size:10px; margin-bottom:8px;">
+          <input type="checkbox" id="memberRangeWeekdays" checked />
+          <span class="checkbox-box" style="width:12px; height:12px; font-size:9px;">✓</span>
+          Weekdays only
+        </label>
+        <button id="memberRangeAddBtn" type="button" style="width:100%; height:28px; font-size:11px;">Add Hours</button>
+      </div>
+
+      <!-- Edit Existing Tab -->
+      <div id="memberRangeEditTab" class="member-range-content" style="display:none;">
+        <div style="max-height:200px; overflow-y:auto; margin-bottom:8px;">
+          <div id="memberRangeEditList" style="display:flex; flex-direction:column; gap:4px;"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <button id="memberRangeSetStatus" class="mini" type="button" style="font-size:10px;">Set All</button>
+          <select id="memberRangeBulkStatus" style="height:24px; font-size:10px;">
+            <option value="locked">Locked In</option>
+            <option value="likely">Likely</option>
+            <option value="tentative">Tentative</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Clear Range Tab -->
+      <div id="memberRangeClearTab" class="member-range-content" style="display:none;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">From</label>
+            <input type="date" id="memberRangeClearFrom" style="width:100%; height:26px; font-size:10px;" />
+          </div>
+          <div>
+            <label style="font-size:9px; color:var(--muted); display:block; margin-bottom:2px;">To</label>
+            <input type="date" id="memberRangeClearTo" style="width:100%; height:26px; font-size:10px;" />
+          </div>
+        </div>
+        <label class="checkbox-wrap" style="color:var(--muted); font-size:10px; margin-bottom:8px;">
+          <input type="checkbox" id="memberRangeClearWeekdays" checked />
+          <span class="checkbox-box" style="width:12px; height:12px; font-size:9px;">✓</span>
+          Weekdays only
+        </label>
+        <button id="memberRangeClearBtn" type="button" style="width:100%; height:28px; font-size:11px; background:var(--danger); border-color:var(--danger);">Clear Range</button>
       </div>
     </div>
 
@@ -1620,15 +1765,41 @@
             <button id="ganttDateReset" class="mini" type="button" style="font-size:11px;">Reset</button>
             <span style="color:var(--border);">|</span>
             <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
-              <input type="checkbox" id="ganttHideWeekends" />
+              <input type="checkbox" id="ganttHideWeekends" checked />
               <span class="checkbox-box">✓</span>
               Hide weekends
+            </label>
+            <span style="color:var(--border);">|</span>
+            <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+              <input type="checkbox" id="ganttShowLocked" checked />
+              <span class="checkbox-box">✓</span>
+              Locked In
+            </label>
+            <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+              <input type="checkbox" id="ganttShowLikely" checked />
+              <span class="checkbox-box">✓</span>
+              Likely
+            </label>
+            <label class="checkbox-wrap" style="color:var(--muted); font-size:12px;">
+              <input type="checkbox" id="ganttShowTentative" checked />
+              <span class="checkbox-box">✓</span>
+              Tentative
             </label>
             <span style="color:var(--border);">|</span>
             <span style="color:var(--muted); font-size:12px;">Zoom:</span>
             <button class="mini gantt-zoom-btn" data-zoom="narrow">-</button>
             <button class="mini gantt-zoom-btn active" data-zoom="normal">○</button>
             <button class="mini gantt-zoom-btn" data-zoom="wide">+</button>
+            <span style="color:var(--border);">|</span>
+            <span style="display:inline-flex; gap:0;">
+              <button id="ganttViewUser" class="gantt-view-btn active" type="button" style="font-size:11px; height:31px; min-width:85px; padding:0 10px; border-radius:6px 0 0 6px; border-right:none; background:var(--teal); color:white; border-color:var(--teal);">My Schedule</button>
+              <button id="ganttViewJob" class="gantt-view-btn" type="button" style="font-size:11px; height:31px; min-width:85px; padding:0 10px; border-radius:0 6px 6px 0; background:var(--panel); color:var(--muted); border-color:var(--border);">By Job</button>
+            </span>
+            <span id="ganttJobFilterSection" style="display:none;">
+              <select id="ganttJobFilter" style="height:31px; font-size:11px; padding:2px 6px; max-width:220px; margin-left:6px;">
+                <option value="">Select a job...</option>
+              </select>
+            </span>
             <span style="color:var(--border);">|</span>
             <button id="ganttWeeklyTotal" class="mini" type="button" style="background:var(--teal); color:white; border-color:var(--teal);">Weekly Total</button>
             <button id="ganttClose" class="mini" type="button">Close</button>
@@ -1728,12 +1899,14 @@
           <div style="font-weight:700; margin-bottom:12px; color:var(--text);">Add Team Members</div>
           <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px;">
             <!-- Header Row -->
-            <div style="display:grid; grid-template-columns:1.5fr 1fr 100px 120px 100px 40px; gap:1px; background:var(--border);">
+            <div style="display:grid; grid-template-columns:1.5fr 1fr 100px 120px 100px 80px 50px 40px; gap:1px; background:var(--border);">
               <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Email</div>
               <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Display Name</div>
               <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Role</div>
               <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Reports To</div>
               <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Team</div>
+              <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">State</div>
+              <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted); text-align:center;">Admin</div>
               <div style="background:var(--panel); padding:8px 12px;"></div>
             </div>
             <!-- Input Rows Container -->
@@ -1754,6 +1927,95 @@
         <div class="modal-footer">
           <div class="subtle" id="firmNameBadge"></div>
           <button id="teamDoneBtn" class="mini" type="button" onclick="hideModal('teamModalBackdrop')">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Team Assignment Modal -->
+    <div id="jobTeamModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10003;">
+      <div class="modal" style="width:min(550px, 96vw); max-height:90vh;">
+        <div class="modal-header">
+          <div class="modal-title">Team Assignment: <span id="jobTeamTaskName" style="color:var(--muted); font-weight:400;"></span></div>
+          <button class="mini" type="button" onclick="closeJobTeamModal()">Close</button>
+        </div>
+        <div class="modal-body" style="padding:16px; overflow-y:auto; max-height:calc(90vh - 140px);">
+          <!-- Current Team Members -->
+          <div style="font-weight:700; margin-bottom:12px; color:var(--text);">Current Team</div>
+          <div id="jobTeamCurrentList" style="border:1px solid var(--border); border-radius:8px; padding:8px; margin-bottom:20px; min-height:60px;"></div>
+
+          <!-- Add Team Member Section -->
+          <div style="font-weight:700; margin-bottom:12px; color:var(--text);">Add Team Member</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="jobTeamMemberSelect" style="flex:1.5; height:36px; min-width:150px;">
+              <option value="">Select person...</option>
+            </select>
+            <select id="jobTeamRoleSelect" style="flex:1; height:36px; min-width:100px;">
+              <option value="Preparer">Preparer</option>
+              <option value="Reviewer">Reviewer</option>
+              <option value="Partner">Partner</option>
+            </select>
+            <button type="button" onclick="addJobTeamMember()" style="height:36px; padding:0 16px;">Add</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="subtle" id="jobTeamTaskInfo"></div>
+          <button type="button" onclick="closeJobTeamModal()" style="background:var(--teal); border-color:var(--teal);">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Member Modal -->
+    <div id="editMemberModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10006;">
+      <div class="modal" style="width:min(500px, 96vw); max-height:90vh;">
+        <div class="modal-header">
+          <div class="modal-title">Edit Team Member</div>
+          <button class="mini" type="button" onclick="hideModal('editMemberModalBackdrop')">Close</button>
+        </div>
+        <div class="modal-body" style="padding:16px; overflow-y:auto; max-height:calc(90vh - 140px);">
+          <input type="hidden" id="editMemberUid" />
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Email (read-only)</label>
+            <input type="text" id="editMemberEmail" readonly style="width:100%; height:36px; background:var(--panel-2); opacity:0.7;" />
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Display Name</label>
+            <input type="text" id="editMemberName" style="width:100%; height:36px;" />
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Role</label>
+            <select id="editMemberRole" style="width:100%; height:36px;"></select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Reports To</label>
+            <select id="editMemberReportsTo" style="width:100%; height:36px;"></select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Team</label>
+            <select id="editMemberTeam" style="width:100%; height:36px;"></select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">State (for public holidays)</label>
+            <select id="editMemberState" style="width:100%; height:36px;"></select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label class="checkbox-wrap" style="color:var(--text);">
+              <input type="checkbox" id="editMemberIsAdmin" />
+              <span class="checkbox-box">✓</span>
+              Administrator
+            </label>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">Admins can manage team members, roles, and firm settings</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="mini btn-danger" type="button" id="editMemberDeleteBtn">Remove Member</button>
+          <button type="button" onclick="saveEditMember()" style="background:var(--teal); border-color:var(--teal);">Save Changes</button>
         </div>
       </div>
     </div>
@@ -1796,44 +2058,104 @@
       </div>
     </div>
 
-    <!-- ===== FIRMS MANAGEMENT MODAL ===== -->
-    <div id="firmsModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10004;">
-      <div class="modal" style="width:min(550px, 96vw);">
+    <!-- ===== HOLIDAYS MANAGEMENT MODAL ===== -->
+    <div id="holidaysModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10003;">
+      <div class="modal" style="width:min(600px, 96vw); max-height:90vh;">
         <div class="modal-header">
-          <div class="modal-title">Manage Firms</div>
-          <button class="mini" type="button" onclick="hideModal('firmsModalBackdrop')">Close</button>
+          <div class="modal-title">Holidays & Blocked Days</div>
+          <button class="mini" type="button" onclick="hideModal('holidaysModalBackdrop')">Close</button>
         </div>
-        <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
-          <!-- Current Firm -->
+        <div class="modal-body" style="padding:16px; overflow-y:auto; max-height:calc(90vh - 180px);">
+          <!-- State Selection -->
           <div style="margin-bottom:20px;">
-            <div style="font-weight:700; margin-bottom:8px; color:var(--text);">Current Firm</div>
-            <div id="currentFirmDisplay" style="padding:12px; background:var(--teal); border-radius:8px; color:white; font-weight:600;"></div>
+            <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Firm Location (for public holidays)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="firmStateSelect" style="flex:1; height:36px; font-size:13px;" onchange="updateFirmState()">
+                <option value="NSW">New South Wales</option>
+                <option value="VIC">Victoria</option>
+                <option value="QLD">Queensland</option>
+                <option value="SA">South Australia</option>
+                <option value="WA">Western Australia</option>
+                <option value="TAS">Tasmania</option>
+                <option value="NT">Northern Territory</option>
+                <option value="ACT">Australian Capital Territory</option>
+              </select>
+            </div>
           </div>
 
-          <!-- My Firms List -->
-          <div style="margin-bottom:20px;">
-            <div style="font-weight:700; margin-bottom:8px; color:var(--text);">My Firms</div>
-            <div id="myFirmsList" style="border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
-          </div>
+          <!-- Holidays List -->
+          <div id="holidaysListContainer"></div>
 
-          <!-- Create New Firm -->
-          <div style="border-top:1px solid var(--border); padding-top:16px;">
-            <div style="font-weight:700; margin-bottom:8px; color:var(--text);">Create New Firm</div>
-            <div style="display:grid; grid-template-columns:1fr 100px auto; gap:8px; align-items:end;">
-              <div>
-                <label style="font-size:11px; color:var(--muted);">Firm Name</label>
-                <input id="newFirmName" type="text" placeholder="e.g. Smith & Co" style="width:100%;" />
+          <!-- Add Custom Blocked Day -->
+          <div style="margin-top:20px; padding:16px; background:var(--panel); border-radius:8px; border:1px solid var(--border);">
+            <h4 style="color:var(--teal); margin-bottom:12px; font-size:14px;">Add Custom Blocked Day</h4>
+            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+              <div style="flex:1; min-width:150px;">
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Date</label>
+                <input type="date" id="newBlockedDate" style="width:100%; height:36px;" />
               </div>
-              <div>
-                <label style="font-size:11px; color:var(--muted);">Prefix (2-5 letters)</label>
-                <input id="newFirmPrefix" type="text" placeholder="e.g. SMC" maxlength="5" style="width:100%; text-transform:uppercase;" />
+              <div style="flex:2; min-width:200px;">
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Name (e.g., Strategy Day, Office Closure)</label>
+                <input type="text" id="newBlockedName" placeholder="Enter name..." style="width:100%; height:36px;" />
               </div>
-              <button type="button" onclick="createNewFirm()" style="height:31px; padding:0 16px; background:var(--teal); border-color:var(--teal);">Create</button>
+              <button type="button" onclick="addCustomBlockedDay()" style="height:36px; padding:0 16px; background:var(--teal); border-color:var(--teal);">Add</button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="mini" type="button" onclick="hideModal('firmsModalBackdrop')">Done</button>
+          <div class="subtle">Blocked days won't be available for scheduling</div>
+          <button class="mini" type="button" onclick="hideModal('holidaysModalBackdrop')">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== USER LEAVE MODAL ===== -->
+    <div id="leaveModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10005;">
+      <div class="modal" style="width:min(500px, 96vw); max-height:90vh;">
+        <div class="modal-header">
+          <div class="modal-title">Leave Schedule - <span id="leaveMemberName"></span></div>
+          <button class="mini" type="button" onclick="hideModal('leaveModalBackdrop')">Close</button>
+        </div>
+        <div class="modal-body" style="padding:16px; overflow-y:auto; max-height:calc(90vh - 180px);">
+          <!-- Existing Leave -->
+          <div id="leaveListContainer" style="background:var(--panel-2); border-radius:8px; margin-bottom:20px;"></div>
+
+          <!-- Add New Leave -->
+          <div style="padding:16px; background:var(--panel); border-radius:8px; border:1px solid var(--border);">
+            <h4 style="color:var(--teal); margin-bottom:12px; font-size:14px;">Add Leave</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+              <div>
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Start Date</label>
+                <input type="date" id="leaveStartDate" style="width:100%; height:36px;" />
+              </div>
+              <div>
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">End Date</label>
+                <input type="date" id="leaveEndDate" style="width:100%; height:36px;" />
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Leave Type</label>
+              <select id="leaveType" style="width:100%; height:36px;">
+                <option value="Annual Leave">Annual Leave</option>
+                <option value="Sick Leave">Sick Leave</option>
+                <option value="Personal Leave">Personal Leave</option>
+                <option value="Parental Leave">Parental Leave</option>
+                <option value="Public Holiday (Individual)">Public Holiday (Individual)</option>
+                <option value="Study Leave">Study Leave</option>
+                <option value="Work From Home">Work From Home</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Notes (optional)</label>
+              <input type="text" id="leaveNotes" placeholder="Additional details..." style="width:100%; height:36px;" />
+            </div>
+            <button type="button" onclick="addMemberLeave()" style="width:100%; height:36px; background:var(--teal); border-color:var(--teal);">Add Leave</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="subtle">Leave dates prevent task scheduling</div>
+          <button class="mini" type="button" onclick="hideModal('leaveModalBackdrop')">Done</button>
         </div>
       </div>
     </div>
@@ -2102,6 +2424,188 @@
 
     let customRoles = [...DEFAULT_ROLES]; // Will be loaded from Firestore for firm mode
 
+    // Default job roles for team assignments on tasks (different from firm member roles)
+    const DEFAULT_JOB_ROLES = ['Preparer', 'Reviewer', 'Partner'];
+    let jobRoles = [...DEFAULT_JOB_ROLES]; // Will be loaded from firm settings
+
+    // Australian states for public holidays
+    const AU_STATES = [
+      { code: 'NSW', name: 'New South Wales' },
+      { code: 'VIC', name: 'Victoria' },
+      { code: 'QLD', name: 'Queensland' },
+      { code: 'SA', name: 'South Australia' },
+      { code: 'WA', name: 'Western Australia' },
+      { code: 'TAS', name: 'Tasmania' },
+      { code: 'NT', name: 'Northern Territory' },
+      { code: 'ACT', name: 'Australian Capital Territory' }
+    ];
+
+    // Calculate Easter Sunday for a given year (Anonymous Gregorian algorithm)
+    function getEasterSunday(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(year, month - 1, day);
+    }
+
+    // Get nth weekday of a month (e.g., 2nd Monday of June)
+    function getNthWeekdayOfMonth(year, month, weekday, n) {
+      const firstDay = new Date(year, month, 1);
+      let dayOffset = (weekday - firstDay.getDay() + 7) % 7;
+      const date = 1 + dayOffset + (n - 1) * 7;
+      return new Date(year, month, date);
+    }
+
+    // Adjust date if it falls on weekend (observed holiday)
+    function observedDate(date) {
+      const day = date.getDay();
+      if (day === 0) return new Date(date.getTime() + 86400000); // Sunday -> Monday
+      if (day === 6) return new Date(date.getTime() + 2 * 86400000); // Saturday -> Monday
+      return date;
+    }
+
+    // Generate Australian public holidays for a given year and state
+    function getAustralianPublicHolidays(year, stateCode) {
+      const holidays = [];
+      const easter = getEasterSunday(year);
+
+      // Helper to format date as YYYY-MM-DD (local timezone, not UTC)
+      const fmt = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
+      // National holidays
+      // New Year's Day (Jan 1, observed)
+      let nyd = new Date(year, 0, 1);
+      holidays.push({ date: fmt(observedDate(nyd)), name: "New Year's Day", type: 'national' });
+
+      // Australia Day (Jan 26, observed)
+      let ausDay = new Date(year, 0, 26);
+      holidays.push({ date: fmt(observedDate(ausDay)), name: 'Australia Day', type: 'national' });
+
+      // Good Friday (2 days before Easter)
+      let goodFriday = new Date(easter.getTime() - 2 * 86400000);
+      holidays.push({ date: fmt(goodFriday), name: 'Good Friday', type: 'national' });
+
+      // Easter Saturday (public holiday in most states, but NOT in WA or TAS)
+      if (stateCode !== 'WA' && stateCode !== 'TAS') {
+        let easterSat = new Date(easter.getTime() - 86400000);
+        holidays.push({ date: fmt(easterSat), name: 'Easter Saturday', type: 'national' });
+      }
+
+      // Easter Monday
+      let easterMon = new Date(easter.getTime() + 86400000);
+      holidays.push({ date: fmt(easterMon), name: 'Easter Monday', type: 'national' });
+
+      // Anzac Day (Apr 25) - when on weekend, observed on following Monday
+      let anzac = new Date(year, 3, 25);
+      let anzacDay = anzac.getDay();
+      if (anzacDay === 0) { // Sunday -> Monday
+        holidays.push({ date: fmt(new Date(year, 3, 26)), name: 'Anzac Day', type: 'national' });
+      } else if (anzacDay === 6) { // Saturday -> Monday
+        holidays.push({ date: fmt(new Date(year, 3, 27)), name: 'Anzac Day', type: 'national' });
+      } else {
+        holidays.push({ date: fmt(anzac), name: 'Anzac Day', type: 'national' });
+      }
+
+      // Queen's Birthday (varies by state)
+      if (stateCode === 'WA') {
+        // WA: Last Monday of September
+        let lastMon = getNthWeekdayOfMonth(year, 8, 1, 4); // 4th Monday
+        if (new Date(year, 8, lastMon.getDate() + 7).getMonth() === 8) {
+          lastMon = new Date(year, 8, lastMon.getDate() + 7);
+        }
+        holidays.push({ date: fmt(lastMon), name: "King's Birthday", type: 'state' });
+      } else if (stateCode === 'QLD') {
+        // QLD: 2nd Monday of October
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 9, 1, 2)), name: "King's Birthday", type: 'state' });
+      } else {
+        // All other states: 2nd Monday of June
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 5, 1, 2)), name: "King's Birthday", type: 'state' });
+      }
+
+      // Christmas Day (Dec 25, observed)
+      let xmas = new Date(year, 11, 25);
+      let xmasObs = observedDate(xmas);
+      holidays.push({ date: fmt(xmasObs), name: 'Christmas Day', type: 'national' });
+
+      // Boxing Day (Dec 26, observed - but if Xmas is Sat, Boxing is Mon, so this needs special handling)
+      let boxing = new Date(year, 11, 26);
+      if (xmas.getDay() === 5) { // Xmas is Friday, Boxing is Saturday -> Monday
+        boxing = new Date(year, 11, 28);
+      } else if (xmas.getDay() === 6) { // Xmas is Saturday -> Mon, Boxing Sun -> Tue
+        boxing = new Date(year, 11, 28);
+      } else if (xmas.getDay() === 0) { // Xmas is Sunday -> Mon, Boxing Mon is fine but Tue for Boxing observed
+        boxing = new Date(year, 11, 27);
+      }
+      holidays.push({ date: fmt(boxing), name: 'Boxing Day', type: 'national' });
+
+      // State-specific holidays
+      if (stateCode === 'VIC') {
+        // Melbourne Cup Day - 1st Tuesday of November
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 10, 2, 1)), name: 'Melbourne Cup Day', type: 'state' });
+      }
+
+      if (stateCode === 'SA') {
+        // Adelaide Cup Day - 2nd Monday of March
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 2, 1, 2)), name: 'Adelaide Cup Day', type: 'state' });
+        // Proclamation Day - Dec 24 or closest weekday
+        let proc = new Date(year, 11, 24);
+        holidays.push({ date: fmt(observedDate(proc)), name: 'Proclamation Day', type: 'state' });
+      }
+
+      if (stateCode === 'WA') {
+        // Western Australia Day - 1st Monday of June
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 5, 1, 1)), name: 'Western Australia Day', type: 'state' });
+      }
+
+      if (stateCode === 'TAS') {
+        // Royal Hobart Regatta - 2nd Monday of February (Southern TAS only, but we'll include it)
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 1, 1, 2)), name: 'Royal Hobart Regatta', type: 'state' });
+      }
+
+      if (stateCode === 'NT') {
+        // May Day - 1st Monday of May
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 4, 1, 1)), name: 'May Day', type: 'state' });
+        // Picnic Day - 1st Monday of August
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 7, 1, 1)), name: 'Picnic Day', type: 'state' });
+      }
+
+      if (stateCode === 'ACT') {
+        // Canberra Day - 2nd Monday of March
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 2, 1, 2)), name: 'Canberra Day', type: 'state' });
+        // Reconciliation Day - 27 May or nearest Monday
+        let recon = new Date(year, 4, 27);
+        if (recon.getDay() === 0) recon = new Date(year, 4, 28);
+        else if (recon.getDay() === 6) recon = new Date(year, 4, 29);
+        holidays.push({ date: fmt(recon), name: 'Reconciliation Day', type: 'state' });
+      }
+
+      if (stateCode === 'NSW') {
+        // Bank Holiday - 1st Monday of August
+        holidays.push({ date: fmt(getNthWeekdayOfMonth(year, 7, 1, 1)), name: 'Bank Holiday', type: 'state' });
+      }
+
+      return holidays;
+    }
+
+    // Firm holidays/blocked days (loaded from Firestore)
+    let firmHolidays = []; // { date: 'YYYY-MM-DD', name: string, type: 'public'|'firm' }
+
     // Get role hierarchy object (for backward compatibility)
     function getRoleHierarchy() {
       const hierarchy = {};
@@ -2168,6 +2672,40 @@
     }
 
     function backfillTask(t) {
+      // Migrate team array - if no team exists but assignedTo does, create team from assignedTo
+      let team = Array.isArray(t && t.team) ? t.team : [];
+      if (team.length === 0 && t && t.assignedTo) {
+        // Migration: convert old assignedTo to team array with Preparer role
+        team = [{
+          uid: t.assignedTo,
+          jobRole: 'Preparer',
+          addedAt: t.createdAt || new Date().toISOString(),
+          addedBy: t.createdBy || t.assignedTo
+        }];
+      }
+
+      // Migrate schedules - add memberUid if missing
+      let schedules = Array.isArray(t && t.schedules) ? t.schedules : [];
+      if (schedules.length > 0 && team.length > 0) {
+        const firstMemberUid = team[0]?.uid;
+        schedules = schedules.map(s => ({
+          ...s,
+          memberUid: s.memberUid || firstMemberUid || null
+        }));
+
+        // Deduplicate schedules by date+memberUid (keep first occurrence only)
+        const seen = new Set();
+        schedules = schedules.filter(s => {
+          const key = `${s.date}|${s.memberUid || ''}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+
+      // Build teamMemberUids array for Firestore queries
+      const teamMemberUids = team.map(m => m.uid).filter(Boolean);
+
       return {
         id: t && t.id ? t.id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
         client: t && t.client != null ? t.client : '',
@@ -2181,7 +2719,7 @@
         seconds: Number.isFinite(t && t.seconds) ? t.seconds : 0,
         notes: (t && typeof t.notes === 'string') ? t.notes : '',
         items: Array.isArray(t && t.items) ? t.items : [],
-        schedules: Array.isArray(t && t.schedules) ? t.schedules : [],
+        schedules: schedules,
         createdAt: (t && t.createdAt) ? t.createdAt : new Date().toISOString(),
         archivedAt: (t && t.archivedAt) ? t.archivedAt : null,
         // Recurring task fields
@@ -2192,7 +2730,13 @@
         // Dependency fields
         dependsOn: Array.isArray(t && t.dependsOn) ? t.dependsOn : [],
         // Sort order for drag-and-drop
-        sortOrder: Number.isFinite(t && t.sortOrder) ? t.sortOrder : 0
+        sortOrder: Number.isFinite(t && t.sortOrder) ? t.sortOrder : 0,
+        // Team-based allocation fields
+        team: team,
+        teamMemberUids: teamMemberUids,
+        // Keep assignedTo for backward compatibility (first Preparer)
+        assignedTo: (t && t.assignedTo) ? t.assignedTo : (team.find(m => m.jobRole === 'Preparer')?.uid || team[0]?.uid || null),
+        createdBy: (t && t.createdBy) ? t.createdBy : null
       };
     }
 
@@ -2294,7 +2838,14 @@
         // Firm mode - save to firm tasks collection
         // Ensure createdBy and assignedTo are set
         if (!taskData.createdBy) taskData.createdBy = currentUser.uid;
-        if (!taskData.assignedTo) taskData.assignedTo = currentUser.uid;
+
+        // Compute teamMemberUids from team array for Firestore queries
+        const team = Array.isArray(taskData.team) ? taskData.team : [];
+        taskData.teamMemberUids = team.map(m => m.uid).filter(Boolean);
+
+        // Keep assignedTo in sync with first Preparer (backward compatibility)
+        const firstPreparer = team.find(m => m.jobRole === 'Preparer');
+        taskData.assignedTo = firstPreparer?.uid || team[0]?.uid || taskData.assignedTo || currentUser.uid;
 
         await fbDb.collection('firms').doc(currentFirmId)
           .collection('tasks').doc(task.id).set(taskData, { merge: true });
@@ -2894,13 +3445,27 @@
 
     function saveMasterLists() {
       if (hasFirebaseConfig() && currentUser) {
-        const uid = currentUser.uid;
-        fbDb.collection('users').doc(uid).collection('settings').doc('masterLists').set({
-          clients: masterClients,
-          jobTypes: masterJobTypes,
-          teamNames: masterTeamNames,
-          hoursPerDay: hoursPerDay
-        }).catch(console.warn);
+        if (isInFirmMode() && currentFirmId) {
+          // Firm mode - save to firm settings
+          fbDb.collection('firms').doc(currentFirmId).set({
+            settings: {
+              clients: masterClients,
+              jobTypes: masterJobTypes,
+              teamNames: masterTeamNames,
+              hoursPerDay: hoursPerDay,
+              jobRoles: jobRoles
+            }
+          }, { merge: true }).catch(console.warn);
+        } else {
+          // Solo mode - save to user settings
+          const uid = currentUser.uid;
+          fbDb.collection('users').doc(uid).collection('settings').doc('masterLists').set({
+            clients: masterClients,
+            jobTypes: masterJobTypes,
+            teamNames: masterTeamNames,
+            hoursPerDay: hoursPerDay
+          }).catch(console.warn);
+        }
       }
     }
 
@@ -2959,7 +3524,8 @@
           clientIdCounter: 0,
           settings: {
             hoursPerDay: 7.5,
-            jobTypes: [...DEFAULT_JOB_TYPES]
+            jobTypes: [...DEFAULT_JOB_TYPES],
+            jobRoles: [...DEFAULT_JOB_ROLES]
           },
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           createdBy: currentUser.uid
@@ -2992,8 +3558,9 @@
           name: name,
           clientIdPrefix: prefix,
           clientIdCounter: 0,
-          settings: { hoursPerDay: 7.5, jobTypes: [...DEFAULT_JOB_TYPES] }
+          settings: { hoursPerDay: 7.5, jobTypes: [...DEFAULT_JOB_TYPES], jobRoles: [...DEFAULT_JOB_ROLES] }
         };
+        jobRoles = [...DEFAULT_JOB_ROLES];
 
         // Set current member (we're the creator/admin)
         currentMember = {
@@ -3035,23 +3602,22 @@
     function updateFirmUI() {
       const teamBtn = document.getElementById('teamBtn');
       const rolesBtn = document.getElementById('rolesBtn');
-      const firmsBtn = document.getElementById('firmsBtn');
+      const holidaysBtn = document.getElementById('holidaysBtn');
       const assignedHeader = document.getElementById('assignedHeader');
 
       // App admins always have admin access to any firm they view
       const hasAdminAccess = window.isAppAdmin || window.isAdminOverride || (currentMember && currentMember.isAdmin);
 
       if (isInFirmMode() && currentFirmData && (currentMember || window.isAppAdmin || window.isAdminOverride)) {
-        // Show team and roles buttons if admin (firm admin or app admin)
+        // Show team, roles, and holidays buttons if admin (firm admin or app admin)
         if (teamBtn) {
           teamBtn.style.display = hasAdminAccess ? 'inline-flex' : 'none';
         }
         if (rolesBtn) {
           rolesBtn.style.display = hasAdminAccess ? 'inline-flex' : 'none';
         }
-        // Show firms button if admin
-        if (firmsBtn) {
-          firmsBtn.style.display = hasAdminAccess ? 'inline-flex' : 'none';
+        if (holidaysBtn) {
+          holidaysBtn.style.display = hasAdminAccess ? 'inline-flex' : 'none';
         }
         // Show assigned column header
         if (assignedHeader) {
@@ -3061,7 +3627,7 @@
         // Hide firm elements in solo mode
         if (teamBtn) teamBtn.style.display = 'none';
         if (rolesBtn) rolesBtn.style.display = 'none';
-        if (firmsBtn) firmsBtn.style.display = 'none';
+        if (holidaysBtn) holidaysBtn.style.display = 'none';
         if (assignedHeader) assignedHeader.style.display = 'none';
       }
     }
@@ -3081,6 +3647,7 @@
         currentFirmData = firmDoc.data();
         hoursPerDay = currentFirmData.settings?.hoursPerDay || 7.5;
         masterJobTypes = currentFirmData.settings?.jobTypes || [...DEFAULT_JOB_TYPES];
+        jobRoles = currentFirmData.settings?.jobRoles || [...DEFAULT_JOB_ROLES];
 
         // Load custom roles
         loadRolesFromFirestore();
@@ -3097,6 +3664,9 @@
 
         // Load firm clients
         await loadFirmClients();
+
+        // Load holidays and blocked days
+        await loadFirmHolidaysQuiet();
 
         // Load visible tasks
         await loadFirmTasks();
@@ -3186,54 +3756,6 @@
       }
     }
 
-    function showFirmsModal() {
-      loadUserFirms().then(() => {
-        renderFirmsList();
-        showModal('firmsModalBackdrop');
-      });
-    }
-
-    function renderFirmsList() {
-      const currentDisplay = document.getElementById('currentFirmDisplay');
-      const listContainer = document.getElementById('myFirmsList');
-
-      // Show current firm
-      if (currentDisplay) {
-        if (currentFirmData) {
-          currentDisplay.textContent = currentFirmData.name + ' (' + (currentMember?.role || 'Member') + ')';
-        } else {
-          currentDisplay.textContent = 'Solo Mode (No Firm)';
-          currentDisplay.style.background = 'var(--muted)';
-        }
-      }
-
-      // Show list of firms
-      if (!listContainer) return;
-
-      if (userFirms.length === 0) {
-        listContainer.innerHTML = '<div class="subtle" style="text-align:center; padding:16px;">No firms yet. Create one below.</div>';
-        return;
-      }
-
-      listContainer.innerHTML = '';
-      userFirms.forEach(firm => {
-        const isCurrent = firm.id === currentFirmId;
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border); background:' + (isCurrent ? 'rgba(0,255,170,0.1)' : 'transparent') + ';';
-        row.innerHTML = `
-          <div>
-            <div style="font-weight:600; color:var(--text);">${firm.name}</div>
-            <div style="font-size:11px; color:var(--muted);">${firm.role}${firm.isAdmin ? ' • Admin' : ''}</div>
-          </div>
-          ${isCurrent
-            ? '<span style="color:var(--teal); font-size:12px; font-weight:600;">Current</span>'
-            : `<button class="mini" onclick="switchToFirm('${firm.id}')" style="padding:6px 12px;">Switch</button>`
-          }
-        `;
-        listContainer.appendChild(row);
-      });
-    }
-
     async function switchToFirm(firmId) {
       if (firmId === currentFirmId) return;
 
@@ -3254,7 +3776,6 @@
         updateFirmUI();
         updateFirmSwitcher();
         renderTasks();
-        hideModal('firmsModalBackdrop');
         hideModal('firmSelectorBackdrop');
 
         toast('Switched to ' + currentFirmData.name);
@@ -3363,76 +3884,6 @@
       }
     });
 
-    async function createNewFirm() {
-      const name = document.getElementById('newFirmName').value.trim();
-      const prefix = document.getElementById('newFirmPrefix').value.trim().toUpperCase();
-
-      if (!name) {
-        toast('Please enter a firm name');
-        return;
-      }
-      if (!prefix || !/^[A-Z]{2,5}$/.test(prefix)) {
-        toast('Prefix must be 2-5 letters');
-        return;
-      }
-
-      toast('Creating firm...');
-      try {
-        const firmRef = fbDb.collection('firms').doc();
-        const firmId = firmRef.id;
-
-        const batch = fbDb.batch();
-
-        // Create firm document
-        batch.set(firmRef, {
-          name: name,
-          clientIdPrefix: prefix,
-          clientIdCounter: 0,
-          settings: {
-            hoursPerDay: 7.5,
-            jobTypes: [...DEFAULT_JOB_TYPES]
-          },
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdBy: currentUser.uid
-        });
-
-        // Add current user as Partner + Admin
-        batch.set(firmRef.collection('members').doc(currentUser.uid), {
-          email: currentUser.email,
-          displayName: currentUser.email.split('@')[0],
-          role: 'Partner',
-          isAdmin: true,
-          reportsTo: null,
-          status: 'active',
-          joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        await batch.commit();
-
-        // Update user document to add this firm to their firmIds array
-        await fbDb.collection('users').doc(currentUser.uid).set({
-          firmId: firmId,
-          firmIds: firebase.firestore.FieldValue.arrayUnion(firmId)
-        }, { merge: true });
-
-        // Clear form
-        document.getElementById('newFirmName').value = '';
-        document.getElementById('newFirmPrefix').value = '';
-
-        toast('Firm created! Switching...');
-
-        // Reload user firms list
-        await loadUserFirms();
-
-        // Switch to the new firm
-        await switchToFirm(firmId);
-
-      } catch (e) {
-        console.error('Failed to create firm:', e);
-        toast('Failed to create firm: ' + e.message);
-      }
-    }
-
     function getSubordinates(supervisorUid) {
       const direct = firmMembers.filter(m => m.reportsTo === supervisorUid && m.status === 'active');
       let all = direct.map(m => m.uid);
@@ -3478,16 +3929,39 @@
         } else {
           // Normal user: load tasks based on visibility
           const visibleUsers = getVisibleUserIds();
+          const taskIds = new Set(); // Track loaded task IDs to avoid duplicates
 
           // Firestore 'in' query limit is 30
           const batches = chunkArray(visibleUsers, 30);
 
+          // Query by assignedTo (backward compatibility)
           for (const batch of batches) {
             const snap = await fbDb.collection('firms').doc(currentFirmId)
               .collection('tasks')
               .where('assignedTo', 'in', batch)
               .get();
-            snap.docs.forEach(d => tasks.push({ id: d.id, ...d.data() }));
+            snap.docs.forEach(d => {
+              if (!taskIds.has(d.id)) {
+                taskIds.add(d.id);
+                tasks.push({ id: d.id, ...d.data() });
+              }
+            });
+          }
+
+          // Query by teamMemberUids (new team-based visibility)
+          // array-contains-any has a limit of 10 values
+          const smallBatches = chunkArray(visibleUsers, 10);
+          for (const batch of smallBatches) {
+            const snap = await fbDb.collection('firms').doc(currentFirmId)
+              .collection('tasks')
+              .where('teamMemberUids', 'array-contains-any', batch)
+              .get();
+            snap.docs.forEach(d => {
+              if (!taskIds.has(d.id)) {
+                taskIds.add(d.id);
+                tasks.push({ id: d.id, ...d.data() });
+              }
+            });
           }
 
           // Also get unassigned tasks (created by visible users)
@@ -3497,7 +3971,8 @@
               .where('createdBy', 'in', batch)
               .get();
             snap.docs.forEach(d => {
-              if (!tasks.find(t => t.id === d.id)) {
+              if (!taskIds.has(d.id)) {
+                taskIds.add(d.id);
                 tasks.push({ id: d.id, ...d.data() });
               }
             });
@@ -3510,8 +3985,8 @@
           return bDate - aDate;
         });
 
-        // Backfill tasks
-        tasks.forEach(backfillTask);
+        // Backfill tasks (this will also migrate team arrays)
+        tasks = tasks.map(t => backfillTask(t));
 
       } catch (e) {
         console.error('Failed to load firm tasks:', e);
@@ -3635,9 +4110,14 @@
         .map(t => `<option value="${t}">${t}</option>`)
         .join('');
 
+      // Generate state options
+      const stateOptions = AU_STATES
+        .map(s => `<option value="${s.code}">${s.code}</option>`)
+        .join('');
+
       const row = document.createElement('div');
       row.id = rowId;
-      row.style.cssText = 'display:grid; grid-template-columns:1.5fr 1fr 100px 120px 100px 40px; gap:1px; background:var(--border);';
+      row.style.cssText = 'display:grid; grid-template-columns:1.5fr 1fr 100px 120px 100px 80px 50px 40px; gap:1px; background:var(--border);';
       row.innerHTML = `
         <div style="background:var(--bg); padding:4px;">
           <input type="email" placeholder="email@example.com" data-field="email" style="width:100%; height:31px; font-size:12px;" />
@@ -3662,26 +4142,43 @@
             ${teamOptions}
           </select>
         </div>
+        <div style="background:var(--bg); padding:4px;">
+          <select data-field="state" style="width:100%; height:31px; font-size:11px;">
+            <option value="">State</option>
+            ${stateOptions}
+          </select>
+        </div>
         <div style="background:var(--bg); padding:4px; display:flex; align-items:center; justify-content:center;">
-          <button type="button" onclick="removeBulkMemberRow('${rowId}')" class="mini btn-danger" style="width:28px; height:28px; padding:0; font-size:14px;">×</button>
+          <label class="checkbox-wrap" style="margin:0;" title="Grant admin privileges">
+            <input type="checkbox" data-field="isAdmin" />
+            <span class="checkbox-box">✓</span>
+          </label>
+        </div>
+        <div style="background:var(--bg); padding:4px; display:flex; align-items:center; justify-content:center;">
+          <button type="button" class="mini btn-danger bulk-remove-btn" style="width:28px; height:28px; padding:0; font-size:14px;">×</button>
         </div>
       `;
       container.appendChild(row);
+
+      // Attach event listener to remove button
+      row.querySelector('.bulk-remove-btn').addEventListener('click', () => row.remove());
     }
 
     function removeBulkMemberRow(rowId) {
       const row = document.getElementById(rowId);
       if (row) row.remove();
     }
+    window.addBulkMemberRow = addBulkMemberRow;
+    window.removeBulkMemberRow = removeBulkMemberRow;
 
     function downloadTeamTemplate() {
       const roleNames = getRoleNames();
       const teamName = masterTeamNames.length > 0 ? masterTeamNames[0] : 'Tax';
       const data = [
-        ['Email', 'Name', 'Role', 'Team'],
-        ['example@email.com', 'John Smith', roleNames[0] || 'Partner', teamName],
-        ['', '', '', ''],
-        ['', '', '', '']
+        ['Email', 'Name', 'Role', 'Team', 'State', 'Admin'],
+        ['example@email.com', 'John Smith', roleNames[0] || 'Partner', teamName, 'NSW', 'No'],
+        ['', '', '', '', '', ''],
+        ['', '', '', '', '', '']
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(data);
@@ -3689,6 +4186,7 @@
       XLSX.utils.book_append_sheet(wb, ws, 'Team Members');
       XLSX.writeFile(wb, 'Team_Template.xlsx');
     }
+    window.downloadTeamTemplate = downloadTeamTemplate;
 
     function handleTeamExcelUpload(event) {
       const file = event.target.files[0];
@@ -3713,6 +4211,8 @@
           const nameIdx = header.findIndex(h => h.includes('name') && !h.includes('email') && !h.includes('team'));
           const roleIdx = header.findIndex(h => h.includes('role'));
           const teamIdx = header.findIndex(h => h.includes('team'));
+          const stateIdx = header.findIndex(h => h.includes('state'));
+          const adminIdx = header.findIndex(h => h.includes('admin'));
 
           if (emailIdx === -1) {
             toast('Excel must have an Email column');
@@ -3730,6 +4230,9 @@
             const name = nameIdx !== -1 && row[nameIdx] ? row[nameIdx].toString().trim() : '';
             const role = roleIdx !== -1 && row[roleIdx] ? row[roleIdx].toString().trim() : '';
             const team = teamIdx !== -1 && row[teamIdx] ? row[teamIdx].toString().trim() : '';
+            const state = stateIdx !== -1 && row[stateIdx] ? row[stateIdx].toString().toUpperCase().trim() : '';
+            const adminValue = adminIdx !== -1 && row[adminIdx] ? row[adminIdx].toString().toLowerCase().trim() : '';
+            const isAdmin = ['yes', 'true', '1', 'y'].includes(adminValue);
 
             if (email) {
               addBulkMemberRow();
@@ -3751,6 +4254,14 @@
                   );
                   if (matchingOption) teamSelect.value = matchingOption.value;
                 }
+                if (state) {
+                  const stateSelect = lastRow.querySelector('[data-field="state"]');
+                  const matchingOption = Array.from(stateSelect.options).find(
+                    opt => opt.value.toUpperCase() === state
+                  );
+                  if (matchingOption) stateSelect.value = matchingOption.value;
+                }
+                lastRow.querySelector('[data-field="isAdmin"]').checked = isAdmin;
                 addedCount++;
               }
             }
@@ -3767,6 +4278,7 @@
       // Reset file input so same file can be uploaded again
       event.target.value = '';
     }
+    window.handleTeamExcelUpload = handleTeamExcelUpload;
 
     async function saveBulkMembers() {
       const container = document.getElementById('bulkMemberRows');
@@ -3779,12 +4291,14 @@
         const role = row.querySelector('[data-field="role"]').value;
         const reportsTo = row.querySelector('[data-field="reportsTo"]').value || null;
         const team = row.querySelector('[data-field="team"]').value || null;
+        const state = row.querySelector('[data-field="state"]').value || null;
+        const isAdmin = row.querySelector('[data-field="isAdmin"]').checked;
 
         if (email && name) {
           // Check if already exists
           const existing = firmMembers.find(m => m.email === email);
           if (!existing) {
-            membersToAdd.push({ email, name, role, reportsTo, team });
+            membersToAdd.push({ email, name, role, reportsTo, team, state, isAdmin });
           }
         }
       });
@@ -3807,9 +4321,10 @@
             email: m.email,
             displayName: m.name,
             role: m.role,
-            isAdmin: false,
+            isAdmin: m.isAdmin,
             reportsTo: m.reportsTo,
             team: m.team,
+            state: m.state,
             status: 'pending',
             joinedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
@@ -3826,12 +4341,14 @@
         }
 
         renderTeamList();
+        renderTasks(); // Refresh task assignment dropdowns
         toast(`${membersToAdd.length} member(s) added successfully!`);
       } catch (e) {
         console.error('Failed to add members:', e);
         toast('Failed to add members: ' + e.message);
       }
     }
+    window.saveBulkMembers = saveBulkMembers;
 
     function updateReportsToDropdown() {
       // Update all Reports To dropdowns in bulk rows
@@ -3878,25 +4395,67 @@
           ? '<span style="background:var(--teal); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px;">Admin</span>'
           : '';
         const isCurrentUser = m.uid === currentUser.uid;
+        const leaveCount = (m.leave || []).filter(l => new Date(l.endDate) >= new Date()).length;
+        const leaveBadge = leaveCount > 0 ? `<span style="background:var(--accent); color:#fff; padding:1px 5px; border-radius:10px; font-size:9px; margin-left:4px;">${leaveCount}</span>` : '';
+        const youBadge = isCurrentUser ? '<span style="background:var(--accent); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px;">You</span>' : '';
 
         return `
-          <div style="display:grid; grid-template-columns:1fr auto auto auto auto; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border); align-items:center; font-size:13px;">
+          <div style="display:grid; grid-template-columns:1fr auto auto auto auto auto auto auto; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border); align-items:center; font-size:13px;" data-member-uid="${m.uid}">
             <div>
               <span style="font-weight:600;">${m.displayName || m.email}</span>
-              ${statusBadge}${adminBadge}
+              ${statusBadge}${adminBadge}${youBadge}
               <div style="font-size:11px; color:var(--muted);">${m.email}</div>
             </div>
             <div style="color:var(--muted);">${m.role}</div>
+            <div style="color:var(--muted); font-size:11px;">${m.state || '—'}</div>
             <div style="color:var(--muted); font-size:11px;">→ ${supervisorName}</div>
-            <button class="mini" onclick="toggleMemberAdmin('${m.uid}')" ${isCurrentUser ? 'disabled' : ''} style="font-size:11px;">
+            <button class="mini member-edit-btn" data-uid="${m.uid}" style="font-size:11px; background:var(--teal); border-color:var(--teal);">
+              Edit
+            </button>
+            <button class="mini member-leave-btn" data-uid="${m.uid}" style="font-size:11px; background:var(--panel-2);">
+              Leave${leaveBadge}
+            </button>
+            <button class="mini member-admin-btn" data-uid="${m.uid}" ${isCurrentUser ? 'disabled title="Cannot modify your own admin status"' : ''} style="font-size:11px; ${isCurrentUser ? 'opacity:0.5; cursor:not-allowed;' : ''}">
               ${m.isAdmin ? 'Remove Admin' : 'Make Admin'}
             </button>
-            <button class="mini btn-danger" onclick="removeMember('${m.uid}')" ${isCurrentUser ? 'disabled' : ''} style="font-size:11px;">
+            <button class="mini btn-danger member-remove-btn" data-uid="${m.uid}" ${isCurrentUser ? 'disabled title="Cannot remove yourself from the firm"' : ''} style="font-size:11px; ${isCurrentUser ? 'opacity:0.5; cursor:not-allowed;' : ''}">
               Remove
             </button>
           </div>
         `;
       }).join('');
+
+      // Attach event listeners after rendering
+      const editButtons = container.querySelectorAll('.member-edit-btn');
+      const leaveButtons = container.querySelectorAll('.member-leave-btn');
+      const adminButtons = container.querySelectorAll('.member-admin-btn');
+      const removeButtons = container.querySelectorAll('.member-remove-btn');
+
+      editButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openEditMember(btn.dataset.uid);
+        });
+      });
+      leaveButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openMemberLeave(btn.dataset.uid);
+        });
+      });
+      adminButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (!btn.disabled) toggleMemberAdmin(btn.dataset.uid);
+        });
+      });
+      removeButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Remove button clicked for uid:', btn.dataset.uid, 'disabled:', btn.disabled);
+          if (!btn.disabled) removeMember(btn.dataset.uid);
+        });
+      });
     }
 
     async function addTeamMember() {
@@ -3938,6 +4497,7 @@
 
         await loadFirmMembers();
         renderTeamList();
+        renderTasks(); // Refresh task assignment dropdowns
 
         // Clear form
         document.getElementById('newMemberEmail').value = '';
@@ -3954,10 +4514,26 @@
     }
 
     async function toggleMemberAdmin(uid) {
+      console.log('toggleMemberAdmin called with uid:', uid);
       const member = firmMembers.find(m => m.uid === uid);
-      if (!member) return;
+      console.log('Found member:', member);
+      if (!member) {
+        console.log('Member not found in firmMembers:', firmMembers);
+        toast('Member not found');
+        return;
+      }
+
+      // Prevent removing the last active admin (pending users don't count)
+      if (member.isAdmin) {
+        const activeAdminCount = firmMembers.filter(m => m.isAdmin && m.status !== 'pending').length;
+        if (activeAdminCount <= 1) {
+          toast('Cannot remove the last active admin. Promote another active member first.');
+          return;
+        }
+      }
 
       try {
+        console.log('Updating isAdmin from', member.isAdmin, 'to', !member.isAdmin);
         await fbDb.collection('firms').doc(currentFirmId)
           .collection('members').doc(uid)
           .update({ isAdmin: !member.isAdmin });
@@ -3971,6 +4547,7 @@
         toast('Failed to update: ' + e.message);
       }
     }
+    window.toggleMemberAdmin = toggleMemberAdmin;
 
     async function removeMember(uid) {
       if (uid === currentUser.uid) {
@@ -3986,6 +4563,7 @@
 
         await loadFirmMembers();
         renderTeamList();
+        renderTasks(); // Refresh task assignment dropdowns
         toast('Member removed');
 
       } catch (e) {
@@ -3993,6 +4571,126 @@
         toast('Failed to remove: ' + e.message);
       }
     }
+    window.removeMember = removeMember;
+
+    // ===== Edit Member Functions =====
+
+    function openEditMember(uid) {
+      const member = firmMembers.find(m => m.uid === uid);
+      if (!member) {
+        toast('Member not found');
+        return;
+      }
+
+      // Store UID
+      document.getElementById('editMemberUid').value = uid;
+      document.getElementById('editMemberEmail').value = member.email || '';
+      document.getElementById('editMemberName').value = member.displayName || '';
+
+      // Populate role dropdown
+      const roleSelect = document.getElementById('editMemberRole');
+      const roleNames = getRoleNames();
+      roleSelect.innerHTML = roleNames.map(r => `<option value="${r}">${r}</option>`).join('');
+      roleSelect.value = member.role || roleNames[0];
+
+      // Populate reports to dropdown (exclude self)
+      const reportsToSelect = document.getElementById('editMemberReportsTo');
+      const otherMembers = firmMembers.filter(m => m.uid !== uid);
+      reportsToSelect.innerHTML = '<option value="">No Supervisor</option>' +
+        otherMembers.map(m => `<option value="${m.uid}">${m.displayName || m.email}</option>`).join('');
+      reportsToSelect.value = member.reportsTo || '';
+
+      // Populate team dropdown
+      const teamSelect = document.getElementById('editMemberTeam');
+      teamSelect.innerHTML = '<option value="">No Team</option>' +
+        masterTeamNames.map(t => `<option value="${t}">${t}</option>`).join('');
+      teamSelect.value = member.team || '';
+
+      // Populate state dropdown
+      const stateSelect = document.getElementById('editMemberState');
+      stateSelect.innerHTML = '<option value="">Select State</option>' +
+        AU_STATES.map(s => `<option value="${s.code}">${s.name}</option>`).join('');
+      stateSelect.value = member.state || '';
+
+      // Set admin checkbox
+      document.getElementById('editMemberIsAdmin').checked = member.isAdmin || false;
+
+      // Setup delete button
+      const deleteBtn = document.getElementById('editMemberDeleteBtn');
+      const isCurrentUser = uid === currentUser.uid;
+      if (isCurrentUser) {
+        deleteBtn.disabled = true;
+        deleteBtn.title = 'Cannot remove yourself';
+        deleteBtn.style.opacity = '0.5';
+      } else {
+        deleteBtn.disabled = false;
+        deleteBtn.title = '';
+        deleteBtn.style.opacity = '1';
+        deleteBtn.onclick = () => {
+          if (confirm('Remove this team member?')) {
+            removeMember(uid);
+            hideModal('editMemberModalBackdrop');
+          }
+        };
+      }
+
+      document.getElementById('editMemberModalBackdrop').style.display = 'flex';
+    }
+    window.openEditMember = openEditMember;
+
+    async function saveEditMember() {
+      const uid = document.getElementById('editMemberUid').value;
+      const displayName = document.getElementById('editMemberName').value.trim();
+      const role = document.getElementById('editMemberRole').value;
+      const reportsTo = document.getElementById('editMemberReportsTo').value || null;
+      const team = document.getElementById('editMemberTeam').value || null;
+      const state = document.getElementById('editMemberState').value || null;
+      const isAdmin = document.getElementById('editMemberIsAdmin').checked;
+
+      if (!displayName) {
+        toast('Display name is required');
+        return;
+      }
+
+      const member = firmMembers.find(m => m.uid === uid);
+      if (!member) {
+        toast('Member not found');
+        return;
+      }
+
+      // Check if removing admin status from last active admin
+      if (member.isAdmin && !isAdmin) {
+        const activeAdminCount = firmMembers.filter(m => m.isAdmin && m.status !== 'pending').length;
+        if (activeAdminCount <= 1) {
+          toast('Cannot remove the last active admin. Promote another active member first.');
+          return;
+        }
+      }
+
+      try {
+        await fbDb.collection('firms').doc(currentFirmId)
+          .collection('members').doc(uid)
+          .update({
+            displayName,
+            role,
+            reportsTo,
+            team,
+            state,
+            isAdmin
+          });
+
+        await loadFirmMembers();
+        renderTeamList();
+        renderTasks(); // Refresh task assignment dropdowns
+        hideModal('editMemberModalBackdrop');
+        toast('Member updated');
+
+      } catch (e) {
+        console.error('Failed to update member:', e);
+        toast('Failed to update: ' + e.message);
+      }
+    }
+    window.saveEditMember = saveEditMember;
 
     // ===== Role Management Functions =====
 
@@ -4287,7 +4985,418 @@
 
       if (membersToUpdate.length > 0) {
         await loadFirmMembers();
+        renderTasks(); // Refresh task assignment dropdowns
       }
+    }
+
+    // ===== Holidays Management Functions =====
+
+    function showHolidaysModal() {
+      const hasAdminAccess = window.isAppAdmin || window.isAdminOverride || currentMember?.isAdmin;
+      if (!isInFirmMode() || !hasAdminAccess) {
+        toast('Only firm admins can manage holidays');
+        return;
+      }
+      loadFirmHolidays();
+      document.getElementById('holidaysModalBackdrop').style.display = 'flex';
+    }
+
+    // Quiet version - loads holidays without updating UI (for initial firm load)
+    async function loadFirmHolidaysQuiet() {
+      if (!currentFirmId) return;
+
+      try {
+        const settings = currentFirmData?.settings || {};
+        const stateCode = settings.state || 'NSW';
+        const customDays = settings.blockedDays || [];
+
+        // Generate public holidays for current and next year
+        const currentYear = new Date().getFullYear();
+        const publicHolidays = [
+          ...getAustralianPublicHolidays(currentYear, stateCode),
+          ...getAustralianPublicHolidays(currentYear + 1, stateCode)
+        ];
+
+        // Merge into firmHolidays
+        firmHolidays = [
+          ...publicHolidays.map(h => ({ ...h, enabled: true })),
+          ...customDays.map(d => ({ ...d, type: 'firm' }))
+        ];
+      } catch (e) {
+        console.error('Failed to load firm holidays:', e);
+      }
+    }
+
+    async function loadFirmHolidays() {
+      if (!currentFirmId) return;
+
+      try {
+        const firmDoc = await fbDb.collection('firms').doc(currentFirmId).get();
+        const data = firmDoc.data() || {};
+        const settings = data.settings || {};
+
+        // Get configured state, default to NSW
+        const stateCode = settings.state || 'NSW';
+        document.getElementById('firmStateSelect').value = stateCode;
+
+        // Get custom blocked days
+        const customDays = settings.blockedDays || [];
+
+        // Generate public holidays for current and next year
+        const currentYear = new Date().getFullYear();
+        const publicHolidays = [
+          ...getAustralianPublicHolidays(currentYear, stateCode),
+          ...getAustralianPublicHolidays(currentYear + 1, stateCode)
+        ];
+
+        // Merge into firmHolidays
+        firmHolidays = [
+          ...publicHolidays.map(h => ({ ...h, enabled: true })),
+          ...customDays.map(d => ({ ...d, type: 'firm' }))
+        ];
+
+        renderHolidaysList();
+      } catch (e) {
+        console.error('Failed to load firm holidays:', e);
+        toast('Failed to load holidays');
+      }
+    }
+
+    function renderHolidaysList() {
+      const container = document.getElementById('holidaysListContainer');
+      if (!container) return;
+
+      // Separate public and custom
+      const publicHols = firmHolidays.filter(h => h.type === 'public' || h.type === 'national' || h.type === 'state');
+      const customDays = firmHolidays.filter(h => h.type === 'firm');
+
+      // Sort by date
+      publicHols.sort((a, b) => a.date.localeCompare(b.date));
+      customDays.sort((a, b) => a.date.localeCompare(b.date));
+
+      const formatDate = (d) => {
+        const date = new Date(d + 'T00:00:00');
+        return date.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      };
+
+      container.innerHTML = `
+        <div style="margin-bottom:20px;">
+          <h4 style="color:var(--teal); margin-bottom:10px; font-size:14px;">Public Holidays</h4>
+          <div style="max-height:200px; overflow-y:auto; background:var(--panel-2); border-radius:8px; padding:8px;">
+            ${publicHols.length === 0 ? '<div style="color:var(--muted); padding:8px;">No public holidays configured</div>' :
+              publicHols.map(h => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border);">
+                  <span style="color:var(--text);">${escapeHtml(h.name)}</span>
+                  <span style="color:var(--muted); font-size:12px;">${formatDate(h.date)}</span>
+                </div>
+              `).join('')}
+          </div>
+        </div>
+
+        <div>
+          <h4 style="color:var(--teal); margin-bottom:10px; font-size:14px;">Custom Blocked Days</h4>
+          <div style="background:var(--panel-2); border-radius:8px; padding:8px;">
+            ${customDays.length === 0 ? '<div style="color:var(--muted); padding:8px;">No custom blocked days</div>' :
+              customDays.map((d, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border);">
+                  <span style="color:var(--text);">${escapeHtml(d.name)}</span>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="color:var(--muted); font-size:12px;">${formatDate(d.date)}</span>
+                    <button type="button" onclick="removeCustomBlockedDay('${d.date}')"
+                      style="width:24px; height:24px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:12px;"
+                      title="Remove">×</button>
+                  </div>
+                </div>
+              `).join('')}
+          </div>
+        </div>
+      `;
+    }
+    window.renderHolidaysList = renderHolidaysList;
+
+    async function updateFirmState() {
+      const stateCode = document.getElementById('firmStateSelect').value;
+
+      try {
+        await fbDb.collection('firms').doc(currentFirmId).set({
+          settings: { state: stateCode }
+        }, { merge: true });
+
+        await loadFirmHolidays();
+        toast('State updated');
+      } catch (e) {
+        console.error('Failed to update state:', e);
+        toast('Failed to update state');
+      }
+    }
+    window.updateFirmState = updateFirmState;
+
+    async function addCustomBlockedDay() {
+      const dateInput = document.getElementById('newBlockedDate');
+      const nameInput = document.getElementById('newBlockedName');
+
+      const date = dateInput.value;
+      const name = nameInput.value.trim();
+
+      if (!date) {
+        toast('Please select a date');
+        return;
+      }
+      if (!name) {
+        toast('Please enter a name');
+        return;
+      }
+
+      try {
+        const firmRef = fbDb.collection('firms').doc(currentFirmId);
+        const firmDoc = await firmRef.get();
+        const settings = firmDoc.data()?.settings || {};
+        const blockedDays = settings.blockedDays || [];
+
+        // Check for duplicate
+        if (blockedDays.some(d => d.date === date)) {
+          toast('This date is already blocked');
+          return;
+        }
+
+        blockedDays.push({ date, name, type: 'firm' });
+
+        await firmRef.set({ settings: { blockedDays } }, { merge: true });
+
+        dateInput.value = '';
+        nameInput.value = '';
+
+        await loadFirmHolidays();
+        toast('Blocked day added');
+      } catch (e) {
+        console.error('Failed to add blocked day:', e);
+        toast('Failed to add blocked day');
+      }
+    }
+    window.addCustomBlockedDay = addCustomBlockedDay;
+
+    async function removeCustomBlockedDay(date) {
+      try {
+        const firmRef = fbDb.collection('firms').doc(currentFirmId);
+        const firmDoc = await firmRef.get();
+        const settings = firmDoc.data()?.settings || {};
+        let blockedDays = settings.blockedDays || [];
+
+        blockedDays = blockedDays.filter(d => d.date !== date);
+
+        await firmRef.set({ settings: { blockedDays } }, { merge: true });
+
+        await loadFirmHolidays();
+        toast('Blocked day removed');
+      } catch (e) {
+        console.error('Failed to remove blocked day:', e);
+        toast('Failed to remove blocked day');
+      }
+    }
+    window.removeCustomBlockedDay = removeCustomBlockedDay;
+
+    // Check if a date is a holiday or blocked day (firm-wide)
+    function isHolidayOrBlocked(dateStr) {
+      return firmHolidays.some(h => h.date === dateStr);
+    }
+
+    // Check if a date is a holiday for a specific member (uses their state)
+    function isHolidayForMember(dateStr, memberUid) {
+      // Always check firm-level custom blocked days
+      const firmBlocked = firmHolidays.some(h => h.date === dateStr && h.type === 'firm');
+      if (firmBlocked) return true;
+
+      // Get member's state for public holidays
+      const member = firmMembers.find(m => m.uid === memberUid);
+      const memberState = member?.state;
+
+      if (!memberState) {
+        // Fall back to firm-wide holidays if member has no state set
+        return firmHolidays.some(h => h.date === dateStr);
+      }
+
+      // Check if date is a public holiday in member's state
+      const year = parseInt(dateStr.substring(0, 4));
+      const memberHolidays = getAustralianPublicHolidays(year, memberState);
+      return memberHolidays.some(h => h.date === dateStr);
+    }
+
+    function getHolidayName(dateStr) {
+      const holiday = firmHolidays.find(h => h.date === dateStr);
+      return holiday ? holiday.name : null;
+    }
+
+    function getHolidayNameForMember(dateStr, memberUid) {
+      // Check firm blocked days first
+      const firmHoliday = firmHolidays.find(h => h.date === dateStr && h.type === 'firm');
+      if (firmHoliday) return firmHoliday.name;
+
+      // Get member's state for public holidays
+      const member = firmMembers.find(m => m.uid === memberUid);
+      const memberState = member?.state;
+
+      if (!memberState) {
+        const holiday = firmHolidays.find(h => h.date === dateStr);
+        return holiday ? holiday.name : null;
+      }
+
+      // Check member's state holidays
+      const year = parseInt(dateStr.substring(0, 4));
+      const memberHolidays = getAustralianPublicHolidays(year, memberState);
+      const holiday = memberHolidays.find(h => h.date === dateStr);
+      return holiday ? holiday.name : null;
+    }
+
+    // ===== User Leave Management =====
+
+    let currentLeaveMemberUid = null;
+
+    function openMemberLeave(uid) {
+      const member = firmMembers.find(m => m.uid === uid);
+      if (!member) return;
+
+      currentLeaveMemberUid = uid;
+      document.getElementById('leaveMemberName').textContent = member.displayName || member.email;
+      renderLeaveList();
+      document.getElementById('leaveModalBackdrop').style.display = 'flex';
+    }
+    window.openMemberLeave = openMemberLeave;
+
+    function renderLeaveList() {
+      const container = document.getElementById('leaveListContainer');
+      if (!container || !currentLeaveMemberUid) return;
+
+      const member = firmMembers.find(m => m.uid === currentLeaveMemberUid);
+      const leave = member?.leave || [];
+
+      // Sort by start date
+      const sorted = [...leave].sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+      const formatDate = (d) => {
+        const date = new Date(d + 'T00:00:00');
+        return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+      };
+
+      const today = new Date().toISOString().split('T')[0];
+
+      container.innerHTML = sorted.length === 0
+        ? '<div style="padding:16px; text-align:center; color:var(--muted);">No leave scheduled</div>'
+        : sorted.map((l, idx) => {
+          const isPast = l.endDate < today;
+          const isCurrent = l.startDate <= today && l.endDate >= today;
+          const statusStyle = isPast ? 'opacity:0.5;' : (isCurrent ? 'background:rgba(20,184,166,0.1);' : '');
+          const statusLabel = isPast ? ' (Past)' : (isCurrent ? ' (Current)' : '');
+
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); ${statusStyle}">
+              <div>
+                <div style="font-weight:600; color:var(--text);">${escapeHtml(l.type || 'Leave')}${statusLabel}</div>
+                <div style="font-size:12px; color:var(--muted);">${formatDate(l.startDate)} - ${formatDate(l.endDate)}</div>
+                ${l.notes ? `<div style="font-size:11px; color:var(--muted); margin-top:2px;">${escapeHtml(l.notes)}</div>` : ''}
+              </div>
+              <button type="button" onclick="removeMemberLeave(${idx})"
+                style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:14px;"
+                title="Remove">×</button>
+            </div>
+          `;
+        }).join('');
+    }
+    window.renderLeaveList = renderLeaveList;
+
+    async function addMemberLeave() {
+      if (!currentLeaveMemberUid) return;
+
+      const startDate = document.getElementById('leaveStartDate').value;
+      const endDate = document.getElementById('leaveEndDate').value;
+      const type = document.getElementById('leaveType').value;
+      const notes = document.getElementById('leaveNotes').value.trim();
+
+      if (!startDate || !endDate) {
+        toast('Please select start and end dates');
+        return;
+      }
+
+      if (endDate < startDate) {
+        toast('End date must be after start date');
+        return;
+      }
+
+      try {
+        const memberRef = fbDb.collection('firms').doc(currentFirmId)
+          .collection('members').doc(currentLeaveMemberUid);
+
+        const memberDoc = await memberRef.get();
+        const leave = memberDoc.data()?.leave || [];
+
+        leave.push({
+          startDate,
+          endDate,
+          type,
+          notes,
+          addedAt: new Date().toISOString()
+        });
+
+        await memberRef.update({ leave });
+
+        // Refresh member data
+        await loadFirmMembers();
+        renderLeaveList();
+        renderTeamList();
+
+        // Clear form
+        document.getElementById('leaveStartDate').value = '';
+        document.getElementById('leaveEndDate').value = '';
+        document.getElementById('leaveType').value = 'Annual Leave';
+        document.getElementById('leaveNotes').value = '';
+
+        toast('Leave added');
+      } catch (e) {
+        console.error('Failed to add leave:', e);
+        toast('Failed to add leave');
+      }
+    }
+    window.addMemberLeave = addMemberLeave;
+
+    async function removeMemberLeave(idx) {
+      if (!currentLeaveMemberUid) return;
+
+      try {
+        const memberRef = fbDb.collection('firms').doc(currentFirmId)
+          .collection('members').doc(currentLeaveMemberUid);
+
+        const memberDoc = await memberRef.get();
+        let leave = memberDoc.data()?.leave || [];
+
+        leave.splice(idx, 1);
+
+        await memberRef.update({ leave });
+
+        await loadFirmMembers();
+        renderLeaveList();
+        renderTeamList();
+
+        toast('Leave removed');
+      } catch (e) {
+        console.error('Failed to remove leave:', e);
+        toast('Failed to remove leave');
+      }
+    }
+    window.removeMemberLeave = removeMemberLeave;
+
+    // Check if a member is on leave for a specific date
+    function isMemberOnLeave(memberUid, dateStr) {
+      const member = firmMembers.find(m => m.uid === memberUid);
+      if (!member || !member.leave) return false;
+
+      return member.leave.some(l => dateStr >= l.startDate && dateStr <= l.endDate);
+    }
+
+    function getMemberLeaveType(memberUid, dateStr) {
+      const member = firmMembers.find(m => m.uid === memberUid);
+      if (!member || !member.leave) return null;
+
+      const leave = member.leave.find(l => dateStr >= l.startDate && dateStr <= l.endDate);
+      return leave ? leave.type : null;
     }
 
     async function createFirmClient(name) {
@@ -4328,60 +5437,574 @@
     // ===== Schedule Modal =====
     let currentScheduleTaskIndex = null;
     let openedFromGantt = false;
-
-    let scheduleMode = 'single'; // 'single' or 'range'
+    let scheduleFilterMemberUid = null; // null = show all, or specific uid
+    let schedGridDateFrom = null;
+    let schedGridDateTo = null;
 
     function openScheduleModal(taskIndex) {
       openedFromGantt = false;
       currentScheduleTaskIndex = taskIndex;
+      scheduleFilterMemberUid = null;
       const task = tasks[taskIndex];
       const taskName = task.description || 'Untitled';
       const clientName = task.client || 'No Client';
       document.getElementById('schedTaskName').textContent = `${taskName} - ${clientName}`;
-      renderScheduleList();
+
+      // Set default date range (2 weeks from today)
+      const today = new Date();
+      const twoWeeksLater = new Date();
+      twoWeeksLater.setDate(today.getDate() + 13);
+
+      schedGridDateFrom = today;
+      schedGridDateTo = twoWeeksLater;
+
+      document.getElementById('schedGridDateFrom').value = formatDateLocal(today);
+      document.getElementById('schedGridDateTo').value = formatDateLocal(twoWeeksLater);
+      document.getElementById('schedNewDate').value = formatDateLocal(today);
+
+      renderScheduleGrid();
       showModal('scheduleModalBackdrop');
-
-      // Set default dates
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('schedNewDate').value = today;
-      document.getElementById('schedRangeStart').value = today;
-
-      // Set default end date to 1 week from now
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      document.getElementById('schedRangeEnd').value = nextWeek.toISOString().split('T')[0];
-
-      // Reset to single mode
-      setScheduleMode('single');
     }
 
     function openScheduleModalFromGantt(taskIndex) {
       openedFromGantt = true;
       currentScheduleTaskIndex = taskIndex;
+      scheduleFilterMemberUid = null;
       const task = tasks[taskIndex];
       const taskName = task.description || 'Untitled';
       const clientName = task.client || 'No Client';
       document.getElementById('schedTaskName').textContent = `${taskName} - ${clientName}`;
-      renderScheduleList();
+
+      // Set default date range (2 weeks from today)
+      const today = new Date();
+      const twoWeeksLater = new Date();
+      twoWeeksLater.setDate(today.getDate() + 13);
+
+      schedGridDateFrom = today;
+      schedGridDateTo = twoWeeksLater;
+
+      document.getElementById('schedGridDateFrom').value = formatDateLocal(today);
+      document.getElementById('schedGridDateTo').value = formatDateLocal(twoWeeksLater);
+      document.getElementById('schedNewDate').value = formatDateLocal(today);
+
+      renderScheduleGrid();
       showModal('scheduleModalBackdrop');
+    }
 
-      // Set default dates
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('schedNewDate').value = today;
-      document.getElementById('schedRangeStart').value = today;
+    function updateScheduleGridDateRange() {
+      const fromVal = document.getElementById('schedGridDateFrom').value;
+      const toVal = document.getElementById('schedGridDateTo').value;
+      if (fromVal) schedGridDateFrom = new Date(fromVal);
+      if (toVal) schedGridDateTo = new Date(toVal);
+      renderScheduleGrid();
+    }
 
-      // Set default end date to 1 week from now
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      document.getElementById('schedRangeEnd').value = nextWeek.toISOString().split('T')[0];
+    function renderScheduleGrid() {
+      const task = tasks[currentScheduleTaskIndex];
+      const team = task.team || [];
+      const schedules = task.schedules || [];
+      const container = document.getElementById('scheduleGridContainer');
+      const legacyView = document.getElementById('scheduleLegacyView');
+      const weekdaysOnly = document.getElementById('schedGridWeekdaysOnly').checked;
 
-      // Reset to single mode
-      setScheduleMode('single');
+      // If no team or solo mode, show legacy view
+      if (!isInFirmMode() || team.length === 0) {
+        container.style.display = 'none';
+        legacyView.style.display = 'block';
+        renderScheduleList();
+        return;
+      }
+
+      container.style.display = 'block';
+      legacyView.style.display = 'none';
+
+      // Generate dates in range
+      const dates = [];
+      const current = new Date(schedGridDateFrom);
+      while (current <= schedGridDateTo) {
+        const dayOfWeek = current.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        if (!weekdaysOnly || !isWeekend) {
+          dates.push(new Date(current));
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      if (dates.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:40px;">No dates in selected range</div>';
+        return;
+      }
+
+      // Build schedule lookup: { "date|memberUid": schedule }
+      const schedLookup = {};
+      schedules.forEach(s => {
+        const key = `${s.date}|${s.memberUid || ''}`;
+        schedLookup[key] = s;
+      });
+
+      // Fixed column widths (compact)
+      const memberColWidth = 42;
+      const dateColWidth = 40;
+      const totalColWidth = 24;
+
+      // Build grid HTML
+      let html = `<div style="overflow-x:auto; overflow-y:auto; max-height:60vh;">
+        <table style="border-collapse:collapse; font-size:11px; table-layout:fixed;">
+          <thead style="position:sticky; top:0; z-index:3;">
+            <tr style="background:var(--panel);">
+              <th style="padding:2px 2px; text-align:left; border:1px solid var(--border); position:sticky; left:0; background:var(--panel); z-index:4; width:${dateColWidth}px; font-size:8px;"></th>
+              ${team.map(m => {
+                const name = getMemberDisplayName(m.uid);
+                const shortName = name.split(' ')[0].substring(0, 5);
+                const isPending = isMemberPending(m.uid);
+                const roleAbbrev = (m.jobRole || '').substring(0, 4);
+                return `<th class="sched-member-header" data-member-uid="${m.uid}" style="padding:2px 1px; text-align:center; border:1px solid var(--border); width:${memberColWidth}px; cursor:pointer; background:var(--panel);" title="Click to add/edit hours for ${escapeHtml(name)} (${m.jobRole})">
+                  <div style="font-weight:600; font-size:8px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(shortName)}</div>
+                  <div style="font-size:7px; color:var(--muted); font-weight:400;">${escapeHtml(roleAbbrev)}${isPending ? '*' : ''}</div>
+                </th>`;
+              }).join('')}
+              <th style="padding:2px 1px; text-align:center; border:1px solid var(--border); width:${totalColWidth}px; background:var(--panel-2); font-size:7px;">Tot</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      dates.forEach(date => {
+        const dateStr = formatDateLocal(date);
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isToday = date.getTime() === today.getTime();
+        const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek];
+        const monthDay = `${date.getDate()}/${date.getMonth() + 1}`;
+
+        let rowTotal = 0;
+
+        html += `<tr style="background:${isToday ? 'rgba(20,184,166,0.1)' : isWeekend ? 'var(--panel-2)' : 'var(--bg)'};">
+          <td style="padding:1px 2px; border:1px solid var(--border); position:sticky; left:0; background:${isToday ? 'rgba(20,184,166,0.15)' : isWeekend ? 'var(--panel-2)' : 'var(--panel)'}; z-index:1; white-space:nowrap; font-size:7px; width:${dateColWidth}px;">
+            <span style="font-weight:${isToday ? '700' : '400'}; color:${isToday ? 'var(--teal)' : 'var(--text)'};">${dayName}</span>
+            <span style="color:var(--muted); margin-left:1px;">${monthDay}</span>
+          </td>`;
+
+        team.forEach(m => {
+          const key = `${dateStr}|${m.uid}`;
+          const sched = schedLookup[key];
+          const hours = sched?.hours || '';
+          const status = sched?.status || 'locked';
+          const schedId = sched?.id || '';
+
+          if (hours) rowTotal += parseFloat(hours) || 0;
+
+          // Status color indicator
+          const statusColor = status === 'locked' ? '#22c55e' : status === 'likely' ? '#3b82f6' : '#f59e0b';
+          const statusBorder = hours ? `border-left:3px solid ${statusColor}` : '';
+
+          html += `<td style="padding:0; border:1px solid var(--border); text-align:center; width:${memberColWidth}px; ${statusBorder}">
+            <input type="number"
+              class="sched-grid-input"
+              data-date="${dateStr}"
+              data-member="${m.uid}"
+              data-sched-id="${schedId}"
+              value="${hours}"
+              min="0" max="24" step="0.5"
+              placeholder="—"
+              style="width:100%; height:18px; text-align:center; font-size:9px; font-weight:${hours ? '600' : '400'};
+                background:${hours ? 'var(--panel-2)' : 'transparent'};
+                border:1px solid ${hours ? 'rgba(20,184,166,0.55)' : 'transparent'};
+                border-radius:2px; color:var(--text);"
+            />
+          </td>`;
+        });
+
+        html += `<td style="padding:1px; border:1px solid var(--border); text-align:center; font-weight:600; font-size:7px; background:var(--panel-2); width:${totalColWidth}px; color:${rowTotal > 0 ? 'var(--text)' : 'var(--muted)'};">
+          ${rowTotal > 0 ? rowTotal : ''}
+        </td></tr>`;
+      });
+
+      // Totals row
+      html += `<tr style="background:var(--panel); font-weight:600; font-size:7px;">
+        <td style="padding:1px 2px; border:1px solid var(--border); position:sticky; left:0; background:var(--panel); z-index:1; width:${dateColWidth}px;">Tot</td>`;
+
+      let grandTotal = 0;
+      team.forEach(m => {
+        let memberTotal = 0;
+        schedules.filter(s => s.memberUid === m.uid).forEach(s => {
+          memberTotal += s.hours || 0;
+        });
+        grandTotal += memberTotal;
+        html += `<td style="padding:1px; border:1px solid var(--border); text-align:center; width:${memberColWidth}px; color:${memberTotal > 0 ? 'var(--teal)' : 'var(--muted)'};">
+          ${memberTotal > 0 ? memberTotal : ''}
+        </td>`;
+      });
+
+      html += `<td style="padding:1px; border:1px solid var(--border); text-align:center; background:var(--teal); color:white; width:${totalColWidth}px;">
+        ${grandTotal}
+      </td></tr>`;
+
+      html += `</tbody></table></div>`;
+
+      container.innerHTML = html;
+
+      // Add event listeners to inputs
+      container.querySelectorAll('.sched-grid-input').forEach(input => {
+        input.addEventListener('change', handleScheduleGridInputChange);
+        input.addEventListener('focus', (e) => e.target.select());
+      });
+
+      // Add click listeners to member headers for range popout
+      container.querySelectorAll('.sched-member-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+          const memberUid = header.dataset.memberUid;
+          openMemberRangePopout(memberUid, header);
+        });
+      });
+
+      // Update summary
+      document.getElementById('schedTotalHours').textContent = `${grandTotal}h`;
+      const breakdown = team.map(m => {
+        const memberTotal = schedules.filter(s => s.memberUid === m.uid).reduce((sum, s) => sum + (s.hours || 0), 0);
+        return `${getMemberDisplayName(m.uid).split(' ')[0]}: ${memberTotal}h`;
+      }).join(' | ');
+      document.getElementById('schedMemberBreakdown').textContent = breakdown ? `(${breakdown})` : '';
+    }
+
+    function handleScheduleGridInputChange(e) {
+      const input = e.target;
+      const dateStr = input.dataset.date;
+      const memberUid = input.dataset.member;
+      const schedId = input.dataset.schedId;
+      const newHours = parseFloat(input.value) || 0;
+      const defaultStatus = document.getElementById('schedGridDefaultStatus').value;
+
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task.schedules) task.schedules = [];
+
+      if (schedId) {
+        // Update existing schedule
+        const sched = task.schedules.find(s => s.id === schedId);
+        if (sched) {
+          if (newHours > 0) {
+            sched.hours = newHours;
+          } else {
+            // Remove if hours is 0
+            task.schedules = task.schedules.filter(s => s.id !== schedId);
+          }
+        }
+      } else if (newHours > 0) {
+        // Add new schedule
+        task.schedules.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+          date: dateStr,
+          hours: newHours,
+          status: defaultStatus,
+          memberUid: memberUid
+        });
+      }
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      // Re-render to update totals and styling
+      renderScheduleGrid();
+      renderTasks();
+    }
+
+    // Member Range Popout functionality
+    let memberRangeCurrentUid = null;
+
+    function openMemberRangePopout(memberUid, anchorElement) {
+      const popout = document.getElementById('memberRangePopout');
+      const title = document.getElementById('memberRangeTitle');
+      const selectorRow = document.getElementById('memberRangeSelectorRow');
+      const selector = document.getElementById('memberRangeSelector');
+
+      const task = tasks[currentScheduleTaskIndex];
+      const team = task?.team || [];
+
+      // Populate member selector
+      selector.innerHTML = team.map(m =>
+        `<option value="${m.uid}">${escapeHtml(getMemberDisplayName(m.uid))} (${m.jobRole})</option>`
+      ).join('');
+
+      if (memberUid) {
+        // Opened from specific member header - hide selector, use that member
+        memberRangeCurrentUid = memberUid;
+        selectorRow.style.display = 'none';
+        title.textContent = `Schedule: ${getMemberDisplayName(memberUid)}`;
+        selector.value = memberUid;
+      } else {
+        // Opened from Add Range button - show selector
+        selectorRow.style.display = 'block';
+        title.textContent = 'Add Hours';
+        memberRangeCurrentUid = team.length > 0 ? team[0].uid : null;
+        if (memberRangeCurrentUid) selector.value = memberRangeCurrentUid;
+      }
+
+      // Set default date range from the schedule grid
+      const fromDate = document.getElementById('schedGridDateFrom').value;
+      const toDate = document.getElementById('schedGridDateTo').value;
+      document.getElementById('memberRangeFrom').value = fromDate;
+      document.getElementById('memberRangeTo').value = toDate;
+      document.getElementById('memberRangeClearFrom').value = fromDate;
+      document.getElementById('memberRangeClearTo').value = toDate;
+
+      // Position popout
+      if (anchorElement) {
+        const rect = anchorElement.getBoundingClientRect();
+        popout.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+        popout.style.top = Math.min(rect.bottom + 8, window.innerHeight - 400) + 'px';
+      } else {
+        // Center horizontally in the modal
+        popout.style.left = '50%';
+        popout.style.top = '150px';
+        popout.style.transform = 'translateX(-50%)';
+      }
+      popout.style.display = 'block';
+
+      // Reset to Add tab
+      switchMemberRangeTab('add');
+
+      // Render edit list
+      renderMemberRangeEditList();
+    }
+
+    function closeMemberRangePopout() {
+      const popout = document.getElementById('memberRangePopout');
+      popout.style.display = 'none';
+      popout.style.transform = '';
+      memberRangeCurrentUid = null;
+    }
+
+    function switchMemberRangeTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.member-range-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+
+      // Show/hide content
+      document.getElementById('memberRangeAddTab').style.display = tabName === 'add' ? 'block' : 'none';
+      document.getElementById('memberRangeEditTab').style.display = tabName === 'edit' ? 'block' : 'none';
+      document.getElementById('memberRangeClearTab').style.display = tabName === 'clear' ? 'block' : 'none';
+
+      // Refresh edit list when switching to edit tab
+      if (tabName === 'edit') {
+        renderMemberRangeEditList();
+      }
+    }
+
+    function addMemberRangeHours() {
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task || !memberRangeCurrentUid) return;
+
+      const fromDate = document.getElementById('memberRangeFrom').value;
+      const toDate = document.getElementById('memberRangeTo').value;
+      const hours = parseFloat(document.getElementById('memberRangeHours').value);
+      const status = document.getElementById('memberRangeStatus').value;
+      const weekdaysOnly = document.getElementById('memberRangeWeekdays').checked;
+
+      if (!fromDate || !toDate) {
+        toast('Please select date range');
+        return;
+      }
+      if (!hours || hours <= 0) {
+        toast('Please enter hours per day');
+        return;
+      }
+
+      if (!task.schedules) task.schedules = [];
+
+      const start = new Date(fromDate);
+      const end = new Date(toDate);
+      let addedCount = 0;
+
+      const current = new Date(start);
+      while (current <= end) {
+        const dayOfWeek = current.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        if (!weekdaysOnly || !isWeekend) {
+          const dateStr = formatDateLocal(current);
+
+          // Check if entry already exists for this member on this date
+          const existingIdx = task.schedules.findIndex(s =>
+            s.date === dateStr && s.memberUid === memberRangeCurrentUid
+          );
+
+          if (existingIdx >= 0) {
+            // Update existing
+            task.schedules[existingIdx].hours = hours;
+            task.schedules[existingIdx].status = status;
+          } else {
+            // Add new
+            task.schedules.push({
+              id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random() + addedCount,
+              date: dateStr,
+              hours: hours,
+              status: status,
+              memberUid: memberRangeCurrentUid
+            });
+          }
+          addedCount++;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      toast(`Added ${addedCount} schedule entries`);
+      renderScheduleGrid();
+      renderTasks();
+      renderMemberRangeEditList();
+    }
+
+    function renderMemberRangeEditList() {
+      const task = tasks[currentScheduleTaskIndex];
+      const container = document.getElementById('memberRangeEditList');
+
+      if (!task || !memberRangeCurrentUid) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:20px;">No entries</div>';
+        return;
+      }
+
+      // Get schedules for this member, sorted by date
+      const memberSchedules = (task.schedules || [])
+        .filter(s => s.memberUid === memberRangeCurrentUid)
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      if (memberSchedules.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:12px; font-size:10px;">No scheduled hours</div>';
+        return;
+      }
+
+      container.innerHTML = memberSchedules.map(sched => {
+        const date = new Date(sched.date);
+        const dayName = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][date.getDay()];
+        const dateDisplay = `${dayName} ${date.getDate()}/${date.getMonth() + 1}`;
+        const statusColor = sched.status === 'locked' ? '#22c55e' : sched.status === 'likely' ? '#3b82f6' : '#f59e0b';
+
+        return `
+          <div class="member-range-entry" data-sched-id="${sched.id}" style="display:flex; align-items:center; gap:4px; padding:3px 6px; background:var(--bg); border-radius:4px; border-left:2px solid ${statusColor};">
+            <span style="flex:1; font-size:10px; color:var(--text);">${dateDisplay}</span>
+            <input type="number" class="member-edit-hours" data-sched-id="${sched.id}" value="${sched.hours}" min="0.5" max="24" step="0.5" style="width:40px; height:20px; text-align:center; font-size:10px;" />
+            <select class="member-edit-status" data-sched-id="${sched.id}" style="height:20px; font-size:9px; padding:1px 2px;">
+              <option value="locked" ${sched.status === 'locked' ? 'selected' : ''}>L</option>
+              <option value="likely" ${sched.status === 'likely' ? 'selected' : ''}>Lk</option>
+              <option value="tentative" ${sched.status === 'tentative' ? 'selected' : ''}>T</option>
+            </select>
+            <button class="mini member-delete-entry" data-sched-id="${sched.id}" type="button" style="padding:1px 4px; font-size:9px; color:var(--danger); border-color:var(--danger);">✕</button>
+          </div>
+        `;
+      }).join('');
+
+      // Add event listeners
+      container.querySelectorAll('.member-edit-hours').forEach(input => {
+        input.addEventListener('change', (e) => updateMemberScheduleEntry(e.target.dataset.schedId, 'hours', parseFloat(e.target.value)));
+      });
+      container.querySelectorAll('.member-edit-status').forEach(select => {
+        select.addEventListener('change', (e) => updateMemberScheduleEntry(e.target.dataset.schedId, 'status', e.target.value));
+      });
+      container.querySelectorAll('.member-delete-entry').forEach(btn => {
+        btn.addEventListener('click', (e) => deleteMemberScheduleEntry(e.target.dataset.schedId));
+      });
+    }
+
+    function updateMemberScheduleEntry(schedId, field, value) {
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task) return;
+
+      const sched = (task.schedules || []).find(s => s.id === schedId);
+      if (sched) {
+        sched[field] = value;
+        saveTasks(false);
+        if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+        renderScheduleGrid();
+        renderTasks();
+        // Update border color if status changed
+        if (field === 'status') {
+          renderMemberRangeEditList();
+        }
+      }
+    }
+
+    function deleteMemberScheduleEntry(schedId) {
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task) return;
+
+      task.schedules = (task.schedules || []).filter(s => s.id !== schedId);
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+      renderScheduleGrid();
+      renderTasks();
+      renderMemberRangeEditList();
+    }
+
+    function clearMemberRange() {
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task || !memberRangeCurrentUid) return;
+
+      const fromDate = document.getElementById('memberRangeClearFrom').value;
+      const toDate = document.getElementById('memberRangeClearTo').value;
+      const weekdaysOnly = document.getElementById('memberRangeClearWeekdays').checked;
+
+      if (!fromDate || !toDate) {
+        toast('Please select date range to clear');
+        return;
+      }
+
+      const start = new Date(fromDate);
+      const end = new Date(toDate);
+      let removedCount = 0;
+
+      task.schedules = (task.schedules || []).filter(sched => {
+        if (sched.memberUid !== memberRangeCurrentUid) return true;
+
+        const schedDate = new Date(sched.date);
+        if (schedDate < start || schedDate > end) return true;
+
+        if (weekdaysOnly) {
+          const dayOfWeek = schedDate.getDay();
+          if (dayOfWeek === 0 || dayOfWeek === 6) return true;
+        }
+
+        removedCount++;
+        return false;
+      });
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      toast(`Cleared ${removedCount} schedule entries`);
+      renderScheduleGrid();
+      renderTasks();
+      renderMemberRangeEditList();
+    }
+
+    function setMemberRangeBulkStatus() {
+      const task = tasks[currentScheduleTaskIndex];
+      if (!task || !memberRangeCurrentUid) return;
+
+      const newStatus = document.getElementById('memberRangeBulkStatus').value;
+
+      (task.schedules || []).forEach(sched => {
+        if (sched.memberUid === memberRangeCurrentUid) {
+          sched.status = newStatus;
+        }
+      });
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+      toast('Updated all entries to ' + (newStatus === 'locked' ? 'Locked In' : newStatus === 'likely' ? 'Likely' : 'Tentative'));
+      renderScheduleGrid();
+      renderTasks();
+      renderMemberRangeEditList();
     }
 
     function closeScheduleModal() {
       hideModal('scheduleModalBackdrop');
       currentScheduleTaskIndex = null;
+      closeMemberRangePopout(); // Close any open popout
 
       // If opened from Gantt, refresh and keep Gantt visible
       if (openedFromGantt) {
@@ -4405,18 +6028,139 @@
 
     function setScheduleMode(mode) {
       scheduleMode = mode;
-      document.getElementById('schedModeSingle').classList.toggle('active', mode === 'single');
-      document.getElementById('schedModeRange').classList.toggle('active', mode === 'range');
-      document.getElementById('schedSingleMode').style.display = mode === 'single' ? 'flex' : 'none';
-      document.getElementById('schedRangeMode').style.display = mode === 'range' ? 'block' : 'none';
+      // Guard against missing legacy elements
+      const modeSingle = document.getElementById('schedModeSingle');
+      const modeRange = document.getElementById('schedModeRange');
+      const modeMatrix = document.getElementById('schedModeMatrix');
+      const singleMode = document.getElementById('schedSingleMode');
+      const rangeMode = document.getElementById('schedRangeMode');
+      const matrixMode = document.getElementById('schedMatrixMode');
+
+      if (modeSingle) modeSingle.classList.toggle('active', mode === 'single');
+      if (modeRange) modeRange.classList.toggle('active', mode === 'range');
+      if (modeMatrix) modeMatrix.classList.toggle('active', mode === 'matrix');
+      if (singleMode) singleMode.style.display = mode === 'single' ? 'flex' : 'none';
+      if (rangeMode) rangeMode.style.display = mode === 'range' ? 'block' : 'none';
+      if (matrixMode) matrixMode.style.display = mode === 'matrix' ? 'block' : 'none';
+
+      // If switching to matrix mode, render the matrix grid
+      if (mode === 'matrix') {
+        renderScheduleMatrixGrid();
+      }
     }
 
+    function renderScheduleMatrixGrid() {
+      const task = tasks[currentScheduleTaskIndex];
+      const team = task.team || [];
+      const container = document.getElementById('schedMatrixGrid');
+
+      // Guard against missing legacy container
+      if (!container) return;
+
+      if (team.length === 0) {
+        container.innerHTML = '<div class="subtle" style="padding:16px; text-align:center;">No team members assigned to this job</div>';
+        return;
+      }
+
+      let html = `
+        <div style="display:grid; grid-template-columns:1fr 80px 100px; gap:1px; background:var(--border);">
+          <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Team Member</div>
+          <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Hours</div>
+          <div style="background:var(--panel); padding:8px 12px; font-size:11px; font-weight:600; color:var(--muted);">Status</div>
+      `;
+
+      team.forEach(m => {
+        const name = getMemberDisplayName(m.uid);
+        html += `
+          <div style="background:var(--bg); padding:8px 12px; display:flex; align-items:center;">
+            <span style="color:var(--text);">${escapeHtml(name)}</span>
+            <span style="color:var(--muted); font-size:10px; margin-left:6px;">(${m.jobRole})</span>
+          </div>
+          <div style="background:var(--bg); padding:4px;">
+            <input type="number" class="matrix-hours" data-uid="${m.uid}" min="0.5" step="0.5" placeholder="—" style="width:100%; height:31px; font-size:12px; text-align:center; background:var(--panel-2); border:1px solid rgba(20,184,166,0.55); border-radius:6px; color:var(--text);" />
+          </div>
+          <div style="background:var(--bg); padding:4px;">
+            <select class="matrix-status" data-uid="${m.uid}" style="width:100%; height:31px; font-size:11px;">
+              <option value="locked">Locked</option>
+              <option value="likely">Likely</option>
+              <option value="tentative">Tentative</option>
+            </select>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function saveScheduleMatrix() {
+      const task = tasks[currentScheduleTaskIndex];
+      const dateInput = document.getElementById('schedMatrixDate');
+
+      // Guard against missing legacy element
+      if (!dateInput) return;
+
+      const date = dateInput.value;
+
+      if (!date) {
+        toast('Please select a date');
+        return;
+      }
+
+      if (!task.schedules) task.schedules = [];
+
+      let addedCount = 0;
+      const hoursInputs = document.querySelectorAll('.matrix-hours');
+
+      hoursInputs.forEach(input => {
+        const hours = parseFloat(input.value);
+        if (!hours || hours <= 0) return;
+
+        const uid = input.dataset.uid;
+        const statusSelect = document.querySelector(`.matrix-status[data-uid="${uid}"]`);
+        const status = statusSelect?.value || 'locked';
+
+        task.schedules.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random() + addedCount,
+          date: date,
+          hours: hours,
+          status: status,
+          memberUid: uid
+        });
+        addedCount++;
+      });
+
+      if (addedCount === 0) {
+        toast('No hours entered');
+        return;
+      }
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      renderScheduleList();
+      renderTasks();
+      renderScheduleMatrixGrid(); // Clear inputs
+
+      toast(`Added schedules for ${addedCount} team member${addedCount > 1 ? 's' : ''}`);
+    }
+
+    window.saveScheduleMatrix = saveScheduleMatrix;
+
     function addScheduleRange() {
-      const startDate = document.getElementById('schedRangeStart').value;
-      const endDate = document.getElementById('schedRangeEnd').value;
-      const hoursPerDay = parseFloat(document.getElementById('schedRangeHours').value);
-      const weekdaysOnly = document.getElementById('schedWeekdaysOnly').checked;
-      const status = document.getElementById('schedRangeStatus').value;
+      // Guard against missing legacy elements
+      const startInput = document.getElementById('schedRangeStart');
+      const endInput = document.getElementById('schedRangeEnd');
+      const hoursInput = document.getElementById('schedRangeHours');
+      const weekdaysInput = document.getElementById('schedWeekdaysOnly');
+      const statusInput = document.getElementById('schedRangeStatus');
+      if (!startInput || !endInput || !hoursInput) return;
+
+      const startDate = startInput.value;
+      const endDate = endInput.value;
+      const hoursPerDay = parseFloat(hoursInput.value);
+      const weekdaysOnly = weekdaysInput?.checked ?? true;
+      const status = statusInput?.value || 'locked';
 
       if (!startDate) {
         toast('Please select a start date');
@@ -4442,6 +6186,10 @@
       const task = tasks[currentScheduleTaskIndex];
       if (!task.schedules) task.schedules = [];
 
+      // Get selected member (if team has multiple members)
+      const memberSelect = document.getElementById('schedMemberSelect');
+      const memberUid = (task.team && task.team.length > 1 && memberSelect.value) ? memberSelect.value : (task.team?.[0]?.uid || task.assignedTo || null);
+
       let daysAdded = 0;
       const current = new Date(start);
 
@@ -4454,7 +6202,8 @@
             id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random() + daysAdded,
             date: current.toISOString().split('T')[0],
             hours: hoursPerDay,
-            status: status
+            status: status,
+            memberUid: memberUid
           });
           daysAdded++;
         }
@@ -4468,7 +6217,8 @@
       renderScheduleList();
       renderTasks();
 
-      toast(`Added ${daysAdded} days (${daysAdded * hoursPerDay}h total)`);
+      const memberName = memberUid ? getMemberDisplayName(memberUid) : '';
+      toast(`Added ${daysAdded} days (${daysAdded * hoursPerDay}h total)${memberName ? ` for ${memberName}` : ''}`);
 
       // Clear hours input
       document.getElementById('schedRangeHours').value = '';
@@ -4476,40 +6226,83 @@
 
     function renderScheduleList() {
       const task = tasks[currentScheduleTaskIndex];
-      const schedules = task.schedules || [];
+      const allSchedules = task.schedules || [];
       const container = document.getElementById('scheduleList');
       container.innerHTML = '';
 
+      // Filter schedules by selected member (if filter is active)
+      const schedules = scheduleFilterMemberUid
+        ? allSchedules.filter(s => s.memberUid === scheduleFilterMemberUid)
+        : allSchedules;
+
+      const hasTeam = task.team && task.team.length > 1;
+
       if (schedules.length === 0) {
-        container.innerHTML = '<div class="subtle" style="text-align:center; padding:20px;">No time scheduled yet</div>';
+        const msg = scheduleFilterMemberUid
+          ? 'No time scheduled for this team member'
+          : 'No time scheduled yet';
+        container.innerHTML = `<div class="subtle" style="text-align:center; padding:20px;">${msg}</div>`;
         document.getElementById('schedTotalHours').textContent = '0h';
+        document.getElementById('schedMemberBreakdown').textContent = '';
         return;
       }
 
-      // Sort by date
-      const sorted = [...schedules].sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Sort by date, then by member
+      const sorted = [...schedules].sort((a, b) => {
+        const dateCompare = new Date(a.date) - new Date(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        return (a.memberUid || '').localeCompare(b.memberUid || '');
+      });
 
       sorted.forEach(sched => {
         const item = document.createElement('div');
         item.className = 'schedule-item';
         const dateFormatted = formatScheduleDate(sched.date);
-        const statusIndicator = sched.status === 'locked' ? '<span style="color:#22c55e; font-size:10px; margin-left:4px;" title="Locked In">●</span>' :
-                                   sched.status === 'likely' ? '<span style="color:#3b82f6; font-size:10px; margin-left:4px;" title="Likely">●</span>' :
-                                   sched.status === 'tentative' || sched.tentative ? '<span style="color:#f59e0b; font-size:10px; margin-left:4px;" title="Tentative">●</span>' :
-                                   '<span style="color:#22c55e; font-size:10px; margin-left:4px;" title="Locked In">●</span>';
+        const currentStatus = sched.status || 'locked';
+
+        // Show member name if team has multiple members and not filtered
+        const memberName = hasTeam && !scheduleFilterMemberUid && sched.memberUid
+          ? getMemberDisplayName(sched.memberUid)
+          : '';
+        const memberBadge = memberName
+          ? `<span style="font-size:10px; color:var(--muted); background:var(--panel-2); padding:2px 6px; border-radius:4px; margin-left:4px;">${escapeHtml(memberName.split(' ')[0])}</span>`
+          : '';
+
         item.innerHTML = `
-          <span class="schedule-item-date">${dateFormatted}${statusIndicator}</span>
+          <span class="schedule-item-date">${dateFormatted}${memberBadge}</span>
+          <select class="schedule-item-status" data-id="${sched.id}" style="height:28px; font-size:11px; padding:2px 4px; border:1px solid rgba(20,184,166,0.55); border-radius:6px; background:var(--panel-2); color:var(--text); cursor:pointer;">
+            <option value="locked" ${currentStatus === 'locked' ? 'selected' : ''} style="color:#22c55e;">● Locked</option>
+            <option value="likely" ${currentStatus === 'likely' ? 'selected' : ''} style="color:#3b82f6;">● Likely</option>
+            <option value="tentative" ${currentStatus === 'tentative' ? 'selected' : ''} style="color:#f59e0b;">● Tentative</option>
+          </select>
           <input type="number" class="schedule-item-hours-input" value="${sched.hours}" min="0.5" step="0.5" data-id="${sched.id}" style="width:60px; height:28px; padding:4px 8px; border:1px solid rgba(20,184,166,0.55); border-radius:8px; background:#141420; color:#f4f7fb; font-weight:600; font-size:13px; text-align:center;" />
           <span class="schedule-item-delete" data-id="${sched.id}">×</span>
         `;
         item.querySelector('.schedule-item-delete').addEventListener('click', () => deleteScheduleBlock(sched.id));
         item.querySelector('.schedule-item-hours-input').addEventListener('change', (e) => updateScheduleHours(sched.id, e.target.value));
+        item.querySelector('.schedule-item-status').addEventListener('change', (e) => updateScheduleStatus(sched.id, e.target.value));
         container.appendChild(item);
       });
 
-      // Calculate total hours
-      const total = schedules.reduce((sum, s) => sum + (s.hours || 0), 0);
+      // Calculate total hours (all schedules, not filtered)
+      const total = allSchedules.reduce((sum, s) => sum + (s.hours || 0), 0);
       document.getElementById('schedTotalHours').textContent = `${total}h`;
+
+      // Show per-member breakdown if team has multiple members
+      const breakdownEl = document.getElementById('schedMemberBreakdown');
+      if (hasTeam && isInFirmMode()) {
+        const hoursByMember = {};
+        allSchedules.forEach(s => {
+          if (!hoursByMember[s.memberUid]) hoursByMember[s.memberUid] = 0;
+          hoursByMember[s.memberUid] += s.hours || 0;
+        });
+        const breakdown = Object.entries(hoursByMember)
+          .map(([uid, hrs]) => `${getMemberDisplayName(uid).split(' ')[0]}: ${hrs}h`)
+          .join(' | ');
+        breakdownEl.textContent = breakdown ? `(${breakdown})` : '';
+      } else {
+        breakdownEl.textContent = '';
+      }
     }
 
     function formatScheduleDate(dateStr) {
@@ -4517,6 +6310,14 @@
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
+    }
+
+    // Format date as YYYY-MM-DD in local timezone (not UTC)
+    function formatDateLocal(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
     }
 
     function addScheduleBlock() {
@@ -4539,11 +6340,16 @@
       const task = tasks[currentScheduleTaskIndex];
       if (!task.schedules) task.schedules = [];
 
+      // Get selected member (if team has multiple members)
+      const memberSelect = document.getElementById('schedMemberSelect');
+      const memberUid = (task.team && task.team.length > 1 && memberSelect.value) ? memberSelect.value : (task.team?.[0]?.uid || task.assignedTo || null);
+
       task.schedules.push({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
         date: date,
         hours: hours,
-        status: status
+        status: status,
+        memberUid: memberUid
       });
 
       saveTasks(false);
@@ -4586,6 +6392,18 @@
       }
     }
 
+    function updateScheduleStatus(blockId, newStatus) {
+      const task = tasks[currentScheduleTaskIndex];
+      const sched = (task.schedules || []).find(s => s.id === blockId);
+      if (sched) {
+        sched.status = newStatus;
+        saveTasks(false);
+        if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+        renderScheduleList();
+        renderTasks();
+      }
+    }
+
     function clearAllSchedules() {
       const task = tasks[currentScheduleTaskIndex];
       if (!task.schedules || task.schedules.length === 0) return;
@@ -4599,17 +6417,152 @@
 
     // ===== Gantt Chart =====
     let ganttZoom = 'normal'; // 'narrow', 'normal', 'wide'
-    let ganttHideWeekends = false;
+    let ganttHideWeekends = true;
     let ganttDateFrom = null;
     let ganttDateTo = null;
+    let ganttMemberFilter = null; // null = all members, or specific uid
+    let ganttJobFilter = null; // null = all jobs, or specific task index
+    let ganttExpandedTasks = new Set(); // Track which tasks have expanded rows
+
+    // Job role order for sorting team members (lowest to highest)
+    const JOB_ROLE_ORDER = { 'Preparer': 1, 'Reviewer': 2, 'Partner': 3 };
 
     function openGanttModal() {
       // Set default date range if not set
       if (!ganttDateFrom || !ganttDateTo) {
         resetGanttDateRange();
       }
+
+      // Always default to user mode - logged-in user's schedule across all jobs
+      setGanttViewMode('user');
+
+      // Populate job filter dropdown
+      setupGanttJobFilter();
+
       renderGantt();
       showModal('ganttModalBackdrop');
+    }
+
+    function setGanttViewMode(mode) {
+      const userBtn = document.getElementById('ganttViewUser');
+      const jobBtn = document.getElementById('ganttViewJob');
+      const jobSection = document.getElementById('ganttJobFilterSection');
+
+      if (mode === 'user') {
+        // User mode - show logged-in user's jobs
+        ganttJobFilter = null;
+        ganttMemberFilter = currentUser?.uid || null;
+        userBtn.classList.add('active');
+        jobBtn.classList.remove('active');
+        // Style active button
+        userBtn.style.background = 'var(--teal)';
+        userBtn.style.color = 'white';
+        userBtn.style.borderColor = 'var(--teal)';
+        jobBtn.style.background = 'var(--panel)';
+        jobBtn.style.color = 'var(--muted)';
+        jobBtn.style.borderColor = 'var(--border)';
+        jobSection.style.display = 'none';
+      } else {
+        // Job mode - show job dropdown
+        ganttMemberFilter = null;
+        userBtn.classList.remove('active');
+        jobBtn.classList.add('active');
+        // Style active button
+        jobBtn.style.background = 'var(--teal)';
+        jobBtn.style.color = 'white';
+        jobBtn.style.borderColor = 'var(--teal)';
+        userBtn.style.background = 'var(--panel)';
+        userBtn.style.color = 'var(--muted)';
+        userBtn.style.borderColor = 'var(--border)';
+        jobSection.style.display = 'inline';
+        // If no job selected yet, don't render until one is chosen
+        if (ganttJobFilter === null) {
+          document.getElementById('ganttJobFilter').value = '';
+        }
+      }
+    }
+
+    function setupGanttJobFilter() {
+      const filterSelect = document.getElementById('ganttJobFilter');
+
+      filterSelect.innerHTML = '<option value="">Select a job...</option>';
+
+      // Get tasks with team members, sorted by client then description
+      const tasksWithTeam = tasks
+        .map((t, idx) => ({ task: t, index: idx }))
+        .filter(({ task }) => task.team && task.team.length > 0 && !task.completed)
+        .sort((a, b) => {
+          const clientA = (a.task.client || '').toLowerCase();
+          const clientB = (b.task.client || '').toLowerCase();
+          if (clientA !== clientB) return clientA.localeCompare(clientB);
+          return (a.task.description || '').toLowerCase().localeCompare((b.task.description || '').toLowerCase());
+        });
+
+      tasksWithTeam.forEach(({ task, index }) => {
+        const label = `${task.client || 'No Client'} - ${(task.description || 'Untitled').substring(0, 30)}${(task.description || '').length > 30 ? '...' : ''}`;
+        filterSelect.innerHTML += `<option value="${index}">${escapeHtml(label)}</option>`;
+      });
+
+      // Add change handler
+      filterSelect.onchange = () => {
+        const val = filterSelect.value;
+        if (val !== '') {
+          ganttJobFilter = parseInt(val, 10);
+          ganttMemberFilter = null; // Job mode shows all team members
+          renderGantt();
+        }
+      };
+
+      // Restore current filter value
+      filterSelect.value = ganttJobFilter !== null ? String(ganttJobFilter) : '';
+    }
+
+    function setupGanttMemberFilter() {
+      const filterSection = document.getElementById('ganttMemberFilterSection');
+      const filterSelect = document.getElementById('ganttMemberFilter');
+
+      // In job mode, hide the member filter (team members are shown as rows)
+      if (ganttJobFilter !== null) {
+        filterSection.style.display = 'none';
+        return;
+      }
+
+      if (isInFirmMode() && firmMembers.length > 0) {
+        filterSection.style.display = 'inline';
+        filterSelect.innerHTML = '<option value="">All Members</option>';
+
+        // User mode: show all members who have schedules
+        const membersWithSchedules = new Set();
+        tasks.forEach(task => {
+          if (!task.schedules || task.completed) return;
+          task.schedules.forEach(s => {
+            if (s.memberUid) membersWithSchedules.add(s.memberUid);
+          });
+        });
+
+        // Add all members to dropdown
+        const sortedMembers = [...firmMembers]
+          .filter(m => m.status === 'active')
+          .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+
+        sortedMembers.forEach(m => {
+          const hasSchedules = membersWithSchedules.has(m.uid);
+          filterSelect.innerHTML += `<option value="${m.uid}"${hasSchedules ? '' : ' style="color:var(--muted)"'}>${escapeHtml(m.displayName)}${hasSchedules ? '' : ' (no schedules)'}</option>`;
+        });
+
+        // Add change handler
+        filterSelect.onchange = () => {
+          ganttMemberFilter = filterSelect.value || null;
+          renderGantt();
+        };
+
+        // Restore current filter value if it's valid for the current dropdown options
+        const currentValueValid = ganttMemberFilter && filterSelect.querySelector(`option[value="${ganttMemberFilter}"]`);
+        filterSelect.value = currentValueValid ? ganttMemberFilter : '';
+        if (!currentValueValid) ganttMemberFilter = null;
+      } else {
+        filterSection.style.display = 'none';
+      }
     }
 
     function updateGanttDateRange() {
@@ -4669,11 +6622,56 @@
       const container = document.getElementById('ganttChart');
       container.innerHTML = '';
 
-      // Collect all tasks with schedules
-      const tasksWithSchedules = tasks.filter(t => t.schedules && t.schedules.length > 0 && !t.completed);
+      // Check if in Job mode but no job selected
+      const jobViewActive = document.getElementById('ganttViewJob').classList.contains('active');
+      if (jobViewActive && ganttJobFilter === null) {
+        container.innerHTML = `<div class="gantt-empty">Select a job from the dropdown to view team schedules.</div>`;
+        return;
+      }
 
-      if (tasksWithSchedules.length === 0) {
-        container.innerHTML = '<div class="gantt-empty">No scheduled time blocks. Add schedules to tasks to see them here.</div>';
+      // Determine if we're in job mode (single job, team members as rows)
+      const isJobMode = ganttJobFilter !== null && ganttJobFilter >= 0 && ganttJobFilter < tasks.length;
+      const selectedJob = isJobMode ? tasks[ganttJobFilter] : null;
+
+      // In job mode, we show team members as rows
+      // In user mode, we show tasks as rows (filtered to current member)
+      let tasksWithSchedules = [];
+      let teamMembersForJob = [];
+
+      if (isJobMode) {
+        // Job mode: Get team members for the selected job
+        if (selectedJob && selectedJob.schedules && selectedJob.schedules.length > 0) {
+          tasksWithSchedules = [selectedJob];
+          // Get team members sorted by role order
+          teamMembersForJob = [...(selectedJob.team || [])].sort((a, b) => {
+            const orderA = JOB_ROLE_ORDER[a.jobRole] || 99;
+            const orderB = JOB_ROLE_ORDER[b.jobRole] || 99;
+            if (orderA !== orderB) return orderA - orderB;
+            return getMemberDisplayName(a.uid).localeCompare(getMemberDisplayName(b.uid));
+          });
+        }
+      } else {
+        // User mode: Get all tasks with schedules, filtered to current member
+        tasksWithSchedules = tasks.filter(t => t.schedules && t.schedules.length > 0 && !t.completed);
+        if (ganttMemberFilter) {
+          tasksWithSchedules = tasksWithSchedules.filter(t =>
+            t.schedules.some(s => s.memberUid === ganttMemberFilter)
+          );
+        }
+      }
+
+      // Check if we have anything to display
+      if (isJobMode && teamMembersForJob.length === 0) {
+        const jobName = selectedJob ? `${selectedJob.client || 'No Client'} - ${selectedJob.description || 'Untitled'}` : 'this job';
+        container.innerHTML = `<div class="gantt-empty">No team members assigned to ${jobName}. Add team members first.</div>`;
+        return;
+      }
+
+      if (!isJobMode && tasksWithSchedules.length === 0) {
+        const msg = ganttMemberFilter
+          ? `No scheduled time blocks for ${getMemberDisplayName(ganttMemberFilter)}.`
+          : 'No scheduled time blocks. Add schedules to tasks to see them here.';
+        container.innerHTML = `<div class="gantt-empty">${msg}</div>`;
         return;
       }
 
@@ -4720,86 +6718,204 @@
       // Create a map from date string to column index for bar positioning
       const dateToColIndex = {};
       dates.forEach((d, idx) => {
-        dateToColIndex[d.toISOString().split('T')[0]] = idx;
+        dateToColIndex[formatDateLocal(d)] = idx;
       });
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Calculate totals per date
+      // Get filter checkbox states for totals calculation
+      const showLocked = document.getElementById('ganttShowLocked')?.checked ?? true;
+      const showLikely = document.getElementById('ganttShowLikely')?.checked ?? true;
+      const showTentative = document.getElementById('ganttShowTentative')?.checked ?? true;
+
+      // Calculate totals per date (respecting filters)
       const totalsByDate = {};
       tasksWithSchedules.forEach(task => {
         (task.schedules || []).forEach(sched => {
-          if (!totalsByDate[sched.date]) totalsByDate[sched.date] = 0;
-          totalsByDate[sched.date] += sched.hours;
+          // Filter by member if active
+          if (ganttMemberFilter && sched.memberUid !== ganttMemberFilter) return;
+
+          // Determine the status for filtering
+          const schedStatus = sched.status === 'tentative' || sched.tentative ? 'tentative' :
+                              sched.status === 'likely' ? 'likely' : 'locked';
+
+          const shouldCount = (schedStatus === 'locked' && showLocked) ||
+                              (schedStatus === 'likely' && showLikely) ||
+                              (schedStatus === 'tentative' && showTentative);
+
+          if (shouldCount) {
+            if (!totalsByDate[sched.date]) totalsByDate[sched.date] = 0;
+            totalsByDate[sched.date] += sched.hours;
+          }
         });
       });
+
+      // Build sidebar HTML based on mode
+      let sidebarHtml = '';
+      if (isJobMode) {
+        // Job mode: Team members as rows
+        sidebarHtml = `
+          <div class="gantt-sidebar">
+            <div class="gantt-sidebar-header"><span class="client-col">Team Member</span><span class="task-col">Role</span></div>
+            ${teamMembersForJob.map((member, idx) => `
+              <div class="gantt-sidebar-row gantt-member-row" data-member-uid="${member.uid}" data-task-index="${ganttJobFilter}" title="${escapeHtml(getMemberDisplayName(member.uid))} (${member.jobRole})">
+                <span class="client-col">${escapeHtml(getMemberDisplayName(member.uid).substring(0, 15))}${getMemberDisplayName(member.uid).length > 15 ? '...' : ''}</span>
+                <span class="task-col">${escapeHtml(member.jobRole || 'Team')}</span>
+              </div>
+            `).join('')}
+            <div class="gantt-sidebar-row gantt-totals-row"><span class="client-col"></span><span class="task-col">Total</span></div>
+          </div>`;
+      } else {
+        // User mode: Tasks as rows
+        sidebarHtml = `
+          <div class="gantt-sidebar">
+            <div class="gantt-sidebar-header"><span class="client-col">Client</span><span class="task-col">Task</span></div>
+            ${tasksWithSchedules.map((task, idx) => `
+              <div class="gantt-sidebar-row" data-task-index="${tasks.indexOf(task)}" title="${escapeHtml(task.client || 'No Client')} - ${escapeHtml(task.description || 'Untitled')}">
+                <span class="client-col">${escapeHtml((task.client || '').substring(0, 15))}${(task.client || '').length > 15 ? '...' : ''}</span>
+                <span class="task-col">${escapeHtml((task.description || 'Untitled').substring(0, 25))}${(task.description || '').length > 25 ? '...' : ''}</span>
+              </div>
+            `).join('')}
+            <div class="gantt-sidebar-row gantt-totals-row"><span class="client-col"></span><span class="task-col">Total</span></div>
+          </div>`;
+      }
 
       // Build HTML
       const html = `
         <div class="gantt-container">
-          <div class="gantt-sidebar">
-            <div class="gantt-sidebar-header">Task</div>
-            ${tasksWithSchedules.map((task, idx) => `
-              <div class="gantt-sidebar-row" data-task-index="${tasks.indexOf(task)}" title="${escapeHtml(task.description || 'Untitled')} - ${escapeHtml(task.client || '')}">
-                ${escapeHtml((task.description || 'Untitled').substring(0, 25))}${(task.description || '').length > 25 ? '...' : ''}
-              </div>
-            `).join('')}
-            <div class="gantt-sidebar-row gantt-totals-row">Total</div>
-          </div>
+          ${sidebarHtml}
           <div class="gantt-timeline">
             <div class="gantt-header" style="width:${dates.length * (cellWidth + 1)}px;">
               ${dates.map(d => {
                 const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                 const isToday = d.getTime() === today.getTime();
                 const isMonday = d.getDay() === 1;
+                const dateStr = formatDateLocal(d);
+                const isHoliday = !isWeekend && isHolidayOrBlocked(dateStr); // Only highlight weekday holidays
+                const holidayName = getHolidayName(dateStr);
                 const dayNum = d.getDate();
                 const dayName = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][d.getDay()];
                 const label = cellWidth >= 32 ? `${dayName}<br>${dayNum}` : dayNum;
-                return `<div class="gantt-header-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''}" style="width:${cellWidth}px;">${label}</div>`;
+                const title = isHoliday ? `${holidayName}` : '';
+                return `<div class="gantt-header-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''}" style="width:${cellWidth}px;" title="${title}">${label}</div>`;
               }).join('')}
             </div>
             <div class="gantt-rows" style="width:${dates.length * (cellWidth + 1)}px;">
-              ${tasksWithSchedules.map((task, rowIdx) => {
-                const taskIdx = tasks.indexOf(task);
+              ${isJobMode ? teamMembersForJob.map((member, rowIdx) => {
+                // Job mode: Each row is a team member
+                const taskIdx = ganttJobFilter;
+                const task = selectedJob;
+                const memberUid = member.uid;
 
-                // Create a map of date -> schedule for this task
+                // Get schedules for this member only
                 const schedByDate = {};
+                const isFirstMember = rowIdx === 0;
                 (task.schedules || []).forEach(sched => {
-                  schedByDate[sched.date] = sched;
+                  // For first member, also include legacy schedules without memberUid
+                  const schedMemberUid = sched.memberUid || null;
+                  const matchesMember = schedMemberUid === memberUid;
+                  const isLegacyForFirst = isFirstMember && !schedMemberUid;
+
+                  if (!matchesMember && !isLegacyForFirst) return;
+
+                  // Use a unique key to prevent double-counting
+                  const key = sched.date;
+                  if (!schedByDate[key]) {
+                    schedByDate[key] = { ...sched, hours: 0 };
+                  }
+                  schedByDate[key].hours += sched.hours;
                 });
 
-                // Check if due date falls on this row
                 const dueDateStr = task.dueDate || null;
 
-                // Render cells with bars inside them
                 const cells = dates.map(d => {
                   const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                   const isToday = d.getTime() === today.getTime();
                   const isMonday = d.getDay() === 1;
-                  const dateStr = d.toISOString().split('T')[0];
+                  const dateStr = formatDateLocal(d);
+                  const isHoliday = !isWeekend && isHolidayForMember(dateStr, memberUid);
+                  const holidayName = getHolidayNameForMember(dateStr, memberUid);
 
-                  // Check if there's a schedule for this date
                   const sched = schedByDate[dateStr];
                   let barHtml = '';
                   if (sched) {
-                    let barClass = '';
-                    if (task.completed) barClass = 'completed';
-                    else if (sched.status === 'locked') barClass = 'locked-in';
-                    else if (sched.status === 'likely') barClass = 'likely';
-                    else if (sched.status === 'tentative' || sched.tentative) barClass = 'tentative';
-                    else barClass = 'locked-in'; // Default to locked-in (green)
-                    const statusLabel = sched.status === 'tentative' || sched.tentative ? ' (T)' : sched.status === 'likely' ? ' (L)' : '';
-                    barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${statusLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
+                    const schedStatus = sched.status === 'tentative' || sched.tentative ? 'tentative' :
+                                        sched.status === 'likely' ? 'likely' : 'locked';
+                    const showLocked = document.getElementById('ganttShowLocked')?.checked ?? true;
+                    const showLikely = document.getElementById('ganttShowLikely')?.checked ?? true;
+                    const showTentative = document.getElementById('ganttShowTentative')?.checked ?? true;
+                    const shouldShow = (schedStatus === 'locked' && showLocked) ||
+                                       (schedStatus === 'likely' && showLikely) ||
+                                       (schedStatus === 'tentative' && showTentative);
+                    if (shouldShow) {
+                      let barClass = schedStatus === 'locked' ? 'locked-in' : schedStatus === 'likely' ? 'likely' : 'tentative';
+                      const statusLabel = schedStatus === 'tentative' ? ' (T)' : schedStatus === 'likely' ? ' (L)' : '';
+                      barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-member-uid="${memberUid}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${statusLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
+                    }
                   }
 
-                  // Check if due date marker should be here
+                  let dueMarkerHtml = '';
+                  if (rowIdx === 0 && dueDateStr === dateStr) {
+                    dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
+                  }
+
+                  const cellTitle = isHoliday ? holidayName : '';
+                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" data-member-uid="${memberUid}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
+                }).join('');
+
+                return `<div class="gantt-row" data-row="${rowIdx}" data-task-index="${taskIdx}" data-member-uid="${memberUid}">${cells}</div>`;
+              }).join('') : tasksWithSchedules.map((task, rowIdx) => {
+                // User mode: Each row is a task
+                const taskIdx = tasks.indexOf(task);
+
+                // Create a map of date -> aggregated schedule for this task
+                // If member filter is active, only show that member's schedules
+                const schedByDate = {};
+                (task.schedules || []).forEach(sched => {
+                  if (ganttMemberFilter && sched.memberUid !== ganttMemberFilter) return;
+                  if (!schedByDate[sched.date]) {
+                    schedByDate[sched.date] = { ...sched, hours: 0 };
+                  }
+                  schedByDate[sched.date].hours += sched.hours;
+                });
+
+                const dueDateStr = task.dueDate || null;
+                const assignedMemberUid = ganttMemberFilter || task.assignedTo;
+
+                const cells = dates.map(d => {
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                  const isToday = d.getTime() === today.getTime();
+                  const isMonday = d.getDay() === 1;
+                  const dateStr = formatDateLocal(d);
+                  const isHoliday = !isWeekend && (assignedMemberUid ? isHolidayForMember(dateStr, assignedMemberUid) : isHolidayOrBlocked(dateStr));
+                  const holidayName = assignedMemberUid ? getHolidayNameForMember(dateStr, assignedMemberUid) : getHolidayName(dateStr);
+
+                  const sched = schedByDate[dateStr];
+                  let barHtml = '';
+                  if (sched) {
+                    const schedStatus = sched.status === 'tentative' || sched.tentative ? 'tentative' :
+                                        sched.status === 'likely' ? 'likely' : 'locked';
+                    const showLocked = document.getElementById('ganttShowLocked')?.checked ?? true;
+                    const showLikely = document.getElementById('ganttShowLikely')?.checked ?? true;
+                    const showTentative = document.getElementById('ganttShowTentative')?.checked ?? true;
+                    const shouldShow = (schedStatus === 'locked' && showLocked) ||
+                                       (schedStatus === 'likely' && showLikely) ||
+                                       (schedStatus === 'tentative' && showTentative);
+                    if (shouldShow) {
+                      let barClass = task.completed ? 'completed' : schedStatus === 'locked' ? 'locked-in' : schedStatus === 'likely' ? 'likely' : 'tentative';
+                      const statusLabel = schedStatus === 'tentative' ? ' (T)' : schedStatus === 'likely' ? ' (L)' : '';
+                      barHtml = `<div class="gantt-bar ${barClass}" data-task-index="${taskIdx}" data-sched-id="${sched.id}" data-date="${dateStr}" title="${sched.hours}h${statusLabel} on ${formatScheduleDate(sched.date)}">${sched.hours}</div>`;
+                    }
+                  }
+
                   let dueMarkerHtml = '';
                   if (dueDateStr === dateStr) {
                     dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
                   }
 
-                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}">${barHtml}${dueMarkerHtml}</div>`;
+                  const cellTitle = isHoliday ? holidayName : '';
+                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
                 }).join('');
 
                 return `<div class="gantt-row" data-row="${rowIdx}" data-task-index="${taskIdx}">${cells}</div>`;
@@ -4809,10 +6925,11 @@
                   const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                   const isToday = d.getTime() === today.getTime();
                   const isMonday = d.getDay() === 1;
-                  const dateStr = d.toISOString().split('T')[0];
+                  const dateStr = formatDateLocal(d);
+                  const isHoliday = !isWeekend && isHolidayOrBlocked(dateStr); // Only highlight weekday holidays
                   const total = totalsByDate[dateStr] || 0;
                   const isOver = total > hoursPerDay;
-                  return `<div class="gantt-row-cell gantt-total-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isOver ? 'over-capacity' : ''}" style="width:${cellWidth}px;">${total > 0 ? total : ''}</div>`;
+                  return `<div class="gantt-row-cell gantt-total-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''} ${isOver ? 'over-capacity' : ''}" style="width:${cellWidth}px;">${total > 0 ? total : ''}</div>`;
                 }).join('')}
               </div>
             </div>
@@ -4850,9 +6967,10 @@
           const row = cell.closest('.gantt-row');
           const taskIdx = parseInt(row.dataset.taskIndex);
           const dateStr = cell.dataset.date;
+          const memberUid = cell.dataset.memberUid || row.dataset.memberUid || null;
 
           if (taskIdx >= 0 && dateStr) {
-            addScheduleFromGantt(taskIdx, dateStr);
+            addScheduleFromGantt(taskIdx, dateStr, memberUid);
           }
         });
       });
@@ -4864,24 +6982,30 @@
       initGanttPan();
     }
 
-    function addScheduleFromGantt(taskIdx, dateStr) {
+    function addScheduleFromGantt(taskIdx, dateStr, memberUid = null) {
       const task = tasks[taskIdx];
       if (!task) return;
 
-      // Check if there's already a schedule for this date
-      const existing = (task.schedules || []).find(s => s.date === dateStr);
+      // Determine memberUid - use passed value, fall back to current user or first team member
+      const effectiveMemberUid = memberUid || currentUser?.uid || (task.team && task.team[0]?.uid) || null;
+
+      // Check if there's already a schedule for this date AND member
+      const existing = (task.schedules || []).find(s =>
+        s.date === dateStr && s.memberUid === effectiveMemberUid
+      );
       if (existing) {
-        // Already has entry - could edit or just return
+        // Already has entry for this member on this date
         return;
       }
 
-      // Add new schedule with default hours
+      // Add new schedule with default hours and memberUid
       if (!task.schedules) task.schedules = [];
       task.schedules.push({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
         date: dateStr,
         hours: hoursPerDay,
-        status: 'locked'
+        status: 'locked',
+        memberUid: effectiveMemberUid
       });
 
       saveTasks(false);
@@ -6308,10 +8432,11 @@
               <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
             </select>
           </td>
-          <td class="assigned-cell" style="width:90px; ${isInFirmMode() ? '' : 'display:none;'}">
-            <select data-field="assignedTo" style="width:100%; height:31px; font-size:10px;">
-              ${firmMembers.map(m => `<option value="${m.uid}" ${task.assignedTo === m.uid ? 'selected' : ''}>${escapeHtml(m.displayName)}</option>`).join('')}
-            </select>
+          <td class="team-cell" style="width:70px; ${isInFirmMode() ? '' : 'display:none;'}">
+            <button type="button" class="team-btn" data-task-index="${index}" style="width:100%; height:31px; padding:0 6px; font-size:11px; display:flex; align-items:center; justify-content:center; gap:4px; border:1px solid ${(task.team && task.team.length > 0) ? 'var(--teal)' : 'rgba(20,184,166,0.55)'}; border-radius:8px; background:transparent; color:${(task.team && task.team.length > 0) ? 'var(--teal-2)' : 'var(--muted)'}; cursor:pointer;" title="${getTeamTooltip(task)}">
+              <span>${(task.team && task.team.length) || 0}</span>
+              <span style="font-size:13px;">👥</span>
+            </button>
           </td>
           <td style="width:70px;">
             <span class="due-date-display" data-field="dueDateDisplay" style="display:block; width:100%; height:31px; line-height:31px; font-size:10px; text-align:center; cursor:pointer; background:var(--panel-2); border:1px solid rgba(20,184,166,0.55); border-radius:8px;">${task.dueDate ? formatShortDate(task.dueDate) : '—'}</span>
@@ -6420,13 +8545,13 @@
           updateSummaryStats();
         });
 
-        // Assigned To select (firm mode only)
-        const assignedSelect = row.querySelector('select[data-field="assignedTo"]');
-        if (assignedSelect) {
-          assignedSelect.addEventListener('change', (e) => {
-            tasks[index].assignedTo = e.target.value;
-            saveTasks(false);
-            if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(tasks[index]).catch(console.warn);
+        // Team button click handler (firm mode only)
+        const teamBtn = row.querySelector('.team-btn');
+        if (teamBtn) {
+          teamBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSelected(index);
+            openJobTeamModal(index);
           });
         }
 
@@ -6558,6 +8683,229 @@
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
     }
+
+    // ===== Job Team Assignment Functions =====
+    let currentJobTeamTaskIndex = null;
+
+    function getTeamTooltip(task) {
+      if (!task.team || task.team.length === 0) {
+        return 'No team assigned - click to add';
+      }
+      const groupedByRole = {};
+      task.team.forEach(m => {
+        const role = m.jobRole || 'Member';
+        if (!groupedByRole[role]) groupedByRole[role] = [];
+        const member = firmMembers.find(fm => fm.uid === m.uid);
+        groupedByRole[role].push(member?.displayName || 'Unknown');
+      });
+      return Object.entries(groupedByRole)
+        .map(([role, names]) => `${role}: ${names.join(', ')}`)
+        .join('\n');
+    }
+
+    function getMemberDisplayName(uid) {
+      const member = firmMembers.find(m => m.uid === uid);
+      return member?.displayName || 'Unknown';
+    }
+
+    function getMemberRole(uid) {
+      const member = firmMembers.find(m => m.uid === uid);
+      return member?.role || '';
+    }
+
+    function isMemberPending(uid) {
+      const member = firmMembers.find(m => m.uid === uid);
+      return member?.status === 'pending';
+    }
+
+    function openJobTeamModal(taskIndex) {
+      currentJobTeamTaskIndex = taskIndex;
+      const task = tasks[taskIndex];
+      const taskName = task.description || 'Untitled';
+      const clientName = task.client || 'No Client';
+      document.getElementById('jobTeamTaskName').textContent = `${clientName} - ${taskName}`;
+
+      // Populate member select dropdown (include pending members)
+      const memberSelect = document.getElementById('jobTeamMemberSelect');
+      memberSelect.innerHTML = '<option value="">Select person...</option>';
+      const sortedMembers = [...firmMembers]
+        .filter(m => m.status === 'active' || m.status === 'pending')
+        .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+      sortedMembers.forEach(m => {
+        const pendingLabel = m.status === 'pending' ? ' (Pending)' : '';
+        memberSelect.innerHTML += `<option value="${m.uid}">${escapeHtml(m.displayName)} (${m.role || 'Member'})${pendingLabel}</option>`;
+      });
+
+      // Populate role select dropdown with firm's job roles
+      const roleSelect = document.getElementById('jobTeamRoleSelect');
+      roleSelect.innerHTML = '';
+      (jobRoles || DEFAULT_JOB_ROLES).forEach(role => {
+        roleSelect.innerHTML += `<option value="${role}">${role}</option>`;
+      });
+
+      renderJobTeamCurrentList();
+      showModal('jobTeamModalBackdrop');
+    }
+
+    function closeJobTeamModal() {
+      hideModal('jobTeamModalBackdrop');
+      currentJobTeamTaskIndex = null;
+      renderTasks();
+    }
+
+    function renderJobTeamCurrentList() {
+      const container = document.getElementById('jobTeamCurrentList');
+      const task = tasks[currentJobTeamTaskIndex];
+      const team = task.team || [];
+
+      if (team.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:16px;">No team members assigned yet</div>';
+        return;
+      }
+
+      // Group by role
+      const groupedByRole = {};
+      const roleOrder = jobRoles || DEFAULT_JOB_ROLES;
+
+      team.forEach(m => {
+        const role = m.jobRole || 'Member';
+        if (!groupedByRole[role]) groupedByRole[role] = [];
+        groupedByRole[role].push(m);
+      });
+
+      let html = '';
+      roleOrder.forEach(role => {
+        const members = groupedByRole[role];
+        if (!members || members.length === 0) return;
+
+        html += `<div style="margin-bottom:12px;">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px; letter-spacing:0.05em;">${escapeHtml(role)}${members.length > 1 ? 'S' : ''}</div>`;
+
+        members.forEach(m => {
+          const displayName = getMemberDisplayName(m.uid);
+          const firmRole = getMemberRole(m.uid);
+          const isPending = isMemberPending(m.uid);
+          const pendingBadge = isPending ? '<span style="color:var(--warning); font-size:10px; margin-left:6px; background:rgba(245,158,11,0.15); padding:1px 5px; border-radius:3px;">Pending</span>' : '';
+          html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--panel-2); border-radius:6px; margin-bottom:4px;">
+            <div>
+              <span style="color:var(--text);">${escapeHtml(displayName)}</span>
+              ${firmRole ? `<span style="color:var(--muted); font-size:11px; margin-left:6px;">(${escapeHtml(firmRole)})</span>` : ''}${pendingBadge}
+            </div>
+            <button type="button" onclick="removeJobTeamMember('${m.uid}')" class="mini btn-danger" style="padding:2px 8px; font-size:11px;">Remove</button>
+          </div>`;
+        });
+
+        html += '</div>';
+      });
+
+      // Show any roles that aren't in the standard list
+      Object.keys(groupedByRole).forEach(role => {
+        if (roleOrder.includes(role)) return;
+        const members = groupedByRole[role];
+
+        html += `<div style="margin-bottom:12px;">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px; letter-spacing:0.05em;">${escapeHtml(role)}${members.length > 1 ? 'S' : ''}</div>`;
+
+        members.forEach(m => {
+          const displayName = getMemberDisplayName(m.uid);
+          const firmRole = getMemberRole(m.uid);
+          const isPending = isMemberPending(m.uid);
+          const pendingBadge = isPending ? '<span style="color:var(--warning); font-size:10px; margin-left:6px; background:rgba(245,158,11,0.15); padding:1px 5px; border-radius:3px;">Pending</span>' : '';
+          html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; background:var(--panel-2); border-radius:6px; margin-bottom:4px;">
+            <div>
+              <span style="color:var(--text);">${escapeHtml(displayName)}</span>
+              ${firmRole ? `<span style="color:var(--muted); font-size:11px; margin-left:6px;">(${escapeHtml(firmRole)})</span>` : ''}${pendingBadge}
+            </div>
+            <button type="button" onclick="removeJobTeamMember('${m.uid}')" class="mini btn-danger" style="padding:2px 8px; font-size:11px;">Remove</button>
+          </div>`;
+        });
+
+        html += '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function addJobTeamMember() {
+      const memberSelect = document.getElementById('jobTeamMemberSelect');
+      const roleSelect = document.getElementById('jobTeamRoleSelect');
+      const uid = memberSelect.value;
+      const jobRole = roleSelect.value;
+
+      if (!uid) {
+        toast('Please select a person');
+        return;
+      }
+
+      const task = tasks[currentJobTeamTaskIndex];
+      if (!task.team) task.team = [];
+
+      // Check if already on team
+      if (task.team.find(m => m.uid === uid)) {
+        toast('This person is already on the team');
+        return;
+      }
+
+      task.team.push({
+        uid: uid,
+        jobRole: jobRole,
+        addedAt: new Date().toISOString(),
+        addedBy: currentUser?.uid || null
+      });
+
+      // Update teamMemberUids
+      task.teamMemberUids = task.team.map(m => m.uid).filter(Boolean);
+
+      // Update assignedTo for backward compatibility
+      const firstPreparer = task.team.find(m => m.jobRole === 'Preparer');
+      task.assignedTo = firstPreparer?.uid || task.team[0]?.uid || task.assignedTo;
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      renderJobTeamCurrentList();
+      memberSelect.value = '';
+      toast(`${getMemberDisplayName(uid)} added as ${jobRole}`);
+    }
+
+    function removeJobTeamMember(uid) {
+      const task = tasks[currentJobTeamTaskIndex];
+      if (!task.team) return;
+
+      const memberName = getMemberDisplayName(uid);
+      task.team = task.team.filter(m => m.uid !== uid);
+
+      // Update teamMemberUids
+      task.teamMemberUids = task.team.map(m => m.uid).filter(Boolean);
+
+      // Update assignedTo for backward compatibility
+      const firstPreparer = task.team.find(m => m.jobRole === 'Preparer');
+      task.assignedTo = firstPreparer?.uid || task.team[0]?.uid || null;
+
+      // Also remove any schedules for this member
+      if (task.schedules && task.schedules.length > 0) {
+        const removedCount = task.schedules.filter(s => s.memberUid === uid).length;
+        task.schedules = task.schedules.filter(s => s.memberUid !== uid);
+        if (removedCount > 0) {
+          toast(`${memberName} removed (${removedCount} scheduled entries also removed)`);
+        } else {
+          toast(`${memberName} removed`);
+        }
+      } else {
+        toast(`${memberName} removed`);
+      }
+
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(task).catch(console.warn);
+
+      renderJobTeamCurrentList();
+    }
+
+    // Make functions available globally
+    window.openJobTeamModal = openJobTeamModal;
+    window.closeJobTeamModal = closeJobTeamModal;
+    window.addJobTeamMember = addJobTeamMember;
+    window.removeJobTeamMember = removeJobTeamMember;
 
     function getShortJobType(jobType) {
       const shortNames = {
@@ -6706,7 +9054,7 @@
     document.getElementById('adminBtn').addEventListener('click', openAdmin);
     document.getElementById('teamBtn').addEventListener('click', showTeamModal);
     document.getElementById('rolesBtn').addEventListener('click', showRolesModal);
-    document.getElementById('firmsBtn').addEventListener('click', showFirmsModal);
+    document.getElementById('holidaysBtn').addEventListener('click', showHolidaysModal);
     document.getElementById('ganttBtn').addEventListener('click', openGanttModal);
     document.getElementById('dashboardBtn').addEventListener('click', openDashboard);
     document.getElementById('notificationsBtn').addEventListener('click', openNotificationsModal);
@@ -6817,17 +9165,57 @@
     });
     document.getElementById('schedViewGantt').addEventListener('click', () => {
       closeScheduleModal();
-      openGanttModal();
+      openGanttModal(); // Always open in user mode (default)
     });
     document.getElementById('scheduleModalBackdrop').addEventListener('mousedown', (e) => {
       if (e.target.id === 'scheduleModalBackdrop') closeScheduleModal();
     });
-    // Mode toggle buttons
-    document.getElementById('schedModeSingle').addEventListener('click', () => setScheduleMode('single'));
-    document.getElementById('schedModeRange').addEventListener('click', () => setScheduleMode('range'));
-    // Add range button
-    document.getElementById('schedAddRangeBtn').addEventListener('click', addScheduleRange);
-    document.getElementById('schedRangeHours').addEventListener('keydown', (e) => {
+    // Schedule grid date range controls
+    document.getElementById('schedGridDateFrom').addEventListener('change', updateScheduleGridDateRange);
+    document.getElementById('schedGridDateTo').addEventListener('change', updateScheduleGridDateRange);
+    document.getElementById('schedGridWeekdaysOnly').addEventListener('change', () => renderScheduleGrid());
+
+    // Member Range Popout event listeners
+    document.getElementById('memberRangeClose').addEventListener('click', closeMemberRangePopout);
+    document.getElementById('memberRangeAddBtn').addEventListener('click', addMemberRangeHours);
+    document.getElementById('memberRangeClearBtn').addEventListener('click', clearMemberRange);
+    document.getElementById('memberRangeSetStatus').addEventListener('click', setMemberRangeBulkStatus);
+    document.getElementById('schedAddRange').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openMemberRangePopout(null, e.target);
+    });
+    document.getElementById('memberRangeSelector').addEventListener('change', (e) => {
+      memberRangeCurrentUid = e.target.value;
+      renderMemberRangeEditList();
+    });
+    document.querySelectorAll('.member-range-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchMemberRangeTab(tab.dataset.tab));
+    });
+    // Close popout when clicking outside
+    document.addEventListener('click', (e) => {
+      const popout = document.getElementById('memberRangePopout');
+      if (popout.style.display !== 'none' && !popout.contains(e.target) && !e.target.closest('.sched-member-header') && !e.target.closest('#schedAddRange')) {
+        closeMemberRangePopout();
+      }
+    });
+
+    // Job Team modal backdrop
+    document.getElementById('jobTeamModalBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'jobTeamModalBackdrop') closeJobTeamModal();
+    });
+    // Legacy schedule mode buttons (only if they exist - for backwards compatibility)
+    const schedModeSingle = document.getElementById('schedModeSingle');
+    const schedModeRange = document.getElementById('schedModeRange');
+    const schedModeMatrix = document.getElementById('schedModeMatrix');
+    const schedAddRangeBtn = document.getElementById('schedAddRangeBtn');
+    const schedMatrixSave = document.getElementById('schedMatrixSave');
+    const schedRangeHours = document.getElementById('schedRangeHours');
+    if (schedModeSingle) schedModeSingle.addEventListener('click', () => setScheduleMode('single'));
+    if (schedModeRange) schedModeRange.addEventListener('click', () => setScheduleMode('range'));
+    if (schedModeMatrix) schedModeMatrix.addEventListener('click', () => setScheduleMode('matrix'));
+    if (schedAddRangeBtn) schedAddRangeBtn.addEventListener('click', addScheduleRange);
+    if (schedMatrixSave) schedMatrixSave.addEventListener('click', saveScheduleMatrix);
+    if (schedRangeHours) schedRangeHours.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') addScheduleRange();
     });
 
@@ -6839,7 +9227,22 @@
     document.querySelectorAll('.gantt-zoom-btn').forEach(btn => {
       btn.addEventListener('click', () => setGanttZoom(btn.dataset.zoom));
     });
+    // View toggle buttons
+    document.getElementById('ganttViewUser').addEventListener('click', () => {
+      setGanttViewMode('user');
+      renderGantt();
+    });
+    document.getElementById('ganttViewJob').addEventListener('click', () => {
+      setGanttViewMode('job');
+      // Don't render until a job is selected
+      if (ganttJobFilter !== null) {
+        renderGantt();
+      }
+    });
     document.getElementById('ganttHideWeekends').addEventListener('change', toggleGanttWeekends);
+    document.getElementById('ganttShowLocked').addEventListener('change', renderGantt);
+    document.getElementById('ganttShowLikely').addEventListener('change', renderGantt);
+    document.getElementById('ganttShowTentative').addEventListener('change', renderGantt);
     document.getElementById('ganttDateFrom').addEventListener('change', updateGanttDateRange);
     document.getElementById('ganttDateTo').addEventListener('change', updateGanttDateRange);
     document.getElementById('ganttDateReset').addEventListener('click', resetGanttDateRange);
@@ -7215,6 +9618,7 @@
 
     // Event listeners for Team modal
     document.getElementById('teamCloseBtn').addEventListener('click', () => hideModal('teamModalBackdrop'));
+
 
     // Boot
     (async function init() {
