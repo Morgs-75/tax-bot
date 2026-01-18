@@ -5502,10 +5502,6 @@
     async function saveLeaveDetail() {
       if (currentLeaveDetailIdx === null || !currentLeaveMemberUid) return;
 
-      const member = firmMembers.find(m => m.uid === currentLeaveMemberUid);
-      if (!member || !member.leave || !member.leave[currentLeaveDetailIdx]) return;
-
-      const leave = member.leave[currentLeaveDetailIdx];
       const defaultHours = parseFloat(document.getElementById('leaveDetailDefaultHours').value) || 7.5;
 
       // Build overrides object (only store days that differ from default)
@@ -5516,17 +5512,28 @@
         }
       }
 
-      // Update leave record
-      leave.hoursPerDay = defaultHours;
-      leave.dayOverrides = dayOverrides;
-
-      // Save to Firestore
+      // Save to Firestore using same path as addMemberLeave
       try {
-        const firmDocRef = db.collection('firms').doc(currentFirmId);
-        const memberIndex = firmMembers.findIndex(m => m.uid === currentLeaveMemberUid);
-        await firmDocRef.update({
-          [`members.${memberIndex}.leave`]: member.leave
-        });
+        const memberRef = fbDb.collection('firms').doc(currentFirmId)
+          .collection('members').doc(currentLeaveMemberUid);
+
+        const memberDoc = await memberRef.get();
+        const leave = memberDoc.data()?.leave || [];
+
+        if (!leave[currentLeaveDetailIdx]) {
+          toast('Leave entry not found');
+          return;
+        }
+
+        // Update the specific leave entry
+        leave[currentLeaveDetailIdx].hoursPerDay = defaultHours;
+        leave[currentLeaveDetailIdx].dayOverrides = dayOverrides;
+
+        await memberRef.update({ leave });
+
+        // Refresh member data
+        await loadFirmMembers();
+
         toast('Leave updated');
         hideModal('leaveDetailBackdrop');
         renderLeaveList();
