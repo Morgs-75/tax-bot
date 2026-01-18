@@ -883,6 +883,88 @@
       );
       pointer-events: none;
     }
+
+    /* News Ticker Banner */
+    .news-ticker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background: linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      border-bottom: 1px solid var(--teal);
+      z-index: 9999;
+      overflow: hidden;
+      display: none;
+    }
+    .news-ticker.active {
+      display: flex;
+      align-items: center;
+    }
+    .news-ticker-label {
+      background: var(--teal);
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      z-index: 1;
+    }
+    .news-ticker-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .news-ticker-track {
+      display: flex;
+      animation: ticker-scroll 30s linear infinite;
+      white-space: nowrap;
+    }
+    .news-ticker:hover .news-ticker-track {
+      animation-play-state: paused;
+    }
+    .news-ticker-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 40px;
+      font-size: 12px;
+      color: #e2e8f0;
+    }
+    .news-ticker-item.announcement {
+      color: #fbbf24;
+    }
+    .news-ticker-item.overdue {
+      color: #f87171;
+    }
+    .news-ticker-item.due-soon {
+      color: #fb923c;
+    }
+    .news-ticker-item::before {
+      content: '•';
+      margin-right: 8px;
+      color: var(--teal);
+    }
+    .news-ticker-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 4px 12px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .news-ticker-close:hover {
+      color: var(--text);
+    }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    body.has-ticker {
+      padding-top: 28px;
+    }
+
     .gantt-row-cell.today {
       background: rgba(59, 130, 246, 0.08);
     }
@@ -1291,6 +1373,15 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
+
+  <!-- News Ticker Banner -->
+  <div id="newsTicker" class="news-ticker">
+    <div class="news-ticker-label">Live</div>
+    <div class="news-ticker-content">
+      <div class="news-ticker-track" id="newsTickerTrack"></div>
+    </div>
+    <button class="news-ticker-close" onclick="hideNewsTicker()" title="Hide ticker">×</button>
+  </div>
 
   <!-- Maintenance Mode Overlay -->
   <div id="maintenanceOverlay" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:99999; align-items:center; justify-content:center;">
@@ -1941,7 +2032,17 @@
 
           <!-- Current Team Members -->
           <div style="font-weight:700; margin-bottom:12px; color:var(--text);">Current Team Members</div>
-          <div id="teamMembersList" style="border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
+          <div id="teamMembersList" style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:20px;"></div>
+
+          <!-- Firm Announcements (Admin Only) -->
+          <div id="announcementsSection" style="display:none;">
+            <div style="font-weight:700; margin-bottom:12px; color:var(--text);">Firm Announcements (Live Ticker)</div>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <input type="text" id="newAnnouncementText" placeholder="Enter announcement message..." style="flex:1; height:36px;" />
+              <button type="button" onclick="addAnnouncementFromInput()" style="height:36px; padding:0 16px; background:var(--teal); border-color:var(--teal);">Add</button>
+            </div>
+            <div id="announcementsList" style="border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
+          </div>
         </div>
         <div class="modal-footer">
           <div class="subtle" id="firmNameBadge"></div>
@@ -3726,6 +3827,10 @@
         updateHoursPerDayUI();
         updateJobTypeSelects();
 
+        // Load announcements and update news ticker
+        await loadFirmAnnouncements();
+        updateNewsTicker();
+
       } catch (e) {
         console.error('Failed to load firm data:', e);
       }
@@ -4136,6 +4241,9 @@
       for (let i = 0; i < 3; i++) {
         addBulkMemberRow();
       }
+
+      // Show announcements section for admins
+      showAnnouncementsSectionIfAdmin();
 
       showModal('teamModalBackdrop');
     }
@@ -5297,6 +5405,230 @@
       const memberHolidays = getAustralianPublicHolidays(year, memberState);
       const holiday = memberHolidays.find(h => h.date === dateStr);
       return holiday ? holiday.name : null;
+    }
+
+    // ===== News Ticker Banner =====
+
+    let firmAnnouncements = [];
+    let tickerHidden = false;
+
+    function hideNewsTicker() {
+      const ticker = document.getElementById('newsTicker');
+      if (ticker) {
+        ticker.classList.remove('active');
+        document.body.classList.remove('has-ticker');
+        tickerHidden = true;
+        sessionStorage.setItem('tickerHidden', 'true');
+      }
+    }
+    window.hideNewsTicker = hideNewsTicker;
+
+    function showNewsTicker() {
+      const ticker = document.getElementById('newsTicker');
+      if (ticker) {
+        ticker.classList.add('active');
+        document.body.classList.add('has-ticker');
+        tickerHidden = false;
+      }
+    }
+
+    async function loadFirmAnnouncements() {
+      if (!isInFirmMode() || !currentFirmId) {
+        firmAnnouncements = [];
+        return;
+      }
+
+      try {
+        const announcementsRef = fbDb.collection('firms').doc(currentFirmId).collection('announcements');
+        const snapshot = await announcementsRef.where('active', '==', true).orderBy('createdAt', 'desc').get();
+        firmAnnouncements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (e) {
+        console.error('Failed to load announcements:', e);
+        firmAnnouncements = [];
+      }
+    }
+
+    function generateAutoReminders() {
+      const reminders = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = formatDateLocal(today);
+
+      // Get visible tasks (not completed)
+      const visibleTasks = tasks.filter(t => !t.completed);
+
+      // Find overdue tasks
+      const overdueTasks = visibleTasks.filter(t => t.dueDate && t.dueDate < todayStr);
+      if (overdueTasks.length > 0) {
+        if (overdueTasks.length === 1) {
+          const t = overdueTasks[0];
+          reminders.push({ type: 'overdue', text: `OVERDUE: ${t.client} - ${t.name} was due ${formatScheduleDate(t.dueDate)}` });
+        } else {
+          reminders.push({ type: 'overdue', text: `${overdueTasks.length} tasks are OVERDUE - check your workflow` });
+        }
+      }
+
+      // Find tasks due today
+      const dueToday = visibleTasks.filter(t => t.dueDate === todayStr);
+      if (dueToday.length > 0) {
+        if (dueToday.length === 1) {
+          const t = dueToday[0];
+          reminders.push({ type: 'due-soon', text: `DUE TODAY: ${t.client} - ${t.name}` });
+        } else {
+          reminders.push({ type: 'due-soon', text: `${dueToday.length} tasks due TODAY` });
+        }
+      }
+
+      // Find tasks due in next 3 days
+      const threeDaysLater = new Date(today);
+      threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+      const threeDaysStr = formatDateLocal(threeDaysLater);
+      const dueSoon = visibleTasks.filter(t => t.dueDate && t.dueDate > todayStr && t.dueDate <= threeDaysStr);
+      if (dueSoon.length > 0) {
+        reminders.push({ type: 'due-soon', text: `${dueSoon.length} task${dueSoon.length > 1 ? 's' : ''} due in next 3 days` });
+      }
+
+      return reminders;
+    }
+
+    function updateNewsTicker() {
+      const track = document.getElementById('newsTickerTrack');
+      const ticker = document.getElementById('newsTicker');
+      if (!track || !ticker) return;
+
+      // Check if user hid ticker this session
+      if (sessionStorage.getItem('tickerHidden') === 'true') {
+        tickerHidden = true;
+        return;
+      }
+
+      const items = [];
+
+      // Add announcements
+      firmAnnouncements.forEach(a => {
+        items.push({ type: 'announcement', text: a.message });
+      });
+
+      // Add auto reminders
+      const reminders = generateAutoReminders();
+      reminders.forEach(r => {
+        items.push({ type: r.type, text: r.text });
+      });
+
+      // If no items, hide ticker
+      if (items.length === 0) {
+        ticker.classList.remove('active');
+        document.body.classList.remove('has-ticker');
+        return;
+      }
+
+      // Build ticker HTML (duplicate for seamless loop)
+      const itemsHtml = items.map(item =>
+        `<span class="news-ticker-item ${item.type}">${escapeHtml(item.text)}</span>`
+      ).join('');
+
+      track.innerHTML = itemsHtml + itemsHtml; // Duplicate for seamless scroll
+
+      // Adjust animation speed based on content length
+      const totalWidth = track.scrollWidth / 2;
+      const duration = Math.max(20, totalWidth / 50); // ~50px per second
+      track.style.animationDuration = duration + 's';
+
+      // Show ticker
+      if (!tickerHidden) {
+        showNewsTicker();
+      }
+    }
+
+    async function addFirmAnnouncement(message) {
+      if (!isInFirmMode() || !currentFirmId || !message.trim()) return;
+
+      try {
+        const announcementsRef = fbDb.collection('firms').doc(currentFirmId).collection('announcements');
+        await announcementsRef.add({
+          message: message.trim(),
+          active: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: currentUser.uid
+        });
+        await loadFirmAnnouncements();
+        updateNewsTicker();
+        toast('Announcement added');
+      } catch (e) {
+        console.error('Failed to add announcement:', e);
+        toast('Failed to add announcement');
+      }
+    }
+    window.addFirmAnnouncement = addFirmAnnouncement;
+
+    async function removeFirmAnnouncement(id) {
+      if (!isInFirmMode() || !currentFirmId) return;
+
+      try {
+        await fbDb.collection('firms').doc(currentFirmId).collection('announcements').doc(id).delete();
+        await loadFirmAnnouncements();
+        updateNewsTicker();
+        renderAnnouncementsList();
+        toast('Announcement removed');
+      } catch (e) {
+        console.error('Failed to remove announcement:', e);
+        toast('Failed to remove announcement');
+      }
+    }
+    window.removeFirmAnnouncement = removeFirmAnnouncement;
+
+    async function addAnnouncementFromInput() {
+      const input = document.getElementById('newAnnouncementText');
+      if (!input || !input.value.trim()) {
+        toast('Please enter an announcement message');
+        return;
+      }
+      await addFirmAnnouncement(input.value);
+      input.value = '';
+      renderAnnouncementsList();
+    }
+    window.addAnnouncementFromInput = addAnnouncementFromInput;
+
+    function renderAnnouncementsList() {
+      const container = document.getElementById('announcementsList');
+      if (!container) return;
+
+      if (firmAnnouncements.length === 0) {
+        container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--muted);">No announcements. Add one to display in the live ticker.</div>';
+        return;
+      }
+
+      container.innerHTML = firmAnnouncements.map(a => {
+        const createdAt = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateStr = createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border);">
+            <div style="flex:1;">
+              <div style="color:var(--text);">${escapeHtml(a.message)}</div>
+              <div style="font-size:10px; color:var(--muted); margin-top:2px;">Added ${dateStr}</div>
+            </div>
+            <button type="button" onclick="removeFirmAnnouncement('${a.id}')"
+              style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:14px;"
+              title="Remove">×</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showAnnouncementsSectionIfAdmin() {
+      const section = document.getElementById('announcementsSection');
+      if (!section) return;
+
+      // Show only for firm admins
+      const member = firmMembers.find(m => m.uid === currentUser?.uid);
+      const isAdmin = member?.isAdmin || window.isAppAdmin;
+
+      if (isAdmin && isInFirmMode()) {
+        section.style.display = 'block';
+        renderAnnouncementsList();
+      } else {
+        section.style.display = 'none';
+      }
     }
 
     // ===== User Leave Management =====
