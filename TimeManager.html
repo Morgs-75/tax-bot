@@ -2184,6 +2184,33 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== LEAVE DETAIL EDIT MODAL ===== -->
+    <div id="leaveDetailBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" style="z-index:10006;">
+      <div class="modal" style="width:min(400px, 96vw); max-height:90vh;">
+        <div class="modal-header">
+          <div class="modal-title" style="font-size:13px;">Edit Leave - <span id="leaveDetailType"></span></div>
+          <button class="mini" type="button" onclick="hideModal('leaveDetailBackdrop')">×</button>
+        </div>
+        <div class="modal-body" style="padding:12px; overflow-y:auto; max-height:calc(90vh - 140px);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:8px; background:var(--panel); border-radius:6px;">
+            <span style="font-size:11px; color:var(--muted);">Default Hours/Day:</span>
+            <input type="number" id="leaveDetailDefaultHours" value="7.5" min="0" max="24" step="0.5"
+              style="width:60px; height:24px; text-align:center; font-size:11px;"
+              onchange="updateLeaveDetailDefault()" />
+          </div>
+          <div id="leaveDetailDaysContainer" style="background:var(--panel-2); border-radius:8px; overflow:hidden;"></div>
+          <div style="margin-top:12px; padding:8px; background:var(--panel); border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--muted);">Total Hours:</span>
+            <span id="leaveDetailTotalHours" style="font-weight:600; color:var(--teal);"></span>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:10px 16px;">
+          <button class="mini" type="button" onclick="hideModal('leaveDetailBackdrop')" style="background:transparent; border:1px solid var(--border); color:var(--muted);">Cancel</button>
+          <button class="mini" type="button" onclick="saveLeaveDetail()" style="background:var(--teal); border-color:var(--teal);">Save Changes</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Dashboard Modal -->
@@ -5313,21 +5340,203 @@
           const statusLabel = isPast ? ' (Past)' : (isCurrent ? ' (Current)' : '');
 
           const hoursDisplay = l.hoursPerDay ? `${l.hoursPerDay}h/day` : '7.5h/day';
+          // Calculate total hours for this leave period
+          const dayCount = countWorkingDays(l.startDate, l.endDate);
+          const totalHours = calculateLeaveTotalHours(l, dayCount);
           return `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); ${statusStyle}">
-              <div>
+              <div style="flex:1; cursor:pointer;" onclick="openLeaveDetail(${idx})">
                 <div style="font-weight:600; color:var(--text);">${escapeHtml(l.type || 'Leave')}${statusLabel} <span style="font-weight:400; font-size:11px; color:var(--muted);">(${hoursDisplay})</span></div>
-                <div style="font-size:12px; color:var(--muted);">${formatDate(l.startDate)} - ${formatDate(l.endDate)}</div>
+                <div style="font-size:12px; color:var(--muted);">${formatDate(l.startDate)} - ${formatDate(l.endDate)} <span style="color:var(--teal);">(${totalHours}h total)</span></div>
                 ${l.notes ? `<div style="font-size:11px; color:var(--muted); margin-top:2px;">${escapeHtml(l.notes)}</div>` : ''}
               </div>
-              <button type="button" onclick="removeMemberLeave(${idx})"
-                style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:14px;"
-                title="Remove">×</button>
+              <div style="display:flex; gap:6px;">
+                <button type="button" onclick="openLeaveDetail(${idx})"
+                  style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--teal); color:var(--teal); border-radius:4px; cursor:pointer; font-size:12px;"
+                  title="Edit">✎</button>
+                <button type="button" onclick="removeMemberLeave(${idx})"
+                  style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:14px;"
+                  title="Remove">×</button>
+              </div>
             </div>
           `;
         }).join('');
     }
     window.renderLeaveList = renderLeaveList;
+
+    // Count working days (Mon-Fri) between two dates inclusive
+    function countWorkingDays(startDate, endDate) {
+      let count = 0;
+      const start = new Date(startDate + 'T00:00:00');
+      const end = new Date(endDate + 'T00:00:00');
+      const current = new Date(start);
+      while (current <= end) {
+        const day = current.getDay();
+        if (day !== 0 && day !== 6) count++;
+        current.setDate(current.getDate() + 1);
+      }
+      return count;
+    }
+
+    // Calculate total leave hours considering day overrides
+    function calculateLeaveTotalHours(leave, dayCount) {
+      const defaultHours = leave.hoursPerDay || 7.5;
+      const overrides = leave.dayOverrides || {};
+
+      // If no overrides, simple calculation
+      if (Object.keys(overrides).length === 0) {
+        return dayCount * defaultHours;
+      }
+
+      // Calculate with overrides
+      let total = 0;
+      const start = new Date(leave.startDate + 'T00:00:00');
+      const end = new Date(leave.endDate + 'T00:00:00');
+      const current = new Date(start);
+      while (current <= end) {
+        const day = current.getDay();
+        if (day !== 0 && day !== 6) {
+          const dateStr = formatDateLocal(current);
+          const hours = overrides.hasOwnProperty(dateStr) ? overrides[dateStr] : defaultHours;
+          total += hours;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      return total;
+    }
+
+    // Leave detail editing state
+    let currentLeaveDetailIdx = null;
+    let leaveDetailDayHours = {}; // { dateStr: hours }
+
+    function openLeaveDetail(idx) {
+      const member = firmMembers.find(m => m.uid === currentLeaveMemberUid);
+      if (!member || !member.leave || !member.leave[idx]) return;
+
+      const leave = member.leave[idx];
+      currentLeaveDetailIdx = idx;
+
+      // Set title
+      document.getElementById('leaveDetailType').textContent = leave.type || 'Leave';
+
+      // Set default hours
+      document.getElementById('leaveDetailDefaultHours').value = leave.hoursPerDay || 7.5;
+
+      // Build day hours map
+      leaveDetailDayHours = {};
+      const defaultHours = leave.hoursPerDay || 7.5;
+      const overrides = leave.dayOverrides || {};
+
+      const start = new Date(leave.startDate + 'T00:00:00');
+      const end = new Date(leave.endDate + 'T00:00:00');
+      const current = new Date(start);
+      while (current <= end) {
+        const day = current.getDay();
+        if (day !== 0 && day !== 6) {
+          const dateStr = formatDateLocal(current);
+          leaveDetailDayHours[dateStr] = overrides.hasOwnProperty(dateStr) ? overrides[dateStr] : defaultHours;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      renderLeaveDetailDays();
+      document.getElementById('leaveDetailBackdrop').style.display = 'flex';
+    }
+    window.openLeaveDetail = openLeaveDetail;
+
+    function renderLeaveDetailDays() {
+      const container = document.getElementById('leaveDetailDaysContainer');
+      if (!container) return;
+
+      const sortedDates = Object.keys(leaveDetailDayHours).sort();
+      const defaultHours = parseFloat(document.getElementById('leaveDetailDefaultHours').value) || 7.5;
+
+      container.innerHTML = sortedDates.map(dateStr => {
+        const date = new Date(dateStr + 'T00:00:00');
+        const dayName = date.toLocaleDateString('en-AU', { weekday: 'short' });
+        const dateDisplay = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        const hours = leaveDetailDayHours[dateStr];
+        const isModified = hours !== defaultHours;
+
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--border);">
+            <div>
+              <span style="font-weight:500; color:var(--text);">${dayName}</span>
+              <span style="font-size:11px; color:var(--muted); margin-left:6px;">${dateDisplay}</span>
+              ${isModified ? '<span style="font-size:9px; color:var(--warning); margin-left:6px;">modified</span>' : ''}
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="number" value="${hours}" min="0" max="24" step="0.5"
+                style="width:50px; height:24px; text-align:center; font-size:11px;"
+                onchange="updateLeaveDetailDay('${dateStr}', this.value)" />
+              <span style="font-size:10px; color:var(--muted);">hrs</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateLeaveDetailTotals();
+    }
+
+    function updateLeaveDetailDay(dateStr, value) {
+      leaveDetailDayHours[dateStr] = parseFloat(value) || 0;
+      updateLeaveDetailTotals();
+      // Re-render to show modified indicator
+      renderLeaveDetailDays();
+    }
+    window.updateLeaveDetailDay = updateLeaveDetailDay;
+
+    function updateLeaveDetailDefault() {
+      const newDefault = parseFloat(document.getElementById('leaveDetailDefaultHours').value) || 7.5;
+      // Update all days that haven't been individually modified to the new default
+      // For simplicity, just re-render with new default reference
+      renderLeaveDetailDays();
+    }
+    window.updateLeaveDetailDefault = updateLeaveDetailDefault;
+
+    function updateLeaveDetailTotals() {
+      const total = Object.values(leaveDetailDayHours).reduce((sum, h) => sum + h, 0);
+      document.getElementById('leaveDetailTotalHours').textContent = total + 'h';
+    }
+
+    async function saveLeaveDetail() {
+      if (currentLeaveDetailIdx === null || !currentLeaveMemberUid) return;
+
+      const member = firmMembers.find(m => m.uid === currentLeaveMemberUid);
+      if (!member || !member.leave || !member.leave[currentLeaveDetailIdx]) return;
+
+      const leave = member.leave[currentLeaveDetailIdx];
+      const defaultHours = parseFloat(document.getElementById('leaveDetailDefaultHours').value) || 7.5;
+
+      // Build overrides object (only store days that differ from default)
+      const dayOverrides = {};
+      for (const [dateStr, hours] of Object.entries(leaveDetailDayHours)) {
+        if (hours !== defaultHours) {
+          dayOverrides[dateStr] = hours;
+        }
+      }
+
+      // Update leave record
+      leave.hoursPerDay = defaultHours;
+      leave.dayOverrides = dayOverrides;
+
+      // Save to Firestore
+      try {
+        const firmDocRef = db.collection('firms').doc(currentFirmId);
+        const memberIndex = firmMembers.findIndex(m => m.uid === currentLeaveMemberUid);
+        await firmDocRef.update({
+          [`members.${memberIndex}.leave`]: member.leave
+        });
+        toast('Leave updated');
+        hideModal('leaveDetailBackdrop');
+        renderLeaveList();
+        renderGantt(); // Refresh Gantt to show updated hours
+      } catch (err) {
+        console.error('Error updating leave:', err);
+        toast('Failed to update leave');
+      }
+    }
+    window.saveLeaveDetail = saveLeaveDetail;
 
     async function addMemberLeave() {
       if (!currentLeaveMemberUid) return;
@@ -5417,15 +5626,38 @@
       const member = firmMembers.find(m => m.uid === memberUid);
       if (!member || !member.leave) return false;
 
-      return member.leave.some(l => dateStr >= l.startDate && dateStr <= l.endDate);
+      return member.leave.some(l => {
+        if (dateStr < l.startDate || dateStr > l.endDate) return false;
+        // Check if day override sets hours to 0
+        const overrides = l.dayOverrides || {};
+        if (overrides.hasOwnProperty(dateStr) && overrides[dateStr] === 0) return false;
+        return true;
+      });
     }
 
     function getMemberLeaveType(memberUid, dateStr) {
       const member = firmMembers.find(m => m.uid === memberUid);
       if (!member || !member.leave) return null;
 
-      const leave = member.leave.find(l => dateStr >= l.startDate && dateStr <= l.endDate);
+      const leave = member.leave.find(l => {
+        if (dateStr < l.startDate || dateStr > l.endDate) return false;
+        const overrides = l.dayOverrides || {};
+        if (overrides.hasOwnProperty(dateStr) && overrides[dateStr] === 0) return false;
+        return true;
+      });
       return leave ? leave.type : null;
+    }
+
+    function getMemberLeaveHours(memberUid, dateStr) {
+      const member = firmMembers.find(m => m.uid === memberUid);
+      if (!member || !member.leave) return 0;
+
+      const leave = member.leave.find(l => dateStr >= l.startDate && dateStr <= l.endDate);
+      if (!leave) return 0;
+
+      const overrides = leave.dayOverrides || {};
+      if (overrides.hasOwnProperty(dateStr)) return overrides[dateStr];
+      return leave.hoursPerDay || 7.5;
     }
 
     async function createFirmClient(name) {
@@ -6867,6 +7099,7 @@
                   const holidayName = getHolidayNameForMember(dateStr, memberUid);
                   const isOnLeave = !isWeekend && !isHoliday && isMemberOnLeave(memberUid, dateStr);
                   const leaveType = isOnLeave ? getMemberLeaveType(memberUid, dateStr) : null;
+                  const leaveHours = isOnLeave ? getMemberLeaveHours(memberUid, dateStr) : 0;
 
                   const sched = schedByDate[dateStr];
                   let barHtml = '';
@@ -6891,7 +7124,7 @@
                     dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
                   }
 
-                  const cellTitle = isHoliday ? holidayName : (isOnLeave ? `Leave: ${leaveType}` : '');
+                  const cellTitle = isHoliday ? holidayName : (isOnLeave ? `Leave: ${leaveType} (${leaveHours}h)` : '');
                   return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''} ${isOnLeave ? 'leave' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" data-member-uid="${memberUid}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
                 }).join('');
 
@@ -6923,6 +7156,7 @@
                   const holidayName = assignedMemberUid ? getHolidayNameForMember(dateStr, assignedMemberUid) : getHolidayName(dateStr);
                   const isOnLeave = !isWeekend && !isHoliday && assignedMemberUid && isMemberOnLeave(assignedMemberUid, dateStr);
                   const leaveType = isOnLeave ? getMemberLeaveType(assignedMemberUid, dateStr) : null;
+                  const leaveHours = isOnLeave ? getMemberLeaveHours(assignedMemberUid, dateStr) : 0;
 
                   const sched = schedByDate[dateStr];
                   let barHtml = '';
@@ -6947,7 +7181,7 @@
                     dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
                   }
 
-                  const cellTitle = isHoliday ? holidayName : (isOnLeave ? `Leave: ${leaveType}` : '');
+                  const cellTitle = isHoliday ? holidayName : (isOnLeave ? `Leave: ${leaveType} (${leaveHours}h)` : '');
                   return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''} ${isOnLeave ? 'leave' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
                 }).join('');
 
