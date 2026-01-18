@@ -4452,25 +4452,25 @@
         const youBadge = isCurrentUser ? '<span style="background:var(--accent); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px;">You</span>' : '';
 
         return `
-          <div style="display:grid; grid-template-columns:1fr auto auto auto auto auto auto auto; gap:12px; padding:10px 12px; border-bottom:1px solid var(--border); align-items:center; font-size:13px;" data-member-uid="${m.uid}">
+          <div style="display:grid; grid-template-columns:1fr 80px 50px 100px 55px 65px 95px 70px; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); align-items:center; font-size:13px;" data-member-uid="${m.uid}">
             <div>
               <span style="font-weight:600;">${m.displayName || m.email}</span>
               ${statusBadge}${adminBadge}${youBadge}
               <div style="font-size:11px; color:var(--muted);">${m.email}</div>
             </div>
-            <div style="color:var(--muted);">${m.role}</div>
-            <div style="color:var(--muted); font-size:11px;">${m.state || '—'}</div>
-            <div style="color:var(--muted); font-size:11px;">→ ${supervisorName}</div>
-            <button class="mini member-edit-btn" data-uid="${m.uid}" style="font-size:11px; background:var(--teal); border-color:var(--teal);">
+            <div style="color:var(--muted); text-align:center;">${m.role}</div>
+            <div style="color:var(--muted); font-size:11px; text-align:center;">${m.state || '—'}</div>
+            <div style="color:var(--muted); font-size:11px; text-align:center;">→ ${supervisorName}</div>
+            <button class="mini member-edit-btn" data-uid="${m.uid}" style="font-size:11px; width:100%; background:var(--teal); border-color:var(--teal);">
               Edit
             </button>
-            <button class="mini member-leave-btn" data-uid="${m.uid}" style="font-size:11px; background:var(--panel-2);">
+            <button class="mini member-leave-btn" data-uid="${m.uid}" style="font-size:11px; width:100%; background:var(--panel-2);">
               Leave${leaveBadge}
             </button>
-            <button class="mini member-admin-btn" data-uid="${m.uid}" ${isCurrentUser ? 'disabled title="Cannot modify your own admin status"' : ''} style="font-size:11px; ${isCurrentUser ? 'opacity:0.5; cursor:not-allowed;' : ''}">
-              ${m.isAdmin ? 'Remove Admin' : 'Make Admin'}
+            <button class="mini member-admin-btn" data-uid="${m.uid}" ${isCurrentUser ? 'disabled title="Cannot modify your own admin status"' : ''} style="font-size:11px; width:100%; ${isCurrentUser ? 'opacity:0.5; cursor:not-allowed;' : ''}">
+              ${m.isAdmin ? 'Revoke' : 'Make Admin'}
             </button>
-            <button class="mini btn-danger member-remove-btn" data-uid="${m.uid}" ${isCurrentUser ? 'disabled title="Cannot remove yourself from the firm"' : ''} style="font-size:11px; ${isCurrentUser ? 'opacity:0.5; cursor:not-allowed;' : ''}">
+            <button class="mini btn-danger member-remove-btn" data-uid="${m.uid}" ${isCurrentUser ? 'disabled title="Cannot remove yourself from the firm"' : ''} style="font-size:11px; width:100%; ${isCurrentUser ? 'opacity:0.5; cursor:not-allowed;' : ''}">
               Remove
             </button>
           </div>
