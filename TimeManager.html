@@ -864,6 +864,25 @@
       background: rgba(239, 68, 68, 0.2) !important;
       color: #ef4444;
     }
+    .gantt-row-cell.leave {
+      background: rgba(249, 115, 22, 0.15);
+    }
+    .gantt-row-cell.leave::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 3px,
+        rgba(249, 115, 22, 0.1) 3px,
+        rgba(249, 115, 22, 0.1) 6px
+      );
+      pointer-events: none;
+    }
     .gantt-row-cell.today {
       background: rgba(59, 130, 246, 0.08);
     }
@@ -2133,18 +2152,24 @@
                 <input type="date" id="leaveEndDate" style="width:100%; height:36px;" />
               </div>
             </div>
-            <div style="margin-bottom:12px;">
-              <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Leave Type</label>
-              <select id="leaveType" style="width:100%; height:36px;">
-                <option value="Annual Leave">Annual Leave</option>
-                <option value="Sick Leave">Sick Leave</option>
-                <option value="Personal Leave">Personal Leave</option>
-                <option value="Parental Leave">Parental Leave</option>
-                <option value="Public Holiday (Individual)">Public Holiday (Individual)</option>
-                <option value="Study Leave">Study Leave</option>
-                <option value="Work From Home">Work From Home</option>
-                <option value="Other">Other</option>
-              </select>
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+              <div>
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Leave Type</label>
+                <select id="leaveType" style="width:100%; height:36px;">
+                  <option value="Annual Leave">Annual Leave</option>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Personal Leave">Personal Leave</option>
+                  <option value="Parental Leave">Parental Leave</option>
+                  <option value="Public Holiday (Individual)">Public Holiday (Individual)</option>
+                  <option value="Study Leave">Study Leave</option>
+                  <option value="Work From Home">Work From Home</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Hours/Day</label>
+                <input type="number" id="leaveHoursPerDay" value="7.5" min="0.5" max="24" step="0.5" style="width:100%; height:36px; text-align:center;" />
+              </div>
             </div>
             <div style="margin-bottom:12px;">
               <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:4px;">Notes (optional)</label>
@@ -5287,10 +5312,11 @@
           const statusStyle = isPast ? 'opacity:0.5;' : (isCurrent ? 'background:rgba(20,184,166,0.1);' : '');
           const statusLabel = isPast ? ' (Past)' : (isCurrent ? ' (Current)' : '');
 
+          const hoursDisplay = l.hoursPerDay ? `${l.hoursPerDay}h/day` : '7.5h/day';
           return `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border); ${statusStyle}">
               <div>
-                <div style="font-weight:600; color:var(--text);">${escapeHtml(l.type || 'Leave')}${statusLabel}</div>
+                <div style="font-weight:600; color:var(--text);">${escapeHtml(l.type || 'Leave')}${statusLabel} <span style="font-weight:400; font-size:11px; color:var(--muted);">(${hoursDisplay})</span></div>
                 <div style="font-size:12px; color:var(--muted);">${formatDate(l.startDate)} - ${formatDate(l.endDate)}</div>
                 ${l.notes ? `<div style="font-size:11px; color:var(--muted); margin-top:2px;">${escapeHtml(l.notes)}</div>` : ''}
               </div>
@@ -5309,6 +5335,7 @@
       const startDate = document.getElementById('leaveStartDate').value;
       const endDate = document.getElementById('leaveEndDate').value;
       const type = document.getElementById('leaveType').value;
+      const hoursPerDay = parseFloat(document.getElementById('leaveHoursPerDay').value) || 7.5;
       const notes = document.getElementById('leaveNotes').value.trim();
 
       if (!startDate || !endDate) {
@@ -5332,6 +5359,7 @@
           startDate,
           endDate,
           type,
+          hoursPerDay,
           notes,
           addedAt: new Date().toISOString()
         });
@@ -5347,6 +5375,7 @@
         document.getElementById('leaveStartDate').value = '';
         document.getElementById('leaveEndDate').value = '';
         document.getElementById('leaveType').value = 'Annual Leave';
+        document.getElementById('leaveHoursPerDay').value = '7.5';
         document.getElementById('leaveNotes').value = '';
 
         toast('Leave added');
@@ -6836,6 +6865,8 @@
                   const dateStr = formatDateLocal(d);
                   const isHoliday = !isWeekend && isHolidayForMember(dateStr, memberUid);
                   const holidayName = getHolidayNameForMember(dateStr, memberUid);
+                  const isOnLeave = !isWeekend && !isHoliday && isMemberOnLeave(memberUid, dateStr);
+                  const leaveType = isOnLeave ? getMemberLeaveType(memberUid, dateStr) : null;
 
                   const sched = schedByDate[dateStr];
                   let barHtml = '';
@@ -6860,8 +6891,8 @@
                     dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
                   }
 
-                  const cellTitle = isHoliday ? holidayName : '';
-                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" data-member-uid="${memberUid}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
+                  const cellTitle = isHoliday ? holidayName : (isOnLeave ? `Leave: ${leaveType}` : '');
+                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''} ${isOnLeave ? 'leave' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" data-member-uid="${memberUid}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
                 }).join('');
 
                 return `<div class="gantt-row" data-row="${rowIdx}" data-task-index="${taskIdx}" data-member-uid="${memberUid}">${cells}</div>`;
@@ -6890,6 +6921,8 @@
                   const dateStr = formatDateLocal(d);
                   const isHoliday = !isWeekend && (assignedMemberUid ? isHolidayForMember(dateStr, assignedMemberUid) : isHolidayOrBlocked(dateStr));
                   const holidayName = assignedMemberUid ? getHolidayNameForMember(dateStr, assignedMemberUid) : getHolidayName(dateStr);
+                  const isOnLeave = !isWeekend && !isHoliday && assignedMemberUid && isMemberOnLeave(assignedMemberUid, dateStr);
+                  const leaveType = isOnLeave ? getMemberLeaveType(assignedMemberUid, dateStr) : null;
 
                   const sched = schedByDate[dateStr];
                   let barHtml = '';
@@ -6914,8 +6947,8 @@
                     dueMarkerHtml = `<div class="gantt-due-marker" title="Due: ${formatScheduleDate(task.dueDate)}"></div>`;
                   }
 
-                  const cellTitle = isHoliday ? holidayName : '';
-                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
+                  const cellTitle = isHoliday ? holidayName : (isOnLeave ? `Leave: ${leaveType}` : '');
+                  return `<div class="gantt-row-cell ${isWeekend ? 'weekend' : ''} ${isToday ? 'today' : ''} ${isMonday ? 'monday' : ''} ${isHoliday ? 'holiday' : ''} ${isOnLeave ? 'leave' : ''}" style="width:${cellWidth}px;" data-date="${dateStr}" title="${cellTitle}">${barHtml}${dueMarkerHtml}</div>`;
                 }).join('');
 
                 return `<div class="gantt-row" data-row="${rowIdx}" data-task-index="${taskIdx}">${cells}</div>`;
