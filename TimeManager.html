@@ -958,8 +958,8 @@
       color: var(--text);
     }
     @keyframes ticker-scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
     }
     body.has-ticker {
       padding-top: 28px;
@@ -5525,16 +5525,18 @@
         return;
       }
 
-      // Build ticker HTML (duplicate for seamless loop)
+      // Build ticker HTML
       const itemsHtml = items.map(item =>
         `<span class="news-ticker-item ${item.type}">${escapeHtml(item.text)}</span>`
       ).join('');
 
-      track.innerHTML = itemsHtml + itemsHtml; // Duplicate for seamless scroll
+      track.innerHTML = itemsHtml;
 
-      // Adjust animation speed based on content length
-      const totalWidth = track.scrollWidth / 2;
-      const duration = Math.max(20, totalWidth / 50); // ~50px per second
+      // Adjust animation speed based on content length (travels 200% - from right edge to left edge)
+      const contentWidth = track.scrollWidth;
+      const viewportWidth = track.parentElement.offsetWidth;
+      const totalTravel = contentWidth + viewportWidth;
+      const duration = Math.max(15, totalTravel / 80); // ~80px per second
       track.style.animationDuration = duration + 's';
 
       // Show ticker
