@@ -5536,7 +5536,7 @@
       const contentWidth = track.scrollWidth;
       const viewportWidth = track.parentElement.offsetWidth;
       const totalTravel = contentWidth + viewportWidth;
-      const duration = Math.max(15, totalTravel / 80); // ~80px per second
+      const duration = Math.max(20, totalTravel / 40); // ~40px per second (slower)
       track.style.animationDuration = duration + 's';
 
       // Show ticker
