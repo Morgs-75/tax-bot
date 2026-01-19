@@ -919,7 +919,7 @@
     }
     .news-ticker-track {
       display: flex;
-      animation: ticker-scroll 30s linear infinite;
+      animation: ticker-scroll 30s linear;
       white-space: nowrap;
     }
     .news-ticker:hover .news-ticker-track {
@@ -2038,13 +2038,34 @@
           <div id="announcementsSection" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <div style="font-weight:700; color:var(--text);">Firm Announcements (Live Ticker)</div>
-              <div style="display:flex; align-items:center; gap:8px;">
+            </div>
+            <div style="display:flex; gap:16px; align-items:center; margin-bottom:12px; padding:10px; background:var(--panel); border-radius:6px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:6px;">
                 <label style="font-size:11px; color:var(--muted);">Speed:</label>
-                <select id="tickerSpeedSelect" onchange="updateTickerSpeed(this.value)" style="height:28px; font-size:11px; padding:0 8px;">
+                <select id="tickerSpeedSelect" onchange="updateTickerSettings()" style="height:26px; font-size:11px; padding:0 6px;">
                   <option value="20">Slow</option>
                   <option value="40" selected>Normal</option>
                   <option value="60">Fast</option>
                   <option value="80">Very Fast</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-size:11px; color:var(--muted);">Repeats:</label>
+                <select id="tickerRepeatsSelect" onchange="updateTickerSettings()" style="height:26px; font-size:11px; padding:0 6px;">
+                  <option value="1">1</option>
+                  <option value="3">3</option>
+                  <option value="5" selected>5</option>
+                  <option value="10">10</option>
+                  <option value="0">Infinite</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-size:11px; color:var(--muted);">Interval:</label>
+                <select id="tickerIntervalSelect" onchange="updateTickerSettings()" style="height:26px; font-size:11px; padding:0 6px;">
+                  <option value="5">5 min</option>
+                  <option value="15">15 min</option>
+                  <option value="30" selected>30 min</option>
+                  <option value="60">1 hour</option>
                 </select>
               </div>
             </div>
@@ -5423,6 +5444,10 @@
     let firmAnnouncements = [];
     let tickerHidden = false;
     let tickerSpeed = 40; // pixels per second (default: Normal)
+    let tickerRepeats = 5; // number of times to scroll (0 = infinite)
+    let tickerInterval = 30; // minutes between cycles
+    let tickerIntervalTimer = null;
+    let tickerCurrentIteration = 0;
 
     function hideNewsTicker() {
       const ticker = document.getElementById('newsTicker');
@@ -5457,8 +5482,10 @@
         firmAnnouncements = (data?.announcements || [])
           .filter(a => a.active !== false)
           .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        // Load ticker speed setting
+        // Load ticker settings
         tickerSpeed = data?.tickerSpeed || 40;
+        tickerRepeats = data?.tickerRepeats ?? 5;
+        tickerInterval = data?.tickerInterval || 30;
       } catch (e) {
         console.error('Failed to load announcements:', e);
         firmAnnouncements = [];
@@ -5546,6 +5573,21 @@
 
       track.innerHTML = itemsHtml;
 
+      // Reset iteration counter
+      tickerCurrentIteration = 0;
+
+      // Set iteration count (0 means infinite)
+      track.style.animationIterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
+
+      // Remove old listener and add new one
+      track.removeEventListener('animationend', onTickerAnimationEnd);
+      track.removeEventListener('animationiteration', onTickerIteration);
+
+      if (tickerRepeats > 0) {
+        track.addEventListener('animationend', onTickerAnimationEnd);
+      }
+      track.addEventListener('animationiteration', onTickerIteration);
+
       // Show ticker first so it has layout
       if (!tickerHidden) {
         showNewsTicker();
@@ -5559,7 +5601,35 @@
         const totalTravel = contentWidth + viewportWidth;
         const duration = Math.max(15, totalTravel / tickerSpeed); // Speed controlled by tickerSpeed setting
         track.style.animationDuration = duration + 's';
+
+        // Restart animation
+        track.style.animation = 'none';
+        track.offsetHeight; // Trigger reflow
+        track.style.animation = '';
+        track.style.animationDuration = duration + 's';
+        track.style.animationIterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
       });
+    }
+
+    function onTickerIteration() {
+      tickerCurrentIteration++;
+    }
+
+    function onTickerAnimationEnd() {
+      // Hide ticker after all repeats complete
+      hideNewsTicker();
+
+      // Clear any existing timer
+      if (tickerIntervalTimer) {
+        clearTimeout(tickerIntervalTimer);
+      }
+
+      // Set timer for next cycle
+      tickerIntervalTimer = setTimeout(() => {
+        tickerHidden = false;
+        sessionStorage.removeItem('tickerHidden');
+        updateNewsTicker();
+      }, tickerInterval * 60 * 1000); // Convert minutes to milliseconds
     }
 
     async function addFirmAnnouncement(message) {
@@ -5662,30 +5732,52 @@
       if (isAdmin && isInFirmMode()) {
         section.style.display = 'block';
         renderAnnouncementsList();
-        // Set speed dropdown to current value
+        // Set dropdowns to current values
         const speedSelect = document.getElementById('tickerSpeedSelect');
+        const repeatsSelect = document.getElementById('tickerRepeatsSelect');
+        const intervalSelect = document.getElementById('tickerIntervalSelect');
         if (speedSelect) speedSelect.value = tickerSpeed.toString();
+        if (repeatsSelect) repeatsSelect.value = tickerRepeats.toString();
+        if (intervalSelect) intervalSelect.value = tickerInterval.toString();
       } else {
         section.style.display = 'none';
       }
     }
 
-    async function updateTickerSpeed(speed) {
-      tickerSpeed = parseInt(speed) || 40;
+    async function updateTickerSettings() {
+      const speedSelect = document.getElementById('tickerSpeedSelect');
+      const repeatsSelect = document.getElementById('tickerRepeatsSelect');
+      const intervalSelect = document.getElementById('tickerIntervalSelect');
+
+      tickerSpeed = parseInt(speedSelect?.value) || 40;
+      tickerRepeats = parseInt(repeatsSelect?.value) ?? 5;
+      tickerInterval = parseInt(intervalSelect?.value) || 30;
 
       // Save to firm document
       if (isInFirmMode() && currentFirmId) {
         try {
-          await fbDb.collection('firms').doc(currentFirmId).update({ tickerSpeed });
+          await fbDb.collection('firms').doc(currentFirmId).update({
+            tickerSpeed,
+            tickerRepeats,
+            tickerInterval
+          });
         } catch (e) {
-          console.error('Failed to save ticker speed:', e);
+          console.error('Failed to save ticker settings:', e);
         }
       }
 
-      // Refresh ticker with new speed
+      // Clear any existing interval timer
+      if (tickerIntervalTimer) {
+        clearTimeout(tickerIntervalTimer);
+        tickerIntervalTimer = null;
+      }
+
+      // Refresh ticker with new settings
+      tickerHidden = false;
+      sessionStorage.removeItem('tickerHidden');
       updateNewsTicker();
     }
-    window.updateTickerSpeed = updateTickerSpeed;
+    window.updateTickerSettings = updateTickerSettings;
 
     // ===== User Leave Management =====
 
