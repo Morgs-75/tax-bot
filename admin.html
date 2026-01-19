@@ -1621,19 +1621,31 @@
 
         for (const doc of snapshot.docs) {
           const user = { id: doc.id, ...doc.data() };
+          user.isOrphaned = true; // Assume orphaned until proven otherwise
 
           // Get firm info if they belong to one
           if (user.firmId) {
             const firmDoc = await db.collection('firms').doc(user.firmId).get();
-            user.firmName = firmDoc.exists ? firmDoc.data().name : 'Unknown';
 
-            // Get member info
-            const memberDoc = await db.collection('firms').doc(user.firmId)
-              .collection('members').doc(doc.id).get();
-            if (memberDoc.exists) {
-              user.role = memberDoc.data().role || '-';
-              user.memberStatus = memberDoc.data().status || 'active';
+            if (firmDoc.exists) {
+              user.firmName = firmDoc.data().name;
+
+              // Get member info - only consider not orphaned if they're in members
+              const memberDoc = await db.collection('firms').doc(user.firmId)
+                .collection('members').doc(doc.id).get();
+              if (memberDoc.exists) {
+                user.role = memberDoc.data().role || '-';
+                user.memberStatus = memberDoc.data().status || 'active';
+                user.isOrphaned = false; // Has firmId, firm exists, and is in members
+              } else {
+                user.orphanReason = 'Not in firm members';
+              }
+            } else {
+              user.firmName = 'Unknown (Deleted?)';
+              user.orphanReason = 'Firm does not exist';
             }
+          } else {
+            user.orphanReason = 'No firm assigned';
           }
 
           usersData.push(user);
@@ -1658,10 +1670,9 @@
       }
 
       tbody.innerHTML = data.map(user => {
-        const isOrphaned = !user.firmId;
-        const rowStyle = isOrphaned ? 'background: rgba(245, 158, 11, 0.1);' : '';
-        const firmDisplay = isOrphaned
-          ? '<span style="color: var(--warning);">⚠ No Firm (Orphaned)</span>'
+        const rowStyle = user.isOrphaned ? 'background: rgba(245, 158, 11, 0.1);' : '';
+        const firmDisplay = user.isOrphaned
+          ? `<span style="color: var(--warning);">⚠ ${escapeHtml(user.orphanReason || 'Orphaned')}</span>`
           : escapeHtml(user.firmName || 'Solo');
 
         return `
@@ -1688,9 +1699,9 @@
 
       // Apply type filter first
       if (currentUserFilter === 'orphaned') {
-        filtered = filtered.filter(u => !u.firmId);
+        filtered = filtered.filter(u => u.isOrphaned);
       } else if (currentUserFilter === 'firm') {
-        filtered = filtered.filter(u => u.firmId);
+        filtered = filtered.filter(u => !u.isOrphaned);
       }
 
       // Then apply search query
@@ -1721,7 +1732,7 @@
     }
 
     function updateOrphanedCount() {
-      const orphanedUsers = usersData.filter(u => !u.firmId);
+      const orphanedUsers = usersData.filter(u => u.isOrphaned);
       const countEl = document.getElementById('orphanedCount');
       const containerEl = document.getElementById('orphanedUserCount');
 
@@ -1735,9 +1746,8 @@
       const user = usersData.find(u => u.id === userId);
       if (!user) return;
 
-      const isOrphaned = !user.firmId;
-      const orphanedBanner = isOrphaned
-        ? '<div style="background: var(--warning); color: #000; padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;"><strong>⚠ ORPHANED USER</strong> - Registered but not in any firm</div>'
+      const orphanedBanner = user.isOrphaned
+        ? `<div style="background: var(--warning); color: #000; padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;"><strong>⚠ ORPHANED USER</strong> - ${escapeHtml(user.orphanReason || 'Not properly linked to a firm')}</div>`
         : '';
 
       const createdAt = user.createdAt
@@ -1747,7 +1757,7 @@
       // Build firm options for dropdown
       const firmOptions = firmsData.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
 
-      const assignToFirmSection = isOrphaned ? `
+      const assignToFirmSection = user.isOrphaned ? `
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
           <h4 style="margin-bottom: 12px; color: var(--accent);">Assign to Firm</h4>
           <div style="margin-bottom: 12px;">
@@ -1785,7 +1795,7 @@
           <strong>Display Name:</strong> ${escapeHtml(user.displayName || '-')}
         </div>
         <div style="margin-bottom: 16px;">
-          <strong>Firm:</strong> ${isOrphaned ? '<span style="color: var(--warning);">No Firm</span>' : escapeHtml(user.firmName || 'Solo Mode')}
+          <strong>Firm:</strong> ${user.isOrphaned ? `<span style="color: var(--warning);">${escapeHtml(user.orphanReason || 'No Firm')}</span>` : escapeHtml(user.firmName || 'Solo Mode')}
         </div>
         <div style="margin-bottom: 16px;">
           <strong>Firm ID:</strong> ${user.firmId ? `<code style="font-size: 11px;">${user.firmId}</code>` : '<span style="color: var(--muted);">None</span>'}
