@@ -1380,7 +1380,7 @@
     <div class="news-ticker-content">
       <div class="news-ticker-track" id="newsTickerTrack"></div>
     </div>
-    <button class="news-ticker-close" onclick="hideNewsTicker()" title="Hide ticker">×</button>
+    <button class="news-ticker-close" onclick="hideNewsTicker(true)" title="Hide ticker">×</button>
   </div>
 
   <!-- Maintenance Mode Overlay -->
@@ -5449,13 +5449,15 @@
     let tickerIntervalTimer = null;
     let tickerCurrentIteration = 0;
 
-    function hideNewsTicker() {
+    function hideNewsTicker(manual = false) {
       const ticker = document.getElementById('newsTicker');
       if (ticker) {
         ticker.classList.remove('active');
         document.body.classList.remove('has-ticker');
         tickerHidden = true;
-        sessionStorage.setItem('tickerHidden', 'true');
+        if (manual) {
+          sessionStorage.setItem('tickerManuallyHidden', 'true');
+        }
       }
     }
     window.hideNewsTicker = hideNewsTicker;
@@ -5466,7 +5468,7 @@
         ticker.classList.add('active');
         document.body.classList.add('has-ticker');
         tickerHidden = false;
-        sessionStorage.removeItem('tickerHidden');
+        sessionStorage.removeItem('tickerManuallyHidden');
       }
     }
 
@@ -5541,8 +5543,8 @@
       const ticker = document.getElementById('newsTicker');
       if (!track || !ticker) return;
 
-      // Check if user hid ticker this session
-      if (sessionStorage.getItem('tickerHidden') === 'true') {
+      // Check if user manually hid ticker this session (not from animation end)
+      if (sessionStorage.getItem('tickerManuallyHidden') === 'true') {
         tickerHidden = true;
         return;
       }
