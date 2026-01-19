@@ -5466,6 +5466,7 @@
         ticker.classList.add('active');
         document.body.classList.add('has-ticker');
         tickerHidden = false;
+        sessionStorage.removeItem('tickerHidden');
       }
     }
 
@@ -5571,18 +5572,19 @@
         `<span class="news-ticker-item ${item.type}">${escapeHtml(item.text)}</span>`
       ).join('');
 
+      // Stop any existing animation
+      track.style.animation = 'none';
+
       track.innerHTML = itemsHtml;
 
       // Reset iteration counter
       tickerCurrentIteration = 0;
 
-      // Set iteration count (0 means infinite)
-      track.style.animationIterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
-
-      // Remove old listener and add new one
+      // Remove old listeners
       track.removeEventListener('animationend', onTickerAnimationEnd);
       track.removeEventListener('animationiteration', onTickerIteration);
 
+      // Add new listeners
       if (tickerRepeats > 0) {
         track.addEventListener('animationend', onTickerAnimationEnd);
       }
@@ -5593,19 +5595,19 @@
         showNewsTicker();
       }
 
-      // Wait for next frame to ensure content is rendered before measuring
+      // Use double RAF to ensure DOM is ready
       requestAnimationFrame(() => {
-        // Adjust animation speed based on content length (travels 200% - from right edge to left edge)
-        const contentWidth = track.scrollWidth || 500;
-        const viewportWidth = track.parentElement?.offsetWidth || window.innerWidth;
-        const totalTravel = contentWidth + viewportWidth;
-        const duration = Math.max(15, totalTravel / tickerSpeed); // Speed controlled by tickerSpeed setting
-        const iterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
+        requestAnimationFrame(() => {
+          // Adjust animation speed based on content length
+          const contentWidth = track.scrollWidth || 500;
+          const viewportWidth = track.parentElement?.offsetWidth || window.innerWidth;
+          const totalTravel = contentWidth + viewportWidth;
+          const duration = Math.max(15, totalTravel / tickerSpeed);
+          const iterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
 
-        // Restart animation by removing and re-adding
-        track.style.animation = 'none';
-        track.offsetHeight; // Trigger reflow
-        track.style.animation = `ticker-scroll ${duration}s linear ${iterationCount}`;
+          // Start animation
+          track.style.animation = `ticker-scroll ${duration}s linear ${iterationCount}`;
+        });
       });
     }
 
