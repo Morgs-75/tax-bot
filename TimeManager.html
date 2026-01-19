@@ -5600,14 +5600,12 @@
         const viewportWidth = track.parentElement?.offsetWidth || window.innerWidth;
         const totalTravel = contentWidth + viewportWidth;
         const duration = Math.max(15, totalTravel / tickerSpeed); // Speed controlled by tickerSpeed setting
-        track.style.animationDuration = duration + 's';
+        const iterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
 
-        // Restart animation
+        // Restart animation by removing and re-adding
         track.style.animation = 'none';
         track.offsetHeight; // Trigger reflow
-        track.style.animation = '';
-        track.style.animationDuration = duration + 's';
-        track.style.animationIterationCount = tickerRepeats === 0 ? 'infinite' : tickerRepeats.toString();
+        track.style.animation = `ticker-scroll ${duration}s linear ${iterationCount}`;
       });
     }
 
