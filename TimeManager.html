@@ -5708,18 +5708,83 @@
         const createdAt = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
         const dateStr = createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
         return `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border);">
-            <div style="flex:1;">
-              <div style="color:var(--text);">${escapeHtml(a.message)}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border);" data-announcement-id="${a.id}">
+            <div style="flex:1; cursor:pointer;" onclick="editFirmAnnouncement('${a.id}')">
+              <div class="announcement-text" style="color:var(--text);">${escapeHtml(a.message)}</div>
               <div style="font-size:10px; color:var(--muted); margin-top:2px;">Added ${dateStr}</div>
             </div>
-            <button type="button" onclick="removeFirmAnnouncement('${a.id}')"
-              style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:14px;"
-              title="Remove">×</button>
+            <div style="display:flex; gap:6px;">
+              <button type="button" onclick="editFirmAnnouncement('${a.id}')"
+                style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--teal); color:var(--teal); border-radius:4px; cursor:pointer; font-size:12px;"
+                title="Edit">✎</button>
+              <button type="button" onclick="removeFirmAnnouncement('${a.id}')"
+                style="width:28px; height:28px; padding:0; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:4px; cursor:pointer; font-size:14px;"
+                title="Remove">×</button>
+            </div>
           </div>
         `;
       }).join('');
     }
+
+    function editFirmAnnouncement(id) {
+      const announcement = firmAnnouncements.find(a => a.id === id);
+      if (!announcement) return;
+
+      const container = document.querySelector(`[data-announcement-id="${id}"]`);
+      if (!container) return;
+
+      // Replace content with edit form
+      container.innerHTML = `
+        <div style="flex:1; display:flex; gap:8px; align-items:center;">
+          <input type="text" id="editAnnouncement_${id}" value="${escapeHtml(announcement.message)}"
+            style="flex:1; height:32px; font-size:13px;"
+            onkeydown="if(event.key==='Enter')saveFirmAnnouncementEdit('${id}');if(event.key==='Escape')renderAnnouncementsList();" />
+          <button type="button" onclick="saveFirmAnnouncementEdit('${id}')"
+            style="height:32px; padding:0 12px; background:var(--teal); border-color:var(--teal); font-size:11px;">Save</button>
+          <button type="button" onclick="renderAnnouncementsList()"
+            style="height:32px; padding:0 12px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:11px;">Cancel</button>
+        </div>
+      `;
+
+      // Focus the input
+      const input = document.getElementById(`editAnnouncement_${id}`);
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+    window.editFirmAnnouncement = editFirmAnnouncement;
+
+    async function saveFirmAnnouncementEdit(id) {
+      const input = document.getElementById(`editAnnouncement_${id}`);
+      if (!input || !input.value.trim()) {
+        toast('Announcement cannot be empty');
+        return;
+      }
+
+      try {
+        const firmRef = fbDb.collection('firms').doc(currentFirmId);
+        const firmDoc = await firmRef.get();
+        let announcements = firmDoc.data()?.announcements || [];
+
+        // Find and update the announcement
+        const idx = announcements.findIndex(a => a.id === id);
+        if (idx !== -1) {
+          announcements[idx].message = input.value.trim();
+          announcements[idx].editedAt = new Date().toISOString();
+          await firmRef.update({ announcements });
+
+          await loadFirmAnnouncements();
+          renderAnnouncementsList();
+          updateNewsTicker();
+          toast('Announcement updated');
+        }
+      } catch (e) {
+        console.error('Failed to update announcement:', e);
+        toast('Failed to update announcement');
+      }
+    }
+    window.saveFirmAnnouncementEdit = saveFirmAnnouncementEdit;
 
     function showAnnouncementsSectionIfAdmin() {
       const section = document.getElementById('announcementsSection');
