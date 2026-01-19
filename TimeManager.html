@@ -5439,9 +5439,12 @@
       }
 
       try {
-        const announcementsRef = fbDb.collection('firms').doc(currentFirmId).collection('announcements');
-        const snapshot = await announcementsRef.where('active', '==', true).orderBy('createdAt', 'desc').get();
-        firmAnnouncements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Load from firm document field (not subcollection) to work with existing security rules
+        const firmDoc = await fbDb.collection('firms').doc(currentFirmId).get();
+        const data = firmDoc.data();
+        firmAnnouncements = (data?.announcements || [])
+          .filter(a => a.active !== false)
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       } catch (e) {
         console.error('Failed to load announcements:', e);
         firmAnnouncements = [];
@@ -5544,13 +5547,21 @@
       if (!isInFirmMode() || !currentFirmId || !message.trim()) return;
 
       try {
-        const announcementsRef = fbDb.collection('firms').doc(currentFirmId).collection('announcements');
-        await announcementsRef.add({
+        const firmRef = fbDb.collection('firms').doc(currentFirmId);
+        const firmDoc = await firmRef.get();
+        const announcements = firmDoc.data()?.announcements || [];
+
+        const newAnnouncement = {
+          id: Date.now().toString(),
           message: message.trim(),
           active: true,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: new Date().toISOString(),
           createdBy: currentUser.uid
-        });
+        };
+
+        announcements.unshift(newAnnouncement);
+        await firmRef.update({ announcements });
+
         await loadFirmAnnouncements();
         updateNewsTicker();
         toast('Announcement added');
@@ -5565,7 +5576,13 @@
       if (!isInFirmMode() || !currentFirmId) return;
 
       try {
-        await fbDb.collection('firms').doc(currentFirmId).collection('announcements').doc(id).delete();
+        const firmRef = fbDb.collection('firms').doc(currentFirmId);
+        const firmDoc = await firmRef.get();
+        let announcements = firmDoc.data()?.announcements || [];
+
+        announcements = announcements.filter(a => a.id !== id);
+        await firmRef.update({ announcements });
+
         await loadFirmAnnouncements();
         updateNewsTicker();
         renderAnnouncementsList();
