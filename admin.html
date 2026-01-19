@@ -393,6 +393,23 @@
       background: rgba(239, 68, 68, 0.1);
     }
 
+    .btn-filter {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn-filter.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn-filter[data-filter="orphaned"].active {
+      background: var(--warning);
+      border-color: var(--warning);
+      color: #000;
+    }
+
     .btn-success {
       border-color: var(--success);
       color: var(--success);
@@ -794,7 +811,15 @@
 
         <div class="search-bar">
           <input type="text" class="form-control" id="userSearchInput" placeholder="Search users by email...">
+          <div class="filter-buttons" style="display: flex; gap: 8px;">
+            <button class="btn btn-filter active" data-filter="all" onclick="filterUsersByType('all')">All Users</button>
+            <button class="btn btn-filter" data-filter="orphaned" onclick="filterUsersByType('orphaned')" style="background: var(--warning); color: #000;">Orphaned</button>
+            <button class="btn btn-filter" data-filter="firm" onclick="filterUsersByType('firm')">In Firm</button>
+          </div>
           <button class="btn" onclick="loadUsers()">Refresh</button>
+        </div>
+        <div id="orphanedUserCount" style="margin-bottom: 12px; padding: 8px 12px; background: var(--surface-hover); border-radius: 6px; display: none;">
+          <span style="color: var(--warning);">⚠</span> <strong id="orphanedCount">0</strong> orphaned users found (registered but not in any firm)
         </div>
 
         <div class="card">
@@ -1624,16 +1649,26 @@
     function renderUsersTable(data = usersData) {
       const tbody = document.getElementById('usersTable');
 
+      // Update orphaned count
+      updateOrphanedCount();
+
       if (data.length === 0) {
         tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users found</td></tr>';
         return;
       }
 
-      tbody.innerHTML = data.map(user => `
-        <tr>
+      tbody.innerHTML = data.map(user => {
+        const isOrphaned = !user.firmId;
+        const rowStyle = isOrphaned ? 'background: rgba(245, 158, 11, 0.1);' : '';
+        const firmDisplay = isOrphaned
+          ? '<span style="color: var(--warning);">⚠ No Firm (Orphaned)</span>'
+          : escapeHtml(user.firmName || 'Solo');
+
+        return `
+        <tr style="${rowStyle}">
           <td>${escapeHtml(user.email || user.id)}</td>
           <td>${escapeHtml(user.displayName || '-')}</td>
-          <td>${escapeHtml(user.firmName || 'Solo')}</td>
+          <td>${firmDisplay}</td>
           <td>${escapeHtml(user.role || '-')}</td>
           <td><span class="status-badge ${user.memberStatus === 'active' ? 'status-active' : 'status-inactive'}">
             ${user.memberStatus || 'Active'}
@@ -1642,26 +1677,106 @@
             <button class="btn btn-sm" onclick="viewUserDetails('${user.id}')">View</button>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     }
+
+    let currentUserFilter = 'all';
 
     function filterUsers() {
       const query = document.getElementById('userSearchInput').value.toLowerCase();
-      const filtered = usersData.filter(u =>
-        (u.email || '').toLowerCase().includes(query) ||
-        (u.displayName || '').toLowerCase().includes(query) ||
-        (u.firmName || '').toLowerCase().includes(query)
-      );
+      let filtered = usersData;
+
+      // Apply type filter first
+      if (currentUserFilter === 'orphaned') {
+        filtered = filtered.filter(u => !u.firmId);
+      } else if (currentUserFilter === 'firm') {
+        filtered = filtered.filter(u => u.firmId);
+      }
+
+      // Then apply search query
+      if (query) {
+        filtered = filtered.filter(u =>
+          (u.email || '').toLowerCase().includes(query) ||
+          (u.displayName || '').toLowerCase().includes(query) ||
+          (u.firmName || '').toLowerCase().includes(query) ||
+          (u.id || '').toLowerCase().includes(query)
+        );
+      }
+
       renderUsersTable(filtered);
+    }
+
+    function filterUsersByType(type) {
+      currentUserFilter = type;
+
+      // Update button styles
+      document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.filter === type) {
+          btn.classList.add('active');
+        }
+      });
+
+      filterUsers();
+    }
+
+    function updateOrphanedCount() {
+      const orphanedUsers = usersData.filter(u => !u.firmId);
+      const countEl = document.getElementById('orphanedCount');
+      const containerEl = document.getElementById('orphanedUserCount');
+
+      if (countEl) countEl.textContent = orphanedUsers.length;
+      if (containerEl) {
+        containerEl.style.display = orphanedUsers.length > 0 ? 'block' : 'none';
+      }
     }
 
     function viewUserDetails(userId) {
       const user = usersData.find(u => u.id === userId);
       if (!user) return;
 
+      const isOrphaned = !user.firmId;
+      const orphanedBanner = isOrphaned
+        ? '<div style="background: var(--warning); color: #000; padding: 8px 12px; border-radius: 6px; margin-bottom: 16px;"><strong>⚠ ORPHANED USER</strong> - Registered but not in any firm</div>'
+        : '';
+
+      const createdAt = user.createdAt
+        ? new Date(user.createdAt.toDate ? user.createdAt.toDate() : user.createdAt).toLocaleString()
+        : 'Unknown';
+
+      // Build firm options for dropdown
+      const firmOptions = firmsData.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+
+      const assignToFirmSection = isOrphaned ? `
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+          <h4 style="margin-bottom: 12px; color: var(--accent);">Assign to Firm</h4>
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted);">Select Firm</label>
+            <select id="assignFirmSelect" class="form-control" style="width: 100%;">
+              <option value="">-- Select a firm --</option>
+              ${firmOptions}
+            </select>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted);">Role</label>
+            <select id="assignRoleSelect" class="form-control" style="width: 100%;">
+              <option value="staff">Staff</option>
+              <option value="senior">Senior</option>
+              <option value="manager">Manager</option>
+              <option value="partner">Partner</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="assignUserToFirm('${userId}')" style="width: 100%;">
+            Assign to Firm
+          </button>
+        </div>
+      ` : '';
+
       document.getElementById('firmDetailsContent').innerHTML = `
+        ${orphanedBanner}
         <div style="margin-bottom: 16px;">
-          <strong>User ID:</strong> <code>${userId}</code>
+          <strong>User ID:</strong> <code style="font-size: 11px; word-break: break-all;">${userId}</code>
         </div>
         <div style="margin-bottom: 16px;">
           <strong>Email:</strong> ${escapeHtml(user.email || '-')}
@@ -1670,14 +1785,59 @@
           <strong>Display Name:</strong> ${escapeHtml(user.displayName || '-')}
         </div>
         <div style="margin-bottom: 16px;">
-          <strong>Firm:</strong> ${escapeHtml(user.firmName || 'Solo Mode')}
+          <strong>Firm:</strong> ${isOrphaned ? '<span style="color: var(--warning);">No Firm</span>' : escapeHtml(user.firmName || 'Solo Mode')}
+        </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Firm ID:</strong> ${user.firmId ? `<code style="font-size: 11px;">${user.firmId}</code>` : '<span style="color: var(--muted);">None</span>'}
         </div>
         <div style="margin-bottom: 16px;">
           <strong>Role:</strong> ${escapeHtml(user.role || '-')}
         </div>
+        <div style="margin-bottom: 16px;">
+          <strong>Registered:</strong> ${createdAt}
+        </div>
+        ${assignToFirmSection}
       `;
 
       showModal('firmDetailsModal');
+    }
+
+    async function assignUserToFirm(userId) {
+      const firmId = document.getElementById('assignFirmSelect').value;
+      const role = document.getElementById('assignRoleSelect').value;
+
+      if (!firmId) {
+        toast('Please select a firm', 'error');
+        return;
+      }
+
+      try {
+        const user = usersData.find(u => u.id === userId);
+        if (!user) throw new Error('User not found');
+
+        // Update user document with firmId
+        await db.collection('users').doc(userId).update({
+          firmId: firmId
+        });
+
+        // Add user to firm's members subcollection
+        await db.collection('firms').doc(firmId).collection('members').doc(userId).set({
+          uid: userId,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          role: role,
+          status: 'active',
+          addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          addedBy: 'admin'
+        });
+
+        toast('User assigned to firm successfully', 'success');
+        closeModal('firmDetailsModal');
+        loadUsers(); // Refresh the users list
+      } catch (error) {
+        console.error('Assign user error:', error);
+        toast('Failed to assign user: ' + error.message, 'error');
+      }
     }
 
     // ===== App Config =====
