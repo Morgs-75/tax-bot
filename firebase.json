@@ -6,7 +6,8 @@
       "**/.*",
       "**/node_modules/**",
       "firestore.rules",
-      ".firebaserc"
+      ".firebaserc",
+      "functions/**"
     ],
     "headers": [
       {
@@ -66,5 +67,8 @@
   },
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions"
   }
 }
