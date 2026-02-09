@@ -1363,6 +1363,132 @@
       background: var(--muted);
       color: white;
     }
+
+    /* ===== Sticky Notes ===== */
+    .sticky-note {
+      position: fixed;
+      width: 187px;
+      min-height: 153px;
+      border-radius: 6px;
+      box-shadow: 2px 4px 16px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      transition: box-shadow 0.15s;
+      overflow: hidden;
+      resize: both;
+    }
+    .sticky-note:hover {
+      box-shadow: 2px 6px 24px rgba(0,0,0,0.28);
+    }
+    .sticky-note-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px;
+      cursor: move;
+      user-select: none;
+      gap: 4px;
+      min-height: 26px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .sticky-note-header .sticky-color-btn {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.18);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .sticky-note-header .sticky-color-btn:hover {
+      transform: scale(1.2);
+    }
+    .sticky-note-header .sticky-delete-btn {
+      background: none;
+      border: none;
+      color: rgba(0,0,0,0.4);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .sticky-note-header .sticky-delete-btn:hover {
+      color: rgba(200, 0, 0, 0.8);
+    }
+    .sticky-note-body {
+      flex: 1;
+      padding: 0;
+    }
+    .sticky-note-body textarea {
+      width: 100%;
+      height: 100%;
+      min-height: 119px;
+      box-sizing: border-box;
+      border: none;
+      background: transparent;
+      resize: none;
+      padding: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      outline: none;
+      font-family: inherit;
+    }
+    .sticky-note-color-picker {
+      display: none;
+      position: absolute;
+      top: 28px;
+      left: 4px;
+      background: white;
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 8px;
+      padding: 6px;
+      gap: 4px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1;
+      width: 88px;
+    }
+    .sticky-note-color-picker.open {
+      display: flex;
+    }
+    .sticky-note-color-picker .sticky-color-option {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.12);
+      cursor: pointer;
+      padding: 0;
+    }
+    .sticky-note-color-picker .sticky-color-option:hover {
+      border-color: rgba(0,0,0,0.4);
+      transform: scale(1.15);
+    }
+    #stickyNotesToggleBtn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid rgba(20, 184, 166, 0.55);
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      z-index: 7999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+    }
+    #stickyNotesToggleBtn:hover {
+      transform: scale(1.1);
+      border-color: var(--teal-2);
+    }
   </style>
 
   <!-- Firebase (compat build so this file runs in a plain <script> context) -->
@@ -1659,6 +1785,33 @@
                 <option value="custom">Custom</option>
               </select>
               <input id="hoursPerDayCustom" type="number" min="1" max="24" step="0.5" style="width:60px; display:none;" placeholder="Hrs" />
+            </div>
+          </div>
+          <!-- Siri Integration Section -->
+          <div style="border-top:1px solid var(--border); padding-top:16px;">
+            <div style="font-weight:700; margin-bottom:8px; color:var(--text);">Siri Integration</div>
+            <p style="color:var(--muted); font-size:12px; margin:0 0 12px 0;">Add tasks via Siri voice commands using an Apple Shortcut. Generate a personal API token below.</p>
+            <div id="siriTokenSection">
+              <div id="siriTokenEmpty">
+                <button id="generateSiriTokenBtn" class="mini" type="button" style="background:var(--accent); color:#fff;">Generate API Token</button>
+              </div>
+              <div id="siriTokenActive" style="display:none;">
+                <div style="margin-bottom:8px;">
+                  <label style="color:var(--muted); font-size:12px; display:block; margin-bottom:4px;">API Token</label>
+                  <div style="display:flex; gap:6px;">
+                    <input id="siriTokenDisplay" type="text" readonly style="flex:1; font-family:monospace; font-size:11px; background:var(--surface); border:1px solid var(--border); padding:6px 8px; border-radius:6px; color:var(--text);" />
+                    <button id="copySiriTokenBtn" class="mini" type="button" title="Copy token">Copy</button>
+                  </div>
+                </div>
+                <div style="margin-bottom:12px;">
+                  <label style="color:var(--muted); font-size:12px; display:block; margin-bottom:4px;">Endpoint URL</label>
+                  <input id="siriEndpointDisplay" type="text" readonly style="width:100%; font-family:monospace; font-size:11px; background:var(--surface); border:1px solid var(--border); padding:6px 8px; border-radius:6px; color:var(--text);" />
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button id="generateSiriTokenBtn2" class="mini" type="button">Regenerate</button>
+                  <button id="revokeSiriTokenBtn" class="mini btn-danger" type="button">Revoke</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2507,6 +2660,10 @@
     </div>
   </div>
 
+  <!-- Sticky Notes Container + Toggle Button -->
+  <div id="stickyNotesContainer"></div>
+  <button id="stickyNotesToggleBtn" type="button" title="Add sticky note" style="display:none;">+</button>
+
   <script>
     // ===== Firebase Auth + Firestore (email/password) =====
     // Replace FIREBASE_CONFIG with your Firebase project config.
@@ -2837,6 +2994,20 @@
 
     const userTasksCol = (uid) => fbDb.collection('users').doc(uid).collection('tasks');
     const userArchiveCol = (uid) => fbDb.collection('users').doc(uid).collection('archive');
+    const userStickyNotesCol = (uid) => fbDb.collection('users').doc(uid).collection('stickyNotes');
+
+    // ===== Sticky Notes State =====
+    const STICKY_NOTES_KEY = 'razeTimeManager_stickyNotes';
+    let stickyNotes = [];
+    let stickyNextZ = 8000;
+    const STICKY_COLORS = {
+      yellow: { bg: '#fef9c3', text: '#713f12', border: '#fde047' },
+      pink:   { bg: '#fce7f3', text: '#831843', border: '#f9a8d4' },
+      blue:   { bg: '#dbeafe', text: '#1e3a5f', border: '#93c5fd' },
+      green:  { bg: '#dcfce7', text: '#14532d', border: '#86efac' },
+      orange: { bg: '#ffedd5', text: '#7c2d12', border: '#fdba74' },
+      purple: { bg: '#f3e8ff', text: '#581c87', border: '#d8b4fe' }
+    };
 
     function pad2(n) { return String(n).padStart(2, '0'); }
 
@@ -3069,6 +3240,271 @@
         const uid = currentUser.uid;
         await userTasksCol(uid).doc(task.id).delete();
       }
+    }
+
+    // ===== Sticky Notes Functions =====
+
+    function createStickyNoteId() {
+      return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+    }
+
+    function addStickyNote(opts = {}) {
+      const note = {
+        id: createStickyNoteId(),
+        text: opts.text || '',
+        color: opts.color || 'yellow',
+        x: opts.x ?? (100 + Math.random() * 200),
+        y: opts.y ?? (100 + Math.random() * 200),
+        zIndex: stickyNextZ++,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      stickyNotes.push(note);
+      renderStickyNote(note);
+      saveStickyNotes();
+      persistStickyNoteToFirestore(note);
+      return note;
+    }
+
+    function deleteStickyNote(noteId) {
+      const idx = stickyNotes.findIndex(n => n.id === noteId);
+      if (idx === -1) return;
+      stickyNotes.splice(idx, 1);
+      const el = document.getElementById('sticky-' + noteId);
+      if (el) el.remove();
+      saveStickyNotes();
+      deleteStickyNoteFromFirestore(noteId);
+      toast('Note deleted');
+    }
+
+    function updateStickyNote(noteId, changes) {
+      const note = stickyNotes.find(n => n.id === noteId);
+      if (!note) return;
+      Object.assign(note, changes, { updatedAt: new Date().toISOString() });
+      saveStickyNotes();
+      persistStickyNoteToFirestore(note);
+    }
+
+    function applyStickyColor(noteId, colorName) {
+      const note = stickyNotes.find(n => n.id === noteId);
+      if (!note) return;
+      note.color = colorName;
+      note.updatedAt = new Date().toISOString();
+      const el = document.getElementById('sticky-' + noteId);
+      if (el) {
+        const c = STICKY_COLORS[colorName];
+        el.style.background = c.bg;
+        el.style.borderColor = c.border;
+        el.querySelector('textarea').style.color = c.text;
+        el.querySelector('.sticky-note-header').style.color = c.text;
+      }
+      saveStickyNotes();
+      persistStickyNoteToFirestore(note);
+    }
+
+    function renderStickyNote(note) {
+      const container = document.getElementById('stickyNotesContainer');
+      if (!container) return;
+      const c = STICKY_COLORS[note.color] || STICKY_COLORS.yellow;
+
+      const el = document.createElement('div');
+      el.id = 'sticky-' + note.id;
+      el.className = 'sticky-note';
+      el.style.cssText = 'left:' + note.x + 'px; top:' + note.y + 'px; z-index:' + note.zIndex + '; background:' + c.bg + '; border:1.5px solid ' + c.border + ';';
+
+      const header = document.createElement('div');
+      header.className = 'sticky-note-header';
+      header.style.color = c.text;
+
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'sticky-color-btn';
+      colorBtn.style.background = c.bg;
+      colorBtn.style.borderColor = c.border;
+      colorBtn.title = 'Change colour';
+      colorBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const picker = el.querySelector('.sticky-note-color-picker');
+        picker.classList.toggle('open');
+      });
+
+      const spacer = document.createElement('span');
+      spacer.style.flex = '1';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'sticky-delete-btn';
+      delBtn.innerHTML = '&times;';
+      delBtn.title = 'Delete note';
+      delBtn.addEventListener('click', () => deleteStickyNote(note.id));
+
+      header.appendChild(colorBtn);
+      header.appendChild(spacer);
+      header.appendChild(delBtn);
+
+      const picker = document.createElement('div');
+      picker.className = 'sticky-note-color-picker';
+      for (const [name, colors] of Object.entries(STICKY_COLORS)) {
+        const opt = document.createElement('button');
+        opt.className = 'sticky-color-option';
+        opt.style.background = colors.bg;
+        opt.style.borderColor = colors.border;
+        opt.title = name;
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applyStickyColor(note.id, name);
+          picker.classList.remove('open');
+          colorBtn.style.background = colors.bg;
+          colorBtn.style.borderColor = colors.border;
+        });
+        picker.appendChild(opt);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'sticky-note-body';
+      const textarea = document.createElement('textarea');
+      textarea.value = note.text;
+      textarea.placeholder = 'Write a note...';
+      textarea.style.color = c.text;
+
+      let saveTimer = null;
+      textarea.addEventListener('input', () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => updateStickyNote(note.id, { text: textarea.value }), 500);
+      });
+      textarea.addEventListener('blur', () => {
+        clearTimeout(saveTimer);
+        updateStickyNote(note.id, { text: textarea.value });
+      });
+
+      body.appendChild(textarea);
+      el.appendChild(header);
+      el.appendChild(picker);
+      el.appendChild(body);
+      container.appendChild(el);
+
+      el.addEventListener('mousedown', () => {
+        note.zIndex = stickyNextZ++;
+        el.style.zIndex = note.zIndex;
+      });
+
+      initStickyDrag(el, header, note);
+
+      document.addEventListener('click', (e) => {
+        if (!el.contains(e.target)) picker.classList.remove('open');
+      });
+    }
+
+    function initStickyDrag(el, handle, note) {
+      let isDragging = false;
+      let startX, startY, origX, origY;
+
+      handle.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        origX = parseInt(el.style.left) || 0;
+        origY = parseInt(el.style.top) || 0;
+        document.body.style.cursor = 'move';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        el.style.left = (origX + e.clientX - startX) + 'px';
+        el.style.top = (origY + e.clientY - startY) + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        document.body.style.cursor = '';
+        note.x = parseInt(el.style.left) || 0;
+        note.y = parseInt(el.style.top) || 0;
+        updateStickyNote(note.id, { x: note.x, y: note.y });
+      });
+
+      handle.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button')) return;
+        const touch = e.touches[0];
+        isDragging = true;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        origX = parseInt(el.style.left) || 0;
+        origY = parseInt(el.style.top) || 0;
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        el.style.left = (origX + touch.clientX - startX) + 'px';
+        el.style.top = (origY + touch.clientY - startY) + 'px';
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        note.x = parseInt(el.style.left) || 0;
+        note.y = parseInt(el.style.top) || 0;
+        updateStickyNote(note.id, { x: note.x, y: note.y });
+      });
+    }
+
+    function renderAllStickyNotes() {
+      const container = document.getElementById('stickyNotesContainer');
+      if (container) container.innerHTML = '';
+      stickyNextZ = 8000;
+      stickyNotes.forEach(note => {
+        if (note.zIndex >= stickyNextZ) stickyNextZ = note.zIndex + 1;
+        renderStickyNote(note);
+      });
+    }
+
+    function saveStickyNotes() {
+      try { localStorage.setItem(STICKY_NOTES_KEY, JSON.stringify(stickyNotes)); } catch (e) {}
+    }
+
+    function loadStickyNotesLocal() {
+      try {
+        const raw = localStorage.getItem(STICKY_NOTES_KEY);
+        if (raw) stickyNotes = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    async function loadStickyNotesFromFirestore() {
+      if (!currentUser || !fbDb) return;
+      try {
+        const uid = currentUser.uid;
+        const snap = await userStickyNotesCol(uid).get();
+        const loaded = [];
+        snap.forEach(d => loaded.push({ id: d.id, ...d.data() }));
+        loaded.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+        stickyNotes = loaded;
+        localStorage.setItem(STICKY_NOTES_KEY, JSON.stringify(stickyNotes));
+      } catch (e) { console.warn('Sticky notes Firestore load failed:', e); }
+    }
+
+    async function persistStickyNoteToFirestore(note) {
+      if (!currentUser || !fbDb || !note || !note.id) return;
+      try {
+        const uid = currentUser.uid;
+        const data = { ...note };
+        delete data.id;
+        await userStickyNotesCol(uid).doc(note.id).set(data, { merge: true });
+      } catch (e) { console.warn('Sticky note persist failed:', e); }
+    }
+
+    async function deleteStickyNoteFromFirestore(noteId) {
+      if (!currentUser || !fbDb || !noteId) return;
+      try {
+        const uid = currentUser.uid;
+        await userStickyNotesCol(uid).doc(noteId).delete();
+      } catch (e) { console.warn('Sticky note delete failed:', e); }
+    }
+
+    function showStickyNotesUI() {
+      const btn = document.getElementById('stickyNotesToggleBtn');
+      if (btn) btn.style.display = 'flex';
+      renderAllStickyNotes();
     }
 
     function setSavedStamp() {
@@ -3444,12 +3880,115 @@
       renderJobTypesMasterList();
       renderTeamNamesMasterList();
       updateHoursPerDayUI();
+      loadSiriToken();
       showModal('adminBackdrop');
       setTimeout(() => document.getElementById('newClientInput').focus(), 50);
     }
 
     function closeAdmin() {
       hideModal('adminBackdrop');
+    }
+
+    // ===== Siri Integration Functions =====
+    const SIRI_ENDPOINT_URL = 'https://australia-southeast1-raze-9311c.cloudfunctions.net/addTask';
+
+    async function loadSiriToken() {
+      try {
+        const uid = fbAuth.currentUser?.uid;
+        if (!uid) return;
+        const settingsRef = fbDb.collection('users').doc(uid).collection('settings').doc('siriToken');
+        const doc = await settingsRef.get();
+        if (doc.exists && doc.data().token) {
+          displaySiriToken(doc.data().token);
+        } else {
+          hideSiriToken();
+        }
+      } catch (err) {
+        console.error('Error loading Siri token:', err);
+        hideSiriToken();
+      }
+    }
+
+    function displaySiriToken(token) {
+      document.getElementById('siriTokenEmpty').style.display = 'none';
+      document.getElementById('siriTokenActive').style.display = 'block';
+      document.getElementById('siriTokenDisplay').value = token;
+      document.getElementById('siriEndpointDisplay').value = SIRI_ENDPOINT_URL;
+    }
+
+    function hideSiriToken() {
+      document.getElementById('siriTokenEmpty').style.display = 'block';
+      document.getElementById('siriTokenActive').style.display = 'none';
+      document.getElementById('siriTokenDisplay').value = '';
+    }
+
+    async function generateSiriToken() {
+      try {
+        const uid = fbAuth.currentUser?.uid;
+        if (!uid) { alert('You must be signed in.'); return; }
+
+        // Generate 64-char hex token
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        const newToken = Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+
+        // Check for existing token and clean it up
+        const settingsRef = fbDb.collection('users').doc(uid).collection('settings').doc('siriToken');
+        const existing = await settingsRef.get();
+        if (existing.exists && existing.data().token) {
+          try {
+            await fbDb.collection('siriTokens').doc(existing.data().token).delete();
+          } catch (e) { /* old token may already be gone */ }
+        }
+
+        // Write new token to siriTokens collection (for API lookup)
+        await fbDb.collection('siriTokens').doc(newToken).set({
+          uid: uid,
+          createdAt: new Date().toISOString()
+        });
+
+        // Write token reference to user settings
+        await settingsRef.set({
+          token: newToken,
+          createdAt: new Date().toISOString()
+        });
+
+        displaySiriToken(newToken);
+      } catch (err) {
+        console.error('Error generating Siri token:', err);
+        alert('Failed to generate token. Please try again.');
+      }
+    }
+
+    async function revokeSiriToken() {
+      if (!confirm('Revoke your Siri API token? Any Shortcuts using this token will stop working.')) return;
+      try {
+        const uid = fbAuth.currentUser?.uid;
+        if (!uid) return;
+
+        const settingsRef = fbDb.collection('users').doc(uid).collection('settings').doc('siriToken');
+        const existing = await settingsRef.get();
+        if (existing.exists && existing.data().token) {
+          await fbDb.collection('siriTokens').doc(existing.data().token).delete();
+        }
+        await settingsRef.delete();
+        hideSiriToken();
+      } catch (err) {
+        console.error('Error revoking Siri token:', err);
+        alert('Failed to revoke token. Please try again.');
+      }
+    }
+
+    function copySiriToken() {
+      const input = document.getElementById('siriTokenDisplay');
+      navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copySiriTokenBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+      }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+      });
     }
 
     function renderClientsMasterList() {
@@ -9960,6 +10499,15 @@
     document.getElementById('hoursPerDayCustom').addEventListener('change', handleHoursPerDayCustom);
     document.getElementById('hoursPerDayCustom').addEventListener('blur', handleHoursPerDayCustom);
 
+    // Siri integration
+    document.getElementById('generateSiriTokenBtn').addEventListener('click', generateSiriToken);
+    document.getElementById('generateSiriTokenBtn2').addEventListener('click', generateSiriToken);
+    document.getElementById('revokeSiriTokenBtn').addEventListener('click', revokeSiriToken);
+    document.getElementById('copySiriTokenBtn').addEventListener('click', copySiriToken);
+
+    // Sticky Notes
+    document.getElementById('stickyNotesToggleBtn').addEventListener('click', () => addStickyNote());
+
     // Client search modal
     document.getElementById('clientSearchClose').addEventListener('click', closeClientSearch);
     document.getElementById('clientSearchInput').addEventListener('input', (e) => {
@@ -10514,6 +11062,8 @@
                     setActiveTimerStamp();
                     setArchiveCount();
                     renderTasks();
+                    await loadStickyNotesFromFirestore();
+                    showStickyNotesUI();
                     return;
                   }
                 }
@@ -10619,6 +11169,8 @@
             setActiveTimerStamp();
             setArchiveCount();
             renderTasks();
+            await loadStickyNotesFromFirestore();
+            showStickyNotesUI();
           });
         } else {
           // Firebase configured but failed to load - show error, don't bypass auth
@@ -10631,6 +11183,8 @@
         setActiveTimerStamp();
         setArchiveCount();
         renderTasks();
+        loadStickyNotesLocal();
+        showStickyNotesUI();
       }
     })();
   </script>
