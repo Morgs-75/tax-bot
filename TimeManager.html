@@ -3183,8 +3183,14 @@
         recurrencePattern: (t && t.recurrencePattern) ? t.recurrencePattern : null,
         nextOccurrence: (t && t.nextOccurrence) ? t.nextOccurrence : null,
         parentTaskId: (t && t.parentTaskId) ? t.parentTaskId : null,
-        // Sub-tasks
-        subTasks: Array.isArray(t && t.subTasks) ? t.subTasks : [],
+        // Sub-tasks — normalise each item to ensure id/description/completed are always present
+        subTasks: Array.isArray(t && t.subTasks)
+          ? t.subTasks.map(s => ({
+              id: s.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+              description: typeof s.description === 'string' ? s.description : '',
+              completed: !!s.completed
+            }))
+          : [],
         // Dependency fields
         dependsOn: Array.isArray(t && t.dependsOn) ? t.dependsOn : [],
         // Sort order for drag-and-drop
@@ -3821,7 +3827,11 @@
     function archiveTask(index) {
       if (index == null || index < 0 || index >= tasks.length) return;
       const task = tasks[index];
-      const archived = backfillTask({ ...task, archivedAt: new Date().toISOString() });
+      const archived = backfillTask({
+        ...task,
+        subTasks: Array.isArray(task.subTasks) ? task.subTasks.map(s => ({ ...s })) : [],
+        archivedAt: new Date().toISOString()
+      });
       archive.push(archived);
       saveTasks(true);
       if (hasFirebaseConfig() && currentUser) persistArchiveToFirestore(archived).catch(console.warn);
@@ -3849,6 +3859,11 @@
       if (runningTaskIndex != null && index < runningTaskIndex) runningTaskIndex -= 1;
       if (selectedTaskIndex != null && index < selectedTaskIndex) selectedTaskIndex -= 1;
       if (selectedTaskIndex === index) selectedTaskIndex = null;
+      if (subTasksTaskIndex === index) {
+        closeSubTasks();
+      } else if (subTasksTaskIndex != null && index < subTasksTaskIndex) {
+        subTasksTaskIndex -= 1;
+      }
 
       saveTasks(true);
       renderTasks();
@@ -4167,7 +4182,9 @@
           const label = (t.client || '').trim() || (t.description || '').trim() || 'this task';
           if (confirm(`All sub-tasks complete — mark "${label}" as complete?`)) {
             closeSubTasks();
-            toggleComplete(taskIdx, true);
+            if (taskIdx != null && taskIdx < tasks.length) {
+              toggleComplete(taskIdx, true);
+            }
           }
         }, 150);
       }
