@@ -1581,6 +1581,31 @@
       </div>
     </div>
 
+    <!-- Sub-tasks Modal -->
+    <div id="subTasksBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="subTasksTitle">Sub-tasks</div>
+          <button id="subTasksClose" class="mini" type="button">Close</button>
+        </div>
+        <div class="modal-body">
+          <div id="subTasksProgress" class="subtle" style="margin-bottom:8px; text-align:right; font-size:12px;"></div>
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <input id="newSubTaskInput" type="text" placeholder="Describe the sub-task…" style="flex:1;" />
+            <button id="addSubTaskBtn" class="mini" type="button">Add</button>
+          </div>
+          <div id="subTasksList"></div>
+        </div>
+        <div class="modal-footer">
+          <div class="subtle" id="subTasksMeta">—</div>
+          <div style="display:flex; gap:6px;">
+            <button id="clearDoneSubTasksBtn" class="mini" type="button" style="color:var(--muted);">Clear done</button>
+            <button id="subTasksDone" class="mini" type="button">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Links/Docs Modal -->
     <div id="linksBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
       <div class="modal">
@@ -2074,6 +2099,79 @@
               <button type="button" onclick="addAnnouncementFromInput()" style="height:36px; padding:0 16px; background:var(--teal); border-color:var(--teal);">Add</button>
             </div>
             <div id="announcementsList" style="border:1px solid var(--border); border-radius:8px; overflow:hidden;"></div>
+          </div>
+
+          <!-- Siri / iPhone Shortcut Integration (Admin Only) -->
+          <div id="siriSection" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div style="font-weight:700; color:var(--text);">Siri / iPhone Shortcut</div>
+            </div>
+
+            <!-- API Token -->
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">API Token</label>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="siriTokenField" readonly placeholder="No token generated" style="flex:1; height:36px; font-family:monospace; font-size:13px;" />
+                <button type="button" id="copySiriTokenBtn" class="mini" style="height:36px; padding:0 12px;" title="Copy token">Copy</button>
+                <button type="button" id="generateSiriTokenBtn" style="height:36px; padding:0 14px; background:var(--teal); border-color:var(--teal);">Generate</button>
+              </div>
+            </div>
+
+            <!-- Endpoint URL -->
+            <div style="margin-bottom:12px;">
+              <label style="font-size:12px; color:var(--muted); margin-bottom:4px; display:block;">Endpoint URL</label>
+              <input type="text" id="siriEndpointField" readonly value="https://australia-southeast1-raze-9311c.cloudfunctions.net/addTask" style="width:100%; height:36px; font-family:monospace; font-size:12px;" />
+            </div>
+
+            <!-- Setup Instructions (collapsible) -->
+            <details style="margin-bottom:12px; border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+              <summary style="padding:10px 14px; cursor:pointer; background:var(--panel); font-weight:600; font-size:13px;">iPhone Shortcut Setup Instructions</summary>
+              <div style="padding:14px; font-size:13px; line-height:1.6; color:var(--text);">
+                <p style="margin:0 0 12px 0;"><strong>Create two Shortcuts in the Apple Shortcuts app:</strong></p>
+
+                <div style="background:var(--panel); border-radius:6px; padding:12px; margin-bottom:14px;">
+                  <div style="font-weight:700; color:var(--teal); margin-bottom:8px;">1. &ldquo;Add Raze Task&rdquo;</div>
+                  <ol style="margin:0; padding-left:20px;">
+                    <li>Open <strong>Shortcuts</strong> &rarr; tap <strong>+</strong> &rarr; name it <em>&ldquo;Add Raze Task&rdquo;</em></li>
+                    <li>Add action: <strong>Ask for Input</strong> &rarr; type: <em>Text</em>, prompt: <em>&ldquo;What&rsquo;s the task?&rdquo;</em></li>
+                    <li>Add action: <strong>Get Contents of URL</strong>
+                      <ul style="margin:4px 0; padding-left:16px;">
+                        <li>URL: <code style="background:var(--panel-2); padding:2px 6px; border-radius:3px;">https://australia-southeast1-raze-9311c.cloudfunctions.net/addTask</code></li>
+                        <li>Method: <strong>POST</strong></li>
+                        <li>Headers: <code>x-siri-token</code> = <em>(paste your token)</em></li>
+                        <li>Headers: <code>Content-Type</code> = <code>application/json</code></li>
+                        <li>Body (JSON): <code>{"action":"addTask","text":"<em>Provided Input</em>"}</code></li>
+                      </ul>
+                    </li>
+                    <li>Optional: add <strong>Show Notification</strong> with the result</li>
+                  </ol>
+                  <div style="margin-top:8px; font-size:12px; color:var(--muted);">Say: <em>&ldquo;Hey Siri, Add Raze Task&rdquo;</em></div>
+                </div>
+
+                <div style="background:var(--panel); border-radius:6px; padding:12px;">
+                  <div style="font-weight:700; color:var(--teal); margin-bottom:8px;">2. &ldquo;Add Raze Note&rdquo;</div>
+                  <ol style="margin:0; padding-left:20px;">
+                    <li>Open <strong>Shortcuts</strong> &rarr; tap <strong>+</strong> &rarr; name it <em>&ldquo;Add Raze Note&rdquo;</em></li>
+                    <li>Add action: <strong>Ask for Input</strong> &rarr; type: <em>Text</em>, prompt: <em>&ldquo;What&rsquo;s the note?&rdquo;</em></li>
+                    <li>Add action: <strong>Get Contents of URL</strong>
+                      <ul style="margin:4px 0; padding-left:16px;">
+                        <li>URL: same endpoint as above</li>
+                        <li>Method: <strong>POST</strong></li>
+                        <li>Headers: same as above</li>
+                        <li>Body (JSON): <code>{"action":"addNote","text":"<em>Provided Input</em>"}</code></li>
+                      </ul>
+                    </li>
+                    <li>Optional: add <strong>Show Notification</strong> with the result</li>
+                  </ol>
+                  <div style="margin-top:8px; font-size:12px; color:var(--muted);">Say: <em>&ldquo;Hey Siri, Add Raze Note&rdquo;</em></div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Revoke Token -->
+            <div style="text-align:right;">
+              <button type="button" id="revokeSiriTokenBtn" class="mini" style="color:var(--danger); border-color:var(--danger);">Revoke Token</button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -2834,6 +2932,8 @@
     // Modal state
     let notesTaskIndex = null;
     let linksTaskIndex = null;
+    let subTasksTaskIndex = null;
+    let subTaskDragIndex = null;
 
     const userTasksCol = (uid) => fbDb.collection('users').doc(uid).collection('tasks');
     const userArchiveCol = (uid) => fbDb.collection('users').doc(uid).collection('archive');
@@ -2912,6 +3012,8 @@
         recurrencePattern: (t && t.recurrencePattern) ? t.recurrencePattern : null,
         nextOccurrence: (t && t.nextOccurrence) ? t.nextOccurrence : null,
         parentTaskId: (t && t.parentTaskId) ? t.parentTaskId : null,
+        // Sub-tasks
+        subTasks: Array.isArray(t && t.subTasks) ? t.subTasks : [],
         // Dependency fields
         dependsOn: Array.isArray(t && t.dependsOn) ? t.dependsOn : [],
         // Sort order for drag-and-drop
@@ -3399,6 +3501,10 @@
       return Array.isArray(task.items) && task.items.length > 0;
     }
 
+    function hasSubTasks(task) {
+      return Array.isArray(task.subTasks) && task.subTasks.length > 0;
+    }
+
     function showModal(id) {
       document.getElementById(id).style.display = 'flex';
     }
@@ -3436,6 +3542,215 @@
     function closeLinks() {
       linksTaskIndex = null;
       hideModal('linksBackdrop');
+    }
+
+    // ===== Sub-tasks Modal =====
+    function openSubTasks(index) {
+      subTasksTaskIndex = index;
+      const t = tasks[index];
+      document.getElementById('subTasksTitle').textContent = `Sub-tasks — ${(t.client || '').trim() || '—'}`;
+      document.getElementById('subTasksMeta').textContent = `${(t.client || '').trim() || 'No client'}${(t.description || '').trim() ? ' — ' + (t.description || '').trim() : ''}`;
+      document.getElementById('newSubTaskInput').value = '';
+      renderSubTasksList();
+      showModal('subTasksBackdrop');
+      setTimeout(() => document.getElementById('newSubTaskInput').focus(), 50);
+    }
+
+    function closeSubTasks() {
+      subTasksTaskIndex = null;
+      hideModal('subTasksBackdrop');
+    }
+
+    function renderSubTasksList() {
+      if (subTasksTaskIndex == null) return;
+      const t = tasks[subTasksTaskIndex];
+      const subTasks = t.subTasks || [];
+      const container = document.getElementById('subTasksList');
+      const progress = document.getElementById('subTasksProgress');
+      const doneCount = subTasks.filter(s => s.completed).length;
+      progress.textContent = subTasks.length > 0 ? `${doneCount} of ${subTasks.length} completed` : '';
+      container.innerHTML = '';
+      if (subTasks.length === 0) {
+        container.innerHTML = '<div class="subtle" style="text-align:center; padding:16px;">No sub-tasks yet. Add one above.</div>';
+        return;
+      }
+      subTasks.forEach((sub, i) => {
+        const row = document.createElement('div');
+        row.dataset.subIndex = String(i);
+        row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); border-top:2px solid transparent;';
+
+        // Drag handle — drag only initiates from here
+        const handle = document.createElement('span');
+        handle.className = 'drag-handle';
+        handle.style.cssText = 'flex-shrink:0; padding:0 2px; font-size:13px;';
+        handle.textContent = '⋮⋮';
+        handle.title = 'Drag to reorder';
+
+        // Checkbox
+        const checkbox = document.createElement('span');
+        checkbox.className = `custom-checkbox ${sub.completed ? 'checked' : ''}`;
+        checkbox.style.cssText = 'display:inline-block; width:18px; height:18px; flex-shrink:0; background:var(--panel); border:1px solid rgba(20,184,166,0.55); border-radius:4px; cursor:pointer; text-align:center; line-height:16px; font-size:12px; color:var(--accent);';
+        checkbox.textContent = sub.completed ? '✓' : '';
+
+        // Description — click to edit inline
+        const desc = document.createElement('span');
+        desc.style.cssText = `flex:1; font-size:13px; color:var(--text); cursor:text; ${sub.completed ? 'text-decoration:line-through; opacity:0.5;' : ''}`;
+        desc.textContent = sub.description;
+        desc.title = 'Click to edit';
+
+        // Delete button
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'mini btn-danger';
+        del.style.cssText = 'padding:2px 8px; font-size:11px; flex-shrink:0;';
+        del.textContent = '✕';
+
+        row.appendChild(handle);
+        row.appendChild(checkbox);
+        row.appendChild(desc);
+        row.appendChild(del);
+
+        // ── Checkbox ──
+        checkbox.addEventListener('click', () => toggleSubTask(i));
+
+        // ── Delete ──
+        del.addEventListener('click', () => deleteSubTask(i));
+
+        // ── Inline edit ──
+        desc.addEventListener('click', () => {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = sub.description;
+          input.style.cssText = 'flex:1; font-size:13px; min-width:0;';
+          row.replaceChild(input, desc);
+          input.focus();
+          input.select();
+          let cancelled = false;
+          const save = () => {
+            if (cancelled) return;
+            const newVal = input.value.trim();
+            if (newVal && newVal !== sub.description) {
+              t.subTasks[i].description = newVal;
+              saveTasks(false);
+              if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+              renderTasks();
+            }
+            renderSubTasksList();
+          };
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Escape') { e.preventDefault(); cancelled = true; renderSubTasksList(); }
+          });
+        });
+
+        // ── Drag to reorder (handle-initiated only) ──
+        handle.addEventListener('mousedown', () => { row.draggable = true; });
+
+        row.addEventListener('dragstart', (e) => {
+          subTaskDragIndex = i;
+          row.style.opacity = '0.5';
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        row.addEventListener('dragend', () => {
+          row.draggable = false;
+          row.style.opacity = '';
+          subTaskDragIndex = null;
+          container.querySelectorAll('[data-sub-index]').forEach(r => r.style.borderTop = '2px solid transparent');
+        });
+
+        row.addEventListener('dragover', (e) => {
+          if (subTaskDragIndex == null) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          container.querySelectorAll('[data-sub-index]').forEach(r => r.style.borderTop = '2px solid transparent');
+          row.style.borderTop = '2px solid var(--accent)';
+        });
+
+        row.addEventListener('dragleave', () => {
+          row.style.borderTop = '2px solid transparent';
+        });
+
+        row.addEventListener('drop', (e) => {
+          e.preventDefault();
+          row.style.borderTop = '2px solid transparent';
+          if (subTaskDragIndex == null || subTaskDragIndex === i) return;
+          const moved = t.subTasks.splice(subTaskDragIndex, 1)[0];
+          t.subTasks.splice(i, 0, moved);
+          saveTasks(false);
+          if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+          renderSubTasksList();
+          renderTasks();
+        });
+
+        container.appendChild(row);
+      });
+    }
+
+    function addSubTask() {
+      if (subTasksTaskIndex == null) return;
+      const input = document.getElementById('newSubTaskInput');
+      const description = (input.value || '').trim();
+      if (!description) return;
+      const t = tasks[subTasksTaskIndex];
+      if (!Array.isArray(t.subTasks)) t.subTasks = [];
+      t.subTasks.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+        description,
+        completed: false
+      });
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+      input.value = '';
+      renderSubTasksList();
+      renderTasks();
+      input.focus();
+    }
+
+    function toggleSubTask(subIndex) {
+      if (subTasksTaskIndex == null) return;
+      const t = tasks[subTasksTaskIndex];
+      if (!t.subTasks || !t.subTasks[subIndex]) return;
+      t.subTasks[subIndex].completed = !t.subTasks[subIndex].completed;
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+      renderSubTasksList();
+      renderTasks();
+      // When the last sub-task is ticked, prompt to complete the parent task
+      if (!t.completed && t.subTasks.every(s => s.completed)) {
+        const taskIdx = subTasksTaskIndex;
+        setTimeout(() => {
+          const label = (t.client || '').trim() || (t.description || '').trim() || 'this task';
+          if (confirm(`All sub-tasks complete — mark "${label}" as complete?`)) {
+            toggleComplete(taskIdx, true);
+          }
+        }, 150);
+      }
+    }
+
+    function deleteSubTask(subIndex) {
+      if (subTasksTaskIndex == null) return;
+      const t = tasks[subTasksTaskIndex];
+      if (!t.subTasks) return;
+      t.subTasks.splice(subIndex, 1);
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+      renderSubTasksList();
+      renderTasks();
+    }
+
+    function clearDoneSubTasks() {
+      if (subTasksTaskIndex == null) return;
+      const t = tasks[subTasksTaskIndex];
+      if (!t.subTasks) return;
+      const remaining = t.subTasks.filter(s => !s.completed);
+      if (remaining.length === t.subTasks.length) return; // nothing to clear
+      t.subTasks = remaining;
+      saveTasks(false);
+      if (hasFirebaseConfig() && currentUser) persistTaskToFirestore(t).catch(console.warn);
+      renderSubTasksList();
+      renderTasks();
     }
 
     // ===== Admin Modal Functions =====
@@ -4276,6 +4591,7 @@
 
       // Show announcements section for admins
       showAnnouncementsSectionIfAdmin();
+      showSiriSectionIfAdmin();
 
       showModal('teamModalBackdrop');
     }
@@ -5808,6 +6124,64 @@
         if (intervalSelect) intervalSelect.value = tickerInterval.toString();
       } else {
         section.style.display = 'none';
+      }
+    }
+
+    // ===== Siri / iPhone Shortcut Integration =====
+
+    function showSiriSectionIfAdmin() {
+      const section = document.getElementById('siriSection');
+      if (!section) return;
+
+      const member = firmMembers.find(m => m.uid === currentUser?.uid);
+      const isAdmin = member?.isAdmin || window.isAppAdmin;
+
+      if (isAdmin && isInFirmMode()) {
+        section.style.display = 'block';
+        const tokenField = document.getElementById('siriTokenField');
+        if (tokenField) {
+          tokenField.value = currentFirmData?.siriToken || '';
+          tokenField.placeholder = currentFirmData?.siriToken ? '' : 'No token generated';
+        }
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    async function generateSiriToken() {
+      if (!isInFirmMode() || !currentFirmId) { toast('No firm selected'); return; }
+      const existing = currentFirmData?.siriToken;
+      if (existing && !confirm('This will replace your existing token. Any shortcuts using the old token will stop working.\n\nContinue?')) return;
+
+      const token = crypto.randomUUID();
+      try {
+        await fbDb.collection('firms').doc(currentFirmId).update({ siriToken: token });
+        currentFirmData.siriToken = token;
+        document.getElementById('siriTokenField').value = token;
+        toast('Siri token generated');
+      } catch (e) {
+        console.error('generateSiriToken:', e);
+        toast('Failed to generate token');
+      }
+    }
+
+    function copySiriToken() {
+      const token = document.getElementById('siriTokenField')?.value;
+      if (!token) { toast('No token to copy'); return; }
+      navigator.clipboard.writeText(token).then(() => toast('Token copied')).catch(() => toast('Copy failed'));
+    }
+
+    async function revokeSiriToken() {
+      if (!isInFirmMode() || !currentFirmId) return;
+      if (!confirm('Revoke the Siri token? Any shortcuts using this token will stop working.')) return;
+      try {
+        await fbDb.collection('firms').doc(currentFirmId).update({ siriToken: firebase.firestore.FieldValue.delete() });
+        delete currentFirmData.siriToken;
+        document.getElementById('siriTokenField').value = '';
+        toast('Siri token revoked');
+      } catch (e) {
+        console.error('revokeSiriToken:', e);
+        toast('Failed to revoke token');
       }
     }
 
@@ -9214,6 +9588,15 @@
         const isBlocked = hasUnmetDependencies(task);
         const recurringClass = `icon-btn recurring-icon ${task.isRecurring ? 'active' : ''}`;
         const dependencyClass = `icon-btn dependency-icon ${task.dependsOn?.length > 0 ? 'has-deps' : ''}`;
+        const subTaskClass = `icon-btn subtask-icon ${hasSubTasks(task) ? 'has-dot' : ''}`;
+        const subTaskProgressHtml = (() => {
+          if (!task.subTasks?.length) return '';
+          const stDone = task.subTasks.filter(s => s.completed).length;
+          const stTotal = task.subTasks.length;
+          const stPct = Math.round((stDone / stTotal) * 100);
+          const stBarColor = stPct === 100 ? 'var(--success)' : stPct > 0 ? 'var(--warning)' : 'var(--border)';
+          return `<div style="width:22px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="width:${stPct}%;height:100%;background:${stBarColor};border-radius:2px;"></div></div><span style="font-size:9px;line-height:1.2;color:var(--muted);">${stDone}/${stTotal}</span>`;
+        })();
 
         // Due date display
         let dueBadge = '';
@@ -9287,6 +9670,9 @@
           <td class="center" style="width:24px; padding:4px;">
             <div class="${dependencyClass}" title="${task.dependsOn?.length > 0 ? task.dependsOn.length + ' dependencies' : 'Manage dependencies'}">🔗</div>
           </td>
+          <td class="center" style="width:30px; padding:4px;">
+            <div class="${subTaskClass}" style="display:flex; flex-direction:column; align-items:center; line-height:1; gap:2px;" title="${task.subTasks?.length > 0 ? task.subTasks.filter(s=>s.completed).length + '/' + task.subTasks.length + ' sub-tasks' : 'Add sub-tasks'}"><span>⊞</span>${subTaskProgressHtml}</div>
+          </td>
           <td class="delete-btn" style="width:24px; padding:4px; text-align:center;">X</td>
         `;
 
@@ -9311,7 +9697,8 @@
         clientInput.addEventListener('keydown', (e) => {
           if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter') {
             const clientName = (e.target.value || '').trim();
-            if (clientName && !masterClients.includes(clientName)) {
+            const clientNameLower = clientName.toLowerCase();
+            if (clientName && !masterClients.some(c => c.toLowerCase() === clientNameLower)) {
               e.preventDefault();
               e.stopImmediatePropagation();
               clientPromptShown = true;
@@ -9332,7 +9719,7 @@
             return;
           }
           const clientName = (e.target.value || '').trim();
-          if (clientName && !masterClients.includes(clientName)) {
+          if (clientName && !masterClients.some(c => c.toLowerCase() === clientName.toLowerCase())) {
             showAddClientConfirm(clientName, descInput);
           }
         });
@@ -9412,6 +9799,13 @@
             return;
           }
           const isCompleted = !tasks[index].completed;
+          if (isCompleted) {
+            const openSubs = (tasks[index].subTasks || []).filter(s => !s.completed);
+            if (openSubs.length > 0) {
+              const proceed = confirm(`This task has ${openSubs.length} unfinished sub-task${openSubs.length > 1 ? 's' : ''}. Mark as complete anyway?`);
+              if (!proceed) return;
+            }
+          }
           e.target.textContent = isCompleted ? '✓' : '';
           e.target.classList.toggle('checked', isCompleted);
           toggleComplete(index, isCompleted);
@@ -9454,6 +9848,13 @@
           e.stopPropagation();
           setSelected(index);
           openDependenciesModal(index);
+        });
+
+        // Sub-tasks icon
+        row.querySelectorAll('.icon-btn')[5].addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelected(index);
+          openSubTasks(index);
         });
 
         row.querySelector('.delete-btn').addEventListener('click', (e) => {
@@ -9839,6 +10240,18 @@
       if (e.target.id === 'linksBackdrop') closeLinks();
     });
 
+    // Sub-tasks modal wiring
+    document.getElementById('subTasksClose').addEventListener('click', closeSubTasks);
+    document.getElementById('subTasksDone').addEventListener('click', closeSubTasks);
+    document.getElementById('clearDoneSubTasksBtn').addEventListener('click', clearDoneSubTasks);
+    document.getElementById('addSubTaskBtn').addEventListener('click', addSubTask);
+    document.getElementById('newSubTaskInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addSubTask(); }
+    });
+    document.getElementById('subTasksBackdrop').addEventListener('mousedown', (e) => {
+      if (e.target.id === 'subTasksBackdrop') closeSubTasks();
+    });
+
     document.getElementById('addLinkBtn').addEventListener('click', () => {
       addLinkToTask(document.getElementById('newLinkInput').value);
       document.getElementById('newLinkInput').value = '';
@@ -9880,6 +10293,11 @@
     document.getElementById('dashboardBtn').addEventListener('click', openDashboard);
     document.getElementById('notificationsBtn').addEventListener('click', openNotificationsModal);
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // Siri / iPhone Shortcut buttons
+    document.getElementById('generateSiriTokenBtn').addEventListener('click', generateSiriToken);
+    document.getElementById('copySiriTokenBtn').addEventListener('click', copySiriToken);
+    document.getElementById('revokeSiriTokenBtn').addEventListener('click', revokeSiriToken);
 
     // Dashboard time range buttons
     document.querySelectorAll('.time-range-btn').forEach(btn => {
