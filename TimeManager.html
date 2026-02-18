@@ -4013,7 +4013,7 @@
       subTasks.forEach((sub, i) => {
         const row = document.createElement('div');
         row.dataset.subIndex = String(i);
-        row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); border-top:2px solid transparent;';
+        row.style.cssText = `display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid var(--border); border-top:2px solid transparent; border-radius:4px; ${sub.completed ? 'background:rgba(34,197,94,0.07);' : ''}`;
 
         // Drag handle — drag only initiates from here
         const handle = document.createElement('span');
@@ -4025,12 +4025,12 @@
         // Checkbox
         const checkbox = document.createElement('span');
         checkbox.className = `custom-checkbox ${sub.completed ? 'checked' : ''}`;
-        checkbox.style.cssText = 'display:inline-block; width:18px; height:18px; flex-shrink:0; background:var(--panel); border:1px solid rgba(20,184,166,0.55); border-radius:4px; cursor:pointer; text-align:center; line-height:16px; font-size:12px; color:var(--accent);';
+        checkbox.style.cssText = `display:inline-block; width:18px; height:18px; flex-shrink:0; background:var(--panel); border:1px solid ${sub.completed ? 'var(--success)' : 'rgba(20,184,166,0.55)'}; border-radius:4px; cursor:pointer; text-align:center; line-height:16px; font-size:12px; color:${sub.completed ? 'var(--success)' : 'var(--accent)'};`;
         checkbox.textContent = sub.completed ? '✓' : '';
 
         // Description — click to edit inline
         const desc = document.createElement('span');
-        desc.style.cssText = `flex:1; font-size:13px; color:var(--text); cursor:text; ${sub.completed ? 'text-decoration:line-through; opacity:0.5;' : ''}`;
+        desc.style.cssText = `flex:1; font-size:13px; cursor:text; ${sub.completed ? 'text-decoration:line-through; color:var(--muted);' : 'color:var(--text);'}`;
         desc.textContent = sub.description;
         desc.title = 'Click to edit';
 
