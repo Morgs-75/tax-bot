@@ -6,7 +6,8 @@
       "**/.*",
       "**/node_modules/**",
       "firestore.rules",
-      ".firebaserc"
+      ".firebaserc",
+      "functions/**"
     ],
     "headers": [
       {
@@ -63,6 +64,9 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "functions": {
+    "source": "functions"
   },
   "firestore": {
     "rules": "firestore.rules"
