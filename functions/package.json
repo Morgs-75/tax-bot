@@ -2,7 +2,7 @@
   "name": "raze-functions",
   "description": "Cloud Functions for Raze TimeManager",
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "main": "index.js",
   "dependencies": {

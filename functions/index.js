@@ -1,76 +1,164 @@
-const functions = require("firebase-functions/v2/https");
+const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+
 admin.initializeApp();
 const db = admin.firestore();
 
+// Job type alias mapping (lowercase key → canonical job type)
+const JOB_TYPE_ALIASES = {
+  "tax": "Tax Return",
+  "tax return": "Tax Return",
+  "itr": "Tax Return",
+  "income tax": "Tax Return",
+  "bas": "BAS",
+  "activity statement": "BAS",
+  "advice": "Advisory",
+  "advice letter": "Advisory",
+  "advisory": "Advisory",
+  "financials": "Financial Statements",
+  "financial statements": "Financial Statements",
+  "financial statement": "Financial Statements",
+  "accounts": "Financial Statements",
+  "audit": "Audit",
+  "review": "Audit",
+  "bookkeeping": "Bookkeeping",
+  "bk": "Bookkeeping",
+  "books": "Bookkeeping",
+  "payroll": "Payroll",
+  "smsf": "SMSF",
+  "super fund": "SMSF",
+  "self managed super": "SMSF",
+  "company": "Company Return",
+  "company return": "Company Return",
+  "trust": "Trust Return",
+  "trust return": "Trust Return",
+  "partnership": "Partnership Return",
+  "partnership return": "Partnership Return",
+  "fbt": "FBT",
+  "fringe benefits": "FBT",
+  "other": "Other",
+};
+
 /**
- * addTask — Siri / iPhone Shortcut endpoint
- *
- * Validates x-siri-token header against firms/{firmId}.siriToken,
- * then creates either a task or a sticky note.
- *
- * Body: { action: "addTask" | "addNote", text: "..." }
+ * Parse Australian date format DD/MM/YYYY to ISO YYYY-MM-DD
  */
-exports.addTask = functions.onRequest(
+function parseAUDate(dateStr) {
+  if (!dateStr) return "";
+  const str = dateStr.trim();
+
+  // Already ISO format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+  // DD/MM/YYYY or DD-MM-YYYY
+  const match = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (match) {
+    const day = match[1].padStart(2, "0");
+    const month = match[2].padStart(2, "0");
+    const year = match[3];
+    // Validate the date
+    const d = new Date(`${year}-${month}-${day}`);
+    if (!isNaN(d.getTime())) {
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  return "";
+}
+
+/**
+ * Resolve job type from user input using alias table.
+ * Returns { jobType, matched } where matched=false means it fell back to "Other".
+ */
+function resolveJobType(input) {
+  if (!input) return { jobType: "Other", matched: false };
+  const key = input.trim().toLowerCase();
+  if (JOB_TYPE_ALIASES[key]) {
+    return { jobType: JOB_TYPE_ALIASES[key], matched: true };
+  }
+  // Partial / fuzzy match: check if any alias key starts with or contains input
+  for (const [alias, canonical] of Object.entries(JOB_TYPE_ALIASES)) {
+    if (alias.startsWith(key) || key.startsWith(alias)) {
+      return { jobType: canonical, matched: true };
+    }
+  }
+  return { jobType: "Other", matched: false };
+}
+
+/**
+ * HTTP Cloud Function: addTask
+ * POST with JSON body: { client, jobType, dueDate, priority?, notes? }
+ * Header: x-siri-token
+ */
+exports.addTask = onRequest(
   { region: "australia-southeast1", cors: true },
   async (req, res) => {
+    // Only allow POST
     if (req.method !== "POST") {
-      res.status(405).json({ error: "Method not allowed" });
+      res.status(405).json({ success: false, error: "Method not allowed" });
       return;
     }
 
+    // Validate token
     const token = req.headers["x-siri-token"];
     if (!token) {
-      res.status(401).json({ error: "Missing x-siri-token header" });
+      res.status(401).json({ success: false, error: "Missing x-siri-token header" });
       return;
     }
 
-    // Look up firm by siriToken
-    const firmsSnap = await db
-      .collection("firms")
-      .where("siriToken", "==", token)
-      .limit(1)
-      .get();
+    try {
+      const tokenDoc = await db.collection("siriTokens").doc(token).get();
+      if (!tokenDoc.exists) {
+        res.status(401).json({ success: false, error: "Invalid token" });
+        return;
+      }
 
-    if (firmsSnap.empty) {
-      res.status(403).json({ error: "Invalid token" });
-      return;
-    }
+      const uid = tokenDoc.data().uid;
+      if (!uid) {
+        res.status(401).json({ success: false, error: "Token has no associated user" });
+        return;
+      }
 
-    const firmDoc = firmsSnap.docs[0];
-    const firmId = firmDoc.id;
-    const { action, text } = req.body || {};
+      // Parse request body
+      const { client, jobType, dueDate, priority, notes } = req.body;
 
-    if (!text || typeof text !== "string" || !text.trim()) {
-      res.status(400).json({ error: "Missing or empty text field" });
-      return;
-    }
+      if (!client) {
+        res.status(400).json({ success: false, error: "Client name is required" });
+        return;
+      }
 
-    const now = new Date().toISOString();
+      // Resolve job type
+      const resolved = resolveJobType(jobType);
+      const finalJobType = resolved.jobType;
 
-    if (action === "addTask") {
-      const taskId =
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      // Parse due date (AU format)
+      const parsedDueDate = parseAUDate(dueDate);
 
-      const taskData = {
-        client: "",
-        description: text.trim(),
-        jobType: "Tax Return",
+      // Build description
+      let description = "";
+      if (!resolved.matched && jobType) {
+        description = `Siri: ${jobType}`;
+      }
+      if (notes) {
+        description = description ? `${description} | ${notes}` : notes;
+      }
+
+      // Build task matching backfillTask() schema
+      const now = new Date().toISOString();
+      const taskId = `siri_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+      const task = {
+        client: client.trim(),
+        description: description,
+        jobType: finalJobType,
         status: "Not Started",
-        dueDate: "",
-        priority: "Medium",
+        dueDate: parsedDueDate,
+        priority: priority || "Medium",
         billable: true,
         completed: false,
         seconds: 0,
         notes: "",
         items: [],
         schedules: [],
-        team: [],
-        teamMemberUids: [],
-        assignedTo: null,
-        createdBy: "siri",
         createdAt: now,
         archivedAt: null,
         isRecurring: false,
@@ -79,36 +167,52 @@ exports.addTask = functions.onRequest(
         parentTaskId: null,
         dependsOn: [],
         sortOrder: 0,
+        team: [{
+          uid: uid,
+          jobRole: "Preparer",
+          addedAt: now,
+          addedBy: uid,
+        }],
+        teamMemberUids: [uid],
+        assignedTo: uid,
+        createdBy: uid,
       };
 
-      await db
-        .collection("firms")
-        .doc(firmId)
-        .collection("tasks")
-        .doc(taskId)
-        .set(taskData);
+      // Determine storage path: check if user belongs to a firm
+      const userDoc = await db.collection("users").doc(uid).get();
+      const firmId = userDoc.exists ? userDoc.data().firmId : null;
 
-      res.status(200).json({ ok: true, action: "addTask", taskId });
-    } else if (action === "addNote") {
-      const noteRef = db
-        .collection("firms")
-        .doc(firmId)
-        .collection("notes")
-        .doc();
+      let taskRef;
+      if (firmId) {
+        taskRef = db.collection("firms").doc(firmId).collection("tasks").doc(taskId);
+      } else {
+        taskRef = db.collection("users").doc(uid).collection("tasks").doc(taskId);
+      }
 
-      await noteRef.set({
-        text: text.trim(),
-        createdBy: "siri",
-        createdAt: now,
+      await taskRef.set(task);
+
+      // Build summary
+      const summary = [
+        `Task added: ${finalJobType} for ${client.trim()}`,
+        parsedDueDate ? `Due: ${parsedDueDate}` : "No due date",
+        !resolved.matched && jobType ? `(Job type "${jobType}" mapped to Other)` : "",
+      ].filter(Boolean).join(". ");
+
+      res.status(200).json({
+        success: true,
+        taskId: taskId,
+        summary: summary,
+        storagePath: firmId ? `firms/${firmId}/tasks/${taskId}` : `users/${uid}/tasks/${taskId}`,
+        task: {
+          client: task.client,
+          jobType: task.jobType,
+          dueDate: task.dueDate,
+          priority: task.priority,
+        },
       });
-
-      res
-        .status(200)
-        .json({ ok: true, action: "addNote", noteId: noteRef.id });
-    } else {
-      res
-        .status(400)
-        .json({ error: 'Invalid action. Use "addTask" or "addNote".' });
+    } catch (err) {
+      console.error("addTask error:", err);
+      res.status(500).json({ success: false, error: "Internal server error" });
     }
   }
 );
