@@ -57,24 +57,21 @@
       filter: none;
     }
 
-    /* Theme toggle button */
-    .theme-toggle {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid rgba(20, 184, 166, 0.55);
-      background: transparent;
-      color: var(--text);
+    .settings-cog {
+      background: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 4px !important;
+      color: var(--muted);
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: border-color 0.2s;
+      transition: color 0.15s, transform 0.3s;
     }
-
-    .theme-toggle:hover {
-      border-color: var(--teal-2);
+    .settings-cog:hover,
+    .settings-cog.active {
+      color: var(--teal-2);
+      transform: rotate(45deg);
     }
 
     body {
@@ -100,7 +97,7 @@
 
     .meta {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 12px;
       font-size: 12px;
       color: var(--muted);
@@ -301,6 +298,163 @@
       user-select: none;
     }
 
+    /* Nav-style dropdown menu system */
+    .dropdown-menu-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .controls .dropdown-menu-wrap > button {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      border-bottom: 2px solid transparent !important;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 10px !important;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .controls .dropdown-menu-wrap > button:hover,
+    .controls .dropdown-menu-wrap > button.active {
+      color: var(--teal-2);
+      border-bottom-color: var(--teal-2) !important;
+    }
+    .dropdown-menu-wrap > button .dd-arrow {
+      font-size: 8px;
+      transition: transform 0.15s;
+    }
+    .dropdown-menu-wrap > button.active .dd-arrow {
+      transform: rotate(180deg);
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      min-width: 170px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 9999;
+      padding: 4px 0;
+    }
+    .dropdown-menu.open {
+      display: block;
+    }
+    .dropdown-menu button {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 6px 16px !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: left;
+      white-space: nowrap;
+      transition: background 0.1s, color 0.1s;
+    }
+    .dropdown-menu button:hover {
+      background: var(--teal) !important;
+      color: #fff !important;
+    }
+    .dropdown-menu .dd-separator {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 8px;
+    }
+    :root.light .dropdown-menu {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Table header filter dropdowns */
+    .th-filter:hover .th-filter-arrow {
+      opacity: 1 !important;
+    }
+    .th-filter-badge {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+    .header-filter-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 2px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      min-width: 140px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 9999;
+      padding: 4px 0;
+      text-align: left;
+    }
+    .header-filter-menu.open {
+      display: block;
+    }
+    .header-filter-menu button {
+      display: block;
+      width: 100%;
+      padding: 5px 14px !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .header-filter-menu button:hover {
+      background: var(--teal) !important;
+      color: #fff !important;
+    }
+    .header-filter-menu button.hf-active {
+      color: var(--teal-2);
+      font-weight: 600;
+    }
+    .header-filter-menu button .hf-check {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      margin-right: 8px;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 10px;
+      line-height: 14px;
+      flex-shrink: 0;
+    }
+    .header-filter-menu button.hf-active .hf-check {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #fff;
+    }
+    .header-filter-menu button {
+      display: flex !important;
+      align-items: center;
+    }
+    :root.light .header-filter-menu {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
     .completed {
       background: rgba(255, 255, 255, 0.02);
       color: rgba(232, 238, 242, 0.55);
@@ -390,33 +544,6 @@
     }
 
     /* Summary bar */
-    .summary-bar {
-      display: flex;
-      gap: 20px;
-      padding: 10px 0;
-      margin-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
-    }
-    .summary-stat {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .summary-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .summary-value.overdue { color: var(--danger); }
-    .summary-value.accent { color: var(--accent-2); }
-    .summary-label {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
     .center { text-align: center; }
 
     .timer-btn,
@@ -1168,32 +1295,94 @@
 
     /* Dashboard styles */
     .dashboard-modal {
-      width: min(900px, 96vw);
-      max-height: 90vh;
+      width: min(1100px, 96vw);
+      max-height: 92vh;
       overflow-y: auto;
+      background: var(--bg);
     }
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-      padding: 16px 0;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 20px 0;
+      justify-items: center;
+    }
+    .dashboard-grid > * {
+      width: 100%;
+    }
+
+    .dashboard-kpi-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+    }
+    .dashboard-kpi {
+      background: linear-gradient(135deg, rgba(45,212,191,0.08), rgba(59,130,246,0.06));
+      border: 1px solid rgba(45,212,191,0.2);
+      border-radius: 14px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .dashboard-kpi:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45,212,191,0.15);
+    }
+    .dashboard-kpi-value {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--teal), var(--teal-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .dashboard-kpi.kpi-danger {
+      background: linear-gradient(135deg, rgba(220,38,38,0.08), rgba(239,68,68,0.06));
+      border-color: rgba(220,38,38,0.25);
+    }
+    .dashboard-kpi.kpi-danger:hover {
+      box-shadow: 0 6px 20px rgba(220,38,38,0.15);
+    }
+    .dashboard-kpi.kpi-danger .dashboard-kpi-value {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .dashboard-kpi-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 6px;
     }
 
     .dashboard-card {
-      background: var(--panel-2);
+      background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .dashboard-card-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 12px;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      width: 100%;
+      text-align: center;
     }
 
     .dashboard-value {
@@ -1203,27 +1392,29 @@
     }
 
     .completion-ring {
-      width: 120px;
-      height: 120px;
+      width: 160px;
+      height: 160px;
       margin: 0 auto;
     }
 
     .bar-chart {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      width: 100%;
     }
 
     .bar-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .bar-label {
-      width: 80px;
+      width: 90px;
       font-size: 11px;
-      color: var(--muted);
+      color: var(--text);
+      font-weight: 500;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1231,22 +1422,23 @@
 
     .bar-container {
       flex: 1;
-      height: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 4px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px;
       overflow: hidden;
     }
 
     .bar-fill {
       height: 100%;
-      background: var(--accent);
-      border-radius: 4px;
-      transition: width 0.3s ease;
+      background: linear-gradient(90deg, var(--teal), var(--teal-2));
+      border-radius: 6px;
+      transition: width 0.5s ease;
     }
 
     .bar-value {
       width: 50px;
-      font-size: 11px;
+      font-size: 12px;
+      font-weight: 600;
       color: var(--text);
       text-align: right;
     }
@@ -1254,48 +1446,72 @@
     .pie-chart-container {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 24px;
+      justify-content: center;
     }
 
     .pie-legend {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 11px;
+      font-size: 12px;
+      color: var(--text);
     }
 
     .legend-color {
-      width: 12px;
-      height: 12px;
-      border-radius: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    :root.light .dashboard-kpi {
+      background: linear-gradient(135deg, rgba(37,99,235,0.06), rgba(59,130,246,0.04));
+      border-color: rgba(37,99,235,0.2);
+    }
+    :root.light .dashboard-kpi:hover {
+      box-shadow: 0 6px 20px rgba(37,99,235,0.12);
+    }
+    :root.light .bar-container {
+      background: rgba(0,0,0,0.04);
     }
 
     .time-range-selector {
       display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      width: fit-content;
     }
 
     .time-range-btn {
-      padding: 6px 12px;
+      padding: 8px 20px;
       background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border: none;
+      border-radius: 8px;
       color: var(--muted);
       cursor: pointer;
       font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .time-range-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(45,212,191,0.06);
     }
 
     .time-range-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--teal), var(--teal-2));
       color: white;
+      box-shadow: 0 2px 8px rgba(45,212,191,0.3);
     }
 
     /* Notification settings modal */
@@ -1565,93 +1781,70 @@
         </div>
       </div>
       <div class="meta">
-        <div id="firmSwitcher" style="display:none; position:relative;">
-          <button id="firmSwitcherBtn" type="button" onclick="toggleFirmSwitcherDropdown(event)" style="padding:4px 12px; font-size:11px; background:var(--teal); color:white; border-color:var(--teal); border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:6px;">
-            <span id="firmSwitcherName">Firm</span>
-            <span style="font-size:10px;">▼</span>
+        <div id="activeTimer" style="display:none;"></div>
+        <div class="dropdown-menu-wrap">
+          <button type="button" class="settings-cog" onclick="toggleDropdown('settingsMenu', event)" title="Settings">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
           </button>
-          <div id="firmSwitcherDropdown" style="display:none; position:absolute; top:100%; right:0; margin-top:4px; background:var(--panel); border:1px solid var(--border); border-radius:8px; min-width:200px; max-height:300px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:9999;">
+          <div id="settingsMenu" class="dropdown-menu" style="right:0; left:auto; min-width:200px;">
+            <!-- Firm switcher (populated dynamically, hidden if solo) -->
+            <div id="firmSwitcher" style="display:none;">
+              <div style="padding:4px 16px 2px; font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Firm</div>
+              <button id="firmSwitcherBtn" type="button" onclick="toggleFirmSwitcherDropdown(event)" title="Switch firm">
+                <span id="firmSwitcherName">Firm</span> <span style="font-size:8px; margin-left:auto;">&#9654;</span>
+              </button>
+              <div id="firmSwitcherDropdown" style="display:none; position:absolute; right:100%; top:0; margin-right:2px; background:var(--panel); border:1px solid var(--border); border-radius:4px; min-width:200px; max-height:300px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.25); z-index:10000;">
+              </div>
+              <div class="dd-separator"></div>
+            </div>
+            <button id="adminBtn" type="button" title="Manage Clients and Job Types">Admin</button>
+            <button id="teamBtn" type="button" title="Manage Team Members" style="display:none;">Team</button>
+            <button id="rolesBtn" type="button" title="Manage Roles and Hierarchy" style="display:none;">Roles</button>
+            <button id="holidaysBtn" type="button" title="Manage Holidays and Blocked Days" style="display:none;">Holidays</button>
+            <div class="dd-separator"></div>
+            <button id="clearArchiveBtn" type="button" title="Permanently clears archived tasks.">Clear Archive <span class="subtle" id="archiveCount" style="margin-left:6px; font-size:11px;">0</span></button>
+            <button id="clearBlankBtn" type="button" title="Remove rows with no client and no task">Clear Blank Rows</button>
+            <div class="dd-separator"></div>
+            <button id="themeToggle" type="button" title="Toggle dark/light theme"><span id="themeToggleLabel">🌙 Dark mode</span></button>
+            <div class="dd-separator"></div>
+            <div id="userBadge" style="padding:4px 16px; font-size:11px; color:var(--muted); white-space:nowrap;">—</div>
+            <button id="signOutBtn" type="button" title="Sign out" style="color:var(--danger);">Sign out</button>
           </div>
         </div>
-        <span class="subtle" id="userBadgeHeader" style="font-size:12px;"></span>
-        <button id="signOutBtnHeader" class="mini" type="button" title="Sign out" style="padding:4px 10px; font-size:11px;">Sign out</button>
-        <div id="activeTimer">⏱ —</div>
-        <button id="themeToggle" class="theme-toggle" title="Toggle dark/light theme">🌙</button>
       </div>
     </div>
 
-    <!-- Summary Bar -->
-    <div class="summary-bar">
-      <div class="summary-stat">
-        <span class="summary-value" id="totalTasksCount">0</span>
-        <span class="summary-label">Total Tasks</span>
-      </div>
-      <div class="summary-stat">
-        <span class="summary-value overdue" id="overdueCount">0</span>
-        <span class="summary-label">Overdue</span>
-      </div>
-      <div class="summary-stat">
-        <span class="summary-value" id="dueThisWeekCount">0</span>
-        <span class="summary-label">Due This Week</span>
-      </div>
-      <div class="summary-stat">
-        <span class="summary-value accent" id="timeThisWeek">0:00</span>
-        <span class="summary-label">Time This Week</span>
-      </div>
-      <div class="summary-stat">
-        <span class="summary-value accent" id="billableTime">0:00</span>
-        <span class="summary-label">Billable Time</span>
-      </div>
+    <!-- Hidden containers for summary stats (rendered in Dashboard) -->
+    <div style="display:none;">
+      <span id="totalTasksCount">0</span>
+      <span id="overdueCount">0</span>
+      <span id="dueThisWeekCount">0</span>
+      <span id="timeThisWeek">0:00</span>
+      <span id="billableTime">0:00</span>
     </div>
 
     <div class="controls">
       <button id="addBtn" type="button">Add Task</button>
-      <button id="emailBtn" type="button" title="Opens your email app with the current work list.">Email list</button>
-      <button id="copyBtn" type="button" title="Copies the current work list to clipboard.">Copy list</button>
-      <button id="excelBtn" type="button" title="Download tasks to Excel file.">Download Excel</button>
-      <button id="adminBtn" type="button" title="Manage Clients and Job Types">Admin</button>
-      <button id="teamBtn" type="button" title="Manage Team Members" style="display:none;">Team</button>
-      <button id="rolesBtn" type="button" title="Manage Roles and Hierarchy" style="display:none;">Roles</button>
-      <button id="holidaysBtn" type="button" title="Manage Holidays and Blocked Days" style="display:none;">Holidays</button>
-      <button id="ganttBtn" type="button" title="View Execution Plan">Execution Plan</button>
-      <button id="capacityBtn" type="button" title="Check available capacity" style="background:var(--teal); color:white; border-color:var(--teal);">Capacity</button>
-      <button id="dashboardBtn" type="button" title="View analytics dashboard">Dashboard</button>
-      <button id="notificationsBtn" type="button" title="Configure notifications">🔔 Notifications</button>
 
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span class="subtle">Status</span>
-        <select id="filterStatus">
-          <option value="all">All</option>
-          <option value="Not Started">Not Started</option>
-          <option value="Info Requested">Info Requested</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Review">Review</option>
-          <option value="Lodged">Lodged</option>
-          <option value="Complete">Complete</option>
-        </select>
+      <div class="dropdown-menu-wrap">
+        <button type="button" onclick="toggleDropdown('exportMenu', event)">Export <span class="dd-arrow">▼</span></button>
+        <div id="exportMenu" class="dropdown-menu">
+          <button id="emailBtn" type="button" title="Opens your email app with the current work list.">Email list</button>
+          <button id="copyBtn" type="button" title="Copies the current work list to clipboard.">Copy list</button>
+          <button id="excelBtn" type="button" title="Download tasks to Excel file.">Download Excel</button>
+        </div>
       </div>
 
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span class="subtle">Job Type</span>
-        <select id="filterJobType">
-          <option value="all">All</option>
-          <option value="Tax Return">Tax Return</option>
-          <option value="BAS">BAS</option>
-          <option value="Financial Statements">Financial Statements</option>
-          <option value="Audit">Audit</option>
-          <option value="Bookkeeping">Bookkeeping</option>
-          <option value="Advisory">Advisory</option>
-          <option value="Other">Other</option>
-        </select>
+      <div class="dropdown-menu-wrap">
+        <button type="button" onclick="toggleDropdown('viewsMenu', event)">Views <span class="dd-arrow">▼</span></button>
+        <div id="viewsMenu" class="dropdown-menu">
+          <button id="ganttBtn" type="button" title="View Execution Plan">Execution Plan</button>
+          <button id="capacityBtn" type="button" title="Check available capacity">Capacity</button>
+          <button id="dashboardBtn" type="button" title="View analytics dashboard">Dashboard</button>
+          <button id="notificationsBtn" type="button" title="Configure notifications">Notifications</button>
+        </div>
       </div>
 
-      <button id="clearArchiveBtn" class="btn-danger" type="button" title="Permanently clears archived tasks (not visible in the list).">Clear Archive</button>
-      <span class="subtle" id="archiveCount">Archive: 0</span>
-      <button id="clearBlankBtn" type="button" title="Remove rows with no client and no task">Clear Blank Rows</button>
-
-      <span style="flex:1;"></span>
-      <span class="subtle" id="userBadge" title="Signed in user" style="white-space:nowrap;">—</span>
-      <button id="signOutBtn" class="mini" type="button" title="Sign out">Sign out</button>
     </div>
 
     <datalist id="clientList"></datalist>
@@ -1663,11 +1856,48 @@
           <th style="width:32px; text-align:center;">#</th>
           <th id="sortClient" style="width:140px; cursor:pointer;" title="Click to sort by client">Client <span id="sortClientIcon"></span></th>
           <th style="width:300px;">Task</th>
-          <th style="width:80px; text-align:center;">Job Type</th>
-          <th style="width:80px; text-align:center;">Status</th>
+          <th class="th-filter" style="width:80px; text-align:center; position:relative; cursor:pointer; user-select:none;" onclick="toggleHeaderFilter('jobTypeFilterMenu', this, event)">
+            Job Type <span class="th-filter-arrow" style="font-size:8px; opacity:0.5;">▼</span>
+            <span id="jobTypeFilterBadge" class="th-filter-badge" style="display:none;"></span>
+            <div id="jobTypeFilterMenu" class="header-filter-menu">
+              <button type="button" data-value="Tax Return"><span class="hf-check"></span>Tax Return</button>
+              <button type="button" data-value="BAS"><span class="hf-check"></span>BAS</button>
+              <button type="button" data-value="Financial Statements"><span class="hf-check"></span>Fin. Statements</button>
+              <button type="button" data-value="Audit"><span class="hf-check"></span>Audit</button>
+              <button type="button" data-value="Bookkeeping"><span class="hf-check"></span>Bookkeeping</button>
+              <button type="button" data-value="Advisory"><span class="hf-check"></span>Advisory</button>
+              <button type="button" data-value="Other"><span class="hf-check"></span>Other</button>
+              <div class="dd-separator" style="margin:4px 8px;"></div>
+              <button type="button" data-value="__clear" style="font-size:10px; color:var(--muted); justify-content:center;">Clear filters</button>
+            </div>
+          </th>
+          <th class="th-filter" style="width:80px; text-align:center; position:relative; cursor:pointer; user-select:none;" onclick="toggleHeaderFilter('statusFilterMenu', this, event)">
+            Status <span class="th-filter-arrow" style="font-size:8px; opacity:0.5;">▼</span>
+            <span id="statusFilterBadge" class="th-filter-badge" style="display:none;"></span>
+            <div id="statusFilterMenu" class="header-filter-menu">
+              <button type="button" data-value="Not Started"><span class="hf-check"></span>Not Started</button>
+              <button type="button" data-value="Info Requested"><span class="hf-check"></span>Info Requested</button>
+              <button type="button" data-value="In Progress"><span class="hf-check"></span>In Progress</button>
+              <button type="button" data-value="Review"><span class="hf-check"></span>Review</button>
+              <button type="button" data-value="Lodged"><span class="hf-check"></span>Lodged</button>
+              <button type="button" data-value="Complete"><span class="hf-check"></span>Complete</button>
+              <div class="dd-separator" style="margin:4px 8px;"></div>
+              <button type="button" data-value="__clear" style="font-size:10px; color:var(--muted); justify-content:center;">Clear filters</button>
+            </div>
+          </th>
           <th id="assignedHeader" style="width:80px; text-align:center; display:none;">Assigned</th>
           <th id="sortDue" style="width:80px; text-align:center; cursor:pointer;" title="Click to sort by due date">Due <span id="sortDueIcon"></span></th>
-          <th id="sortPriority" style="width:20px; text-align:center; cursor:pointer;" title="Click to sort by priority">P <span id="sortPriorityIcon"></span></th>
+          <th class="th-filter" style="width:20px; text-align:center; position:relative; cursor:pointer; user-select:none;" onclick="toggleHeaderFilter('priorityFilterMenu', this, event)" title="Filter by priority">
+            P <span class="th-filter-arrow" style="font-size:8px; opacity:0.5;">▼</span>
+            <span id="priorityFilterBadge" class="th-filter-badge" style="display:none;"></span>
+            <div id="priorityFilterMenu" class="header-filter-menu">
+              <button type="button" data-value="High"><span class="hf-check"></span>High</button>
+              <button type="button" data-value="Medium"><span class="hf-check"></span>Medium</button>
+              <button type="button" data-value="Low"><span class="hf-check"></span>Low</button>
+              <div class="dd-separator" style="margin:4px 8px;"></div>
+              <button type="button" data-value="__clear" style="font-size:10px; color:var(--muted); justify-content:center;">Clear filters</button>
+            </div>
+          </th>
           <th style="width:24px; text-align:center;">✓</th>
           <th style="width:24px; text-align:center;">⏱</th>
           <th style="width:24px; text-align:center;" title="Schedule">
@@ -3620,16 +3850,18 @@
     }
 
     function setArchiveCount() {
-      document.getElementById('archiveCount').textContent = `Archive: ${archive.length}`;
+      document.getElementById('archiveCount').textContent = archive.length;
     }
 
     function setActiveTimerStamp() {
       const el = document.getElementById('activeTimer');
       if (runningTaskIndex == null) {
-        el.textContent = '⏱ —';
+        el.style.display = 'none';
+        el.textContent = '';
         el.title = '';
         return;
       }
+      el.style.display = '';
       const t = tasks[runningTaskIndex];
       const label = (t && (t.client || t.description))
         ? `${(t.client || '').trim()}${(t.client && t.description) ? ' — ' : ''}${(t.description || '').trim()}`
@@ -3773,18 +4005,14 @@
         if (d !== 0) return sortDue === 'desc' ? -d : d;
       }
 
-      // Sort by Priority
-      if (sortPriority !== 'none') {
-        const p = pa - pb;
-        if (p !== 0) return sortPriority === 'desc' ? -p : p;
-      }
-
       return a.index - b.index;
     }
 
-    // Filter state
-    let filterStatus = 'all';
-    let filterJobType = 'all';
+    // Filter state (Sets — empty means "all")
+    let filterStatus = new Set();
+    let filterJobType = new Set();
+    let filterPriority = new Set();
+    let completedCollapsed = localStorage.getItem('completedCollapsed') === '1';
 
     function buildClientDatalist() {
       const dl = document.getElementById('clientList');
@@ -4455,17 +4683,32 @@
     }
 
     function updateJobTypeSelects() {
-      // Update the filter dropdown
-      const filterSelect = document.getElementById('filterJobType');
-      const currentFilter = filterSelect.value;
-      filterSelect.innerHTML = '<option value="all">All</option>';
-      masterJobTypes.forEach(jt => {
-        const opt = document.createElement('option');
-        opt.value = jt;
-        opt.textContent = jt;
-        filterSelect.appendChild(opt);
-      });
-      filterSelect.value = currentFilter;
+      // Rebuild the header filter menu with current master job types
+      const menu = document.getElementById('jobTypeFilterMenu');
+      if (menu) {
+        menu.innerHTML = '';
+        masterJobTypes.forEach(jt => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.dataset.value = jt;
+          btn.innerHTML = '<span class="hf-check"></span>' + jt;
+          if (filterJobType.has(jt)) btn.classList.add('hf-active');
+          menu.appendChild(btn);
+        });
+        // Add separator + clear
+        const sep = document.createElement('div');
+        sep.className = 'dd-separator';
+        sep.style.margin = '4px 8px';
+        menu.appendChild(sep);
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.dataset.value = '__clear';
+        clearBtn.style.cssText = 'font-size:10px; color:var(--muted); justify-content:center;';
+        clearBtn.textContent = 'Clear filters';
+        menu.appendChild(clearBtn);
+        // Re-bind
+        bindHeaderFilter('jobTypeFilterMenu', filterJobType, 'jobTypeFilterBadge');
+      }
 
       // Re-render tasks to update job type dropdowns in rows
       renderTasks();
@@ -4941,14 +5184,42 @@
       if (dropdown) dropdown.style.display = 'none';
     }
 
+    // Generic dropdown toggle for controls bar menus
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+      document.querySelectorAll('.dropdown-menu-wrap > button.active').forEach(b => b.classList.remove('active'));
+    }
+    function toggleDropdown(menuId, event) {
+      if (event) event.stopPropagation();
+      const menu = document.getElementById(menuId);
+      if (!menu) return;
+      const trigger = menu.parentElement.querySelector(':scope > button');
+      const wasOpen = menu.classList.contains('open');
+      closeAllDropdowns();
+      if (!wasOpen) {
+        menu.classList.add('open');
+        if (trigger) trigger.classList.add('active');
+      }
+    }
+    window.toggleDropdown = toggleDropdown;
+
+    // Close dropdown menu when any item inside is clicked
+    document.querySelectorAll('.dropdown-menu button').forEach(btn => {
+      btn.addEventListener('click', () => closeAllDropdowns());
+    });
+
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
+      // Close firm switcher
       const switcher = document.getElementById('firmSwitcher');
       const btn = document.getElementById('firmSwitcherBtn');
-      // Don't close if clicking the button itself
       if (btn && btn.contains(e.target)) return;
       if (switcher && !switcher.contains(e.target)) {
         hideFirmSwitcherDropdown();
+      }
+      // Close controls bar dropdown menus
+      if (!e.target.closest('.dropdown-menu-wrap')) {
+        closeAllDropdowns();
       }
     });
 
@@ -9431,7 +9702,7 @@
     function buildWorkListText() {
       const decorated = tasks.map((task, index) => ({ task, index }));
       let open = decorated.filter(x => !x.task.completed);
-      if (sortClient !== 'none' || sortDue !== 'none' || sortPriority !== 'none') open = [...open].sort(compareBySort);
+      if (sortClient !== 'none' || sortDue !== 'none') open = [...open].sort(compareBySort);
 
       const now = new Date();
       const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
@@ -9563,11 +9834,10 @@
     }
 
     function updateThemeToggleIcon() {
-      const btn = document.getElementById('themeToggle');
-      if (btn) {
+      const label = document.getElementById('themeToggleLabel');
+      if (label) {
         const isLight = document.documentElement.classList.contains('light');
-        btn.textContent = isLight ? '☀️' : '🌙';
-        btn.title = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+        label.textContent = isLight ? '☀️ Light mode' : '🌙 Dark mode';
       }
     }
 
@@ -9924,10 +10194,8 @@
       updateSortOrders();
       sortClient = 'none';
       sortDue = 'none';
-      sortPriority = 'none';
       localStorage.setItem(SORT_CLIENT_KEY, 'none');
       localStorage.setItem(SORT_DUE_KEY, 'none');
-      localStorage.setItem(SORT_PRIORITY_KEY, 'none');
 
       saveTasks(false);
       renderTasks();
@@ -9984,11 +10252,13 @@
       const offset = circumference - (percent / 100) * circumference;
       return `
         <svg class="completion-ring" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="45" fill="none" stroke="var(--border)" stroke-width="10"/>
-          <circle cx="60" cy="60" r="45" fill="none" stroke="var(--accent)" stroke-width="10"
+          <circle cx="60" cy="60" r="45" fill="none" stroke="var(--border)" stroke-width="8" opacity="0.3"/>
+          <circle cx="60" cy="60" r="45" fill="none" stroke="url(#ringGrad)" stroke-width="8"
             stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
-            transform="rotate(-90 60 60)" stroke-linecap="round"/>
-          <text x="60" y="60" text-anchor="middle" dy="0.35em" fill="var(--text)" font-size="24" font-weight="700">${percent}%</text>
+            transform="rotate(-90 60 60)" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(45,212,191,0.4));"/>
+          <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--teal)"/><stop offset="100%" stop-color="var(--teal-2)"/></linearGradient></defs>
+          <text x="60" y="56" text-anchor="middle" dy="0.35em" fill="var(--text)" font-size="28" font-weight="800">${percent}%</text>
+          <text x="60" y="76" text-anchor="middle" fill="var(--muted)" font-size="9" font-weight="600">COMPLETE</text>
         </svg>
       `;
     }
@@ -10038,7 +10308,7 @@
 
       return `
         <div class="pie-chart-container">
-          <svg viewBox="0 0 100 100" width="100" height="100">${slices.join('')}</svg>
+          <svg viewBox="0 0 100 100" width="140" height="140">${slices.join('')}</svg>
           <div class="pie-legend">${legend.join('')}</div>
         </div>
       `;
@@ -10049,8 +10319,41 @@
       const statusColors = ['#6b7280', '#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e', '#10b981'];
       const jobTypeColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#6b7280'];
 
+      // Compute summary stats
+      const openTasks = tasks.filter(t => !t.completed);
+      const totalOpen = openTasks.length;
+      const overdue = openTasks.filter(t => isOverdue(t.dueDate) && t.status !== 'Complete').length;
+      const dueThisWeek = openTasks.filter(t => isThisWeek(t.dueDate)).length;
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      let weekSeconds = 0, billableSeconds = 0;
+      tasks.forEach(t => { if (t.seconds > 0) { weekSeconds += t.seconds; if (t.billable) billableSeconds += t.seconds; } });
+
       const content = document.getElementById('dashboardContent');
       content.innerHTML = `
+        <div class="dashboard-kpi-row">
+          <div class="dashboard-kpi">
+            <div class="dashboard-kpi-value">${totalOpen}</div>
+            <div class="dashboard-kpi-label">Open Tasks</div>
+          </div>
+          <div class="dashboard-kpi ${overdue > 0 ? 'kpi-danger' : ''}">
+            <div class="dashboard-kpi-value">${overdue}</div>
+            <div class="dashboard-kpi-label">Overdue</div>
+          </div>
+          <div class="dashboard-kpi">
+            <div class="dashboard-kpi-value">${dueThisWeek}</div>
+            <div class="dashboard-kpi-label">Due This Week</div>
+          </div>
+          <div class="dashboard-kpi">
+            <div class="dashboard-kpi-value">${formatHMS(weekSeconds)}</div>
+            <div class="dashboard-kpi-label">Time Tracked</div>
+          </div>
+          <div class="dashboard-kpi">
+            <div class="dashboard-kpi-value">${data.completed}</div>
+            <div class="dashboard-kpi-label">Completed</div>
+          </div>
+        </div>
         <div class="dashboard-card">
           <div class="dashboard-card-title">Completion Rate</div>
           ${renderCompletionRing(data.completionRate)}
@@ -10125,14 +10428,17 @@
       const done = decorated.filter(x => x.task.completed);
 
       // Apply filters
-      if (filterStatus !== 'all') {
-        open = open.filter(x => x.task.status === filterStatus);
+      if (filterStatus.size > 0) {
+        open = open.filter(x => filterStatus.has(x.task.status));
       }
-      if (filterJobType !== 'all') {
-        open = open.filter(x => x.task.jobType === filterJobType);
+      if (filterJobType.size > 0) {
+        open = open.filter(x => filterJobType.has(x.task.jobType));
+      }
+      if (filterPriority.size > 0) {
+        open = open.filter(x => filterPriority.has(x.task.priority || 'Medium'));
       }
 
-      if (sortClient !== 'none' || sortDue !== 'none' || sortPriority !== 'none') open = [...open].sort(compareBySort);
+      if (sortClient !== 'none' || sortDue !== 'none') open = [...open].sort(compareBySort);
 
       const appendRow = (item, displayNumber) => {
         const task = item.task;
@@ -10438,14 +10744,23 @@
       let n = 1;
       open.forEach(item => appendRow(item, n++));
 
-      if (open.length > 0 && done.length > 0) {
+      if (done.length > 0) {
         const div = document.createElement('tr');
         div.className = 'divider';
-        div.innerHTML = `<td colspan="17">Completed</td>`;
+        div.style.cursor = 'pointer';
+        const arrow = completedCollapsed ? '▶' : '▼';
+        div.innerHTML = `<td colspan="17"><span style="margin-right:6px; font-size:10px;">${arrow}</span>Completed (${done.length})</td>`;
+        div.addEventListener('click', () => {
+          completedCollapsed = !completedCollapsed;
+          localStorage.setItem('completedCollapsed', completedCollapsed ? '1' : '0');
+          renderTasks();
+        });
         body.appendChild(div);
-      }
 
-      done.forEach(item => appendRow(item, n++));
+        if (!completedCollapsed) {
+          done.forEach(item => appendRow(item, n++));
+        }
+      }
     }
 
     let toastTimer = null;
@@ -11099,31 +11414,64 @@
       }
     });
 
-    // Filter controls
-    document.getElementById('filterStatus').addEventListener('change', (e) => {
-      filterStatus = e.target.value;
-      renderTasks();
+    // Table header filter dropdowns
+    function toggleHeaderFilter(menuId, thEl, event) {
+      event.stopPropagation();
+      const menu = document.getElementById(menuId);
+      if (!menu) return;
+      const wasOpen = menu.classList.contains('open');
+      // Close all header filter menus and controls dropdowns
+      document.querySelectorAll('.header-filter-menu.open').forEach(m => m.classList.remove('open'));
+      closeAllDropdowns();
+      if (!wasOpen) menu.classList.add('open');
+    }
+    window.toggleHeaderFilter = toggleHeaderFilter;
+
+    // Close header filters on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.th-filter')) {
+        document.querySelectorAll('.header-filter-menu.open').forEach(m => m.classList.remove('open'));
+      }
     });
 
-    document.getElementById('filterJobType').addEventListener('change', (e) => {
-      filterJobType = e.target.value;
-      renderTasks();
-    });
+    // Wire up multi-select filter clicks
+    function bindHeaderFilter(menuId, filterSet, badgeId) {
+      document.querySelectorAll('#' + menuId + ' button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const val = btn.dataset.value;
+          if (val === '__clear') {
+            filterSet.clear();
+            document.querySelectorAll('#' + menuId + ' button').forEach(b => b.classList.remove('hf-active'));
+          } else {
+            if (filterSet.has(val)) {
+              filterSet.delete(val);
+              btn.classList.remove('hf-active');
+            } else {
+              filterSet.add(val);
+              btn.classList.add('hf-active');
+            }
+          }
+          document.getElementById(badgeId).style.display = filterSet.size === 0 ? 'none' : '';
+          renderTasks();
+        });
+      });
+    }
+    bindHeaderFilter('statusFilterMenu', filterStatus, 'statusFilterBadge');
+    bindHeaderFilter('jobTypeFilterMenu', filterJobType, 'jobTypeFilterBadge');
+    bindHeaderFilter('priorityFilterMenu', filterPriority, 'priorityFilterBadge');
 
     // Column header sorting
     function updateSortIcons() {
       const clientIcon = document.getElementById('sortClientIcon');
       const dueIcon = document.getElementById('sortDueIcon');
-      const priorityIcon = document.getElementById('sortPriorityIcon');
       clientIcon.textContent = sortClient === 'asc' ? '▲' : sortClient === 'desc' ? '▼' : '';
       dueIcon.textContent = sortDue === 'asc' ? '▲' : sortDue === 'desc' ? '▼' : '';
-      priorityIcon.textContent = sortPriority === 'asc' ? '▲' : sortPriority === 'desc' ? '▼' : '';
     }
 
     function clearAllSorts() {
       sortClient = 'none';
       sortDue = 'none';
-      sortPriority = 'none';
     }
 
     document.getElementById('sortClient').addEventListener('click', () => {
@@ -11132,7 +11480,6 @@
       sortClient = next;
       localStorage.setItem(SORT_CLIENT_KEY, sortClient);
       localStorage.setItem(SORT_DUE_KEY, sortDue);
-      localStorage.setItem(SORT_PRIORITY_KEY, sortPriority);
       updateSortIcons();
       renderTasks();
     });
@@ -11143,18 +11490,6 @@
       sortDue = next;
       localStorage.setItem(SORT_CLIENT_KEY, sortClient);
       localStorage.setItem(SORT_DUE_KEY, sortDue);
-      localStorage.setItem(SORT_PRIORITY_KEY, sortPriority);
-      updateSortIcons();
-      renderTasks();
-    });
-
-    document.getElementById('sortPriority').addEventListener('click', () => {
-      const next = sortPriority === 'none' ? 'asc' : sortPriority === 'asc' ? 'desc' : 'none';
-      clearAllSorts();
-      sortPriority = next;
-      localStorage.setItem(SORT_CLIENT_KEY, sortClient);
-      localStorage.setItem(SORT_DUE_KEY, sortDue);
-      localStorage.setItem(SORT_PRIORITY_KEY, sortPriority);
       updateSortIcons();
       renderTasks();
     });
@@ -11377,13 +11712,6 @@
       document.getElementById('authPass').value = '';
     });
 
-    // Header sign out button
-    document.getElementById('signOutBtnHeader').addEventListener('click', async () => {
-      if (!fbAuth) return;
-      try { await fbAuth.signOut(); } catch (e) { console.warn(e); }
-      document.getElementById('authPass').value = '';
-    });
-
     // Firm switcher button - onclick handler is defined inline on the button
 
     authPass.addEventListener('keydown', (e) => {
@@ -11457,7 +11785,6 @@
             }
 
             userBadge.textContent = currentUser.email || 'Signed in';
-            document.getElementById('userBadgeHeader').textContent = currentUser.email || '';
             authStatus.textContent = '';
 
             try {
