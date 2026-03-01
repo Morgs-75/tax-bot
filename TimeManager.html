@@ -1932,7 +1932,11 @@
         </div>
         <div class="modal-footer">
           <div class="subtle" id="notesMeta">—</div>
-          <button id="notesSave" class="mini" type="button">Done</button>
+          <div style="display:flex; gap:6px;">
+            <button id="printNotesBtn" class="mini" type="button" style="color:var(--muted);" title="Print notes">🖨</button>
+            <button id="downloadNotesBtn" class="mini" type="button" style="color:var(--muted);" title="Download as text file">⬇</button>
+            <button id="notesSave" class="mini" type="button">Done</button>
+          </div>
         </div>
       </div>
     </div>
@@ -4208,6 +4212,52 @@
     function closeNotes() {
       notesTaskIndex = null;
       hideModal('notesBackdrop');
+    }
+
+    function printNotes() {
+      if (notesTaskIndex == null) return;
+      const t = tasks[notesTaskIndex];
+      const notes = (t.notes || '').trim();
+      if (!notes) return;
+      const client = (t.client || '').trim() || 'No client';
+      const desc = (t.description || '').trim();
+      const escaped = notes.replace(/</g, '&lt;').replace(/\n/g, '<br>');
+      const win = window.open('', '_blank', 'width=600,height=800');
+      win.document.write(`<!DOCTYPE html><html><head><title>Notes — ${client}</title><style>
+        body { font-family: Arial, sans-serif; padding: 24px; color: #1a1a2e; }
+        h2 { margin: 0 0 4px; font-size: 18px; }
+        .meta { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+        .notes { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+        @media print { body { padding: 12px; } }
+      </style></head><body>`);
+      win.document.write(`<h2>Notes — ${client}</h2>`);
+      if (desc) win.document.write(`<div class="meta">${desc}</div>`);
+      win.document.write(`<div class="notes">${escaped}</div>`);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+
+    function downloadNotesTxt() {
+      if (notesTaskIndex == null) return;
+      const t = tasks[notesTaskIndex];
+      const notes = (t.notes || '').trim();
+      if (!notes) return;
+      const client = (t.client || '').trim() || 'No client';
+      const desc = (t.description || '').trim();
+      let content = `Notes — ${client}\n`;
+      if (desc) content += `${desc}\n`;
+      content += `${'—'.repeat(40)}\n\n${notes}\n`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeName = client.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+      a.download = `notes_${safeName}_${new Date().toISOString().slice(0,10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     function openLinks(index) {
@@ -11157,6 +11207,8 @@
 
     // Notes modal wiring
     document.getElementById('notesClose').addEventListener('click', closeNotes);
+    document.getElementById('printNotesBtn').addEventListener('click', printNotes);
+    document.getElementById('downloadNotesBtn').addEventListener('click', downloadNotesTxt);
     document.getElementById('notesSave').addEventListener('click', closeNotes);
     document.getElementById('notesBackdrop').addEventListener('mousedown', (e) => {
       if (e.target.id === 'notesBackdrop') closeNotes();
