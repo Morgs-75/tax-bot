@@ -9602,6 +9602,7 @@
     // ===== Add Client Confirm Modal =====
     let pendingClientName = null;
     let pendingClientDescInput = null;
+    const declinedClients = new Set();
 
     function showAddClientConfirm(clientName, descInput) {
       pendingClientName = clientName;
@@ -9626,6 +9627,7 @@
     }
 
     function handleAddClientNo() {
+      if (pendingClientName) declinedClients.add(pendingClientName.toLowerCase());
       hideModal('addClientConfirmBackdrop');
       if (pendingClientDescInput) {
         pendingClientDescInput.focus();
@@ -10676,7 +10678,7 @@
           if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter') {
             const clientName = (e.target.value || '').trim();
             const clientNameLower = clientName.toLowerCase();
-            if (clientName && !masterClients.some(c => c.toLowerCase() === clientNameLower)) {
+            if (clientName && !masterClients.some(c => c.toLowerCase() === clientNameLower) && !declinedClients.has(clientNameLower)) {
               e.preventDefault();
               e.stopImmediatePropagation();
               clientPromptShown = true;
@@ -10697,7 +10699,7 @@
             return;
           }
           const clientName = (e.target.value || '').trim();
-          if (clientName && !masterClients.some(c => c.toLowerCase() === clientName.toLowerCase())) {
+          if (clientName && !masterClients.some(c => c.toLowerCase() === clientName.toLowerCase()) && !declinedClients.has(clientName.toLowerCase())) {
             showAddClientConfirm(clientName, descInput);
           }
         });
